@@ -6,7 +6,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import authService from "../../services/authService";
 
-// Sức mạnh của Zod: Validate password khớp nhau
 const registerSchema = z.object({
   name: z.string().min(2, "Họ tên phải có ít nhất 2 ký tự"),
   email: z.string().min(1, "Vui lòng nhập email").email("Email không đúng định dạng"),
@@ -30,7 +29,6 @@ export default function RegisterPage() {
   const onSubmit = async (data) => {
     setServerError("");
     try {
-      // Gọi API đăng ký
       await authService.register({
         name: data.name,
         email: data.email,
@@ -51,10 +49,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full max-w-[440px] bg-white p-8 sm:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 z-10 my-8">
-      <div className="text-center mb-8">
+    <div className="w-full bg-white p-6 sm:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 my-4 sm:my-8">
+      <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-2xl font-bold text-heading">Tạo tài khoản mới</h2>
-        <p className="mt-2 text-sm">Bắt đầu quản lý nhà trọ hiệu quả</p>
+        <p className="mt-2 text-sm text-gray-500">Bắt đầu quản lý nhà trọ hiệu quả</p>
       </div>
 
       {serverError && (
@@ -63,10 +61,10 @@ export default function RegisterPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
         {/* Họ và Tên */}
         <div className="space-y-1.5">
-          <label className="block font-medium text-heading">Họ và tên</label>
+          <label className="block font-medium text-heading text-sm sm:text-base">Họ và tên</label>
           <input 
             type="text" 
             {...register("name")}
@@ -76,10 +74,10 @@ export default function RegisterPage() {
           {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
         </div>
 
-        {/* Email & Phone */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Email & Phone - FIX RESPONSIVE CHỖ NÀY */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="space-y-1.5">
-            <label className="block font-medium text-heading">Email</label>
+            <label className="block font-medium text-heading text-sm sm:text-base">Email</label>
             <input 
               type="text" 
               {...register("email")}
@@ -89,7 +87,7 @@ export default function RegisterPage() {
             {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <label className="block font-medium text-heading">Số điện thoại</label>
+            <label className="block font-medium text-heading text-sm sm:text-base">Số điện thoại</label>
             <input 
               type="text" 
               {...register("phone")}
@@ -102,7 +100,7 @@ export default function RegisterPage() {
 
         {/* Mật khẩu */}
         <div className="space-y-1.5">
-          <label className="block font-medium text-heading">Mật khẩu</label>
+          <label className="block font-medium text-heading text-sm sm:text-base">Mật khẩu</label>
           <div className="relative">
             <input 
               type={showPassword ? "text" : "password"} 
@@ -119,7 +117,7 @@ export default function RegisterPage() {
 
         {/* Xác nhận Mật khẩu */}
         <div className="space-y-1.5">
-          <label className="block font-medium text-heading">Xác nhận mật khẩu</label>
+          <label className="block font-medium text-heading text-sm sm:text-base">Xác nhận mật khẩu</label>
           <input 
             type={showPassword ? "text" : "password"} 
             {...register("password_confirmation")}
@@ -130,7 +128,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Submit */}
-        <button type="submit" disabled={isSubmitting} className="w-full py-3 px-4 mt-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-lg shadow-sm transition flex justify-center items-center">
+        <button type="submit" disabled={isSubmitting} className="w-full py-2.5 sm:py-3 px-4 mt-4 bg-primary hover:bg-primary-hover text-white font-medium rounded-lg shadow-sm transition flex justify-center items-center">
           {isSubmitting ? "Đang xử lý..." : "Đăng ký tài khoản"}
         </button>
 
