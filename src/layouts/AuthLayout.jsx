@@ -35,7 +35,7 @@ export default function AuthLayout() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-primary leading-tight">
-                Nhà Trọ An Bình
+                Nhà Trọ Kiêu Giang
               </h1>
               <p className="text-xs text-body">Quản lý nhà trọ thông minh</p>
             </div>
@@ -134,9 +134,9 @@ export default function AuthLayout() {
       </div>
 
       {/* === FOOTER === */}
-      <footer className="w-full bg-white border-t border-gray-100 py-5 px-6 md:px-16 flex flex-col md:flex-row items-center justify-between z-20">
+      <footer className="w-full bg-white border-t border-gray-100 py-2 px-2 md:px-16 flex flex-col md:flex-row items-center justify-between z-20">
         <p className="text-sm">
-          © 2024 Nhà Trọ An Bình. Tất cả quyền được bảo lưu.
+          © 2024 Nhà Trọ Kiêu Giang. Tất cả quyền được bảo lưu.
         </p>
         <div className="flex gap-6 mt-3 md:mt-0">
           <a href="#" className="hover:text-primary font-medium">

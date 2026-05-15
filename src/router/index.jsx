@@ -1,11 +1,12 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import useAuthStore from "../stores/authStore";
-import AuthLayout from "../layouts/AuthLayout";
-import LoginPage from "../pages/auth/LoginPage";
-import RegisterPage from "../pages/auth/RegisterPage";
-import LandlordLayout from "../layouts/LandlordLayout";
-import LandlordDashboard from "../pages/landlord/DashboardPage";
-import PropertiesPage from "../pages/landlord/PropertiesPage";
+import useAuthStore from "@/stores/authStore";
+import AuthLayout from "@/layouts/AuthLayout";
+import LoginPage from "@/pages/auth/LoginPage";
+import RegisterPage from "@/pages/auth/RegisterPage";
+import LandlordLayout from "@/layouts/LandlordLayout";
+import LandlordDashboard from "@/pages/landlord/DashboardPage";
+import PropertiesPage from "@/pages/landlord/PropertiesPage";
+import RoomsPage from "@/pages/landlord/RoomsPage";
 // Component bảo vệ Route: Chỉ cho vào nếu có Token và đúng Role
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = useAuthStore((state) => state.user);
@@ -43,6 +44,7 @@ export default function AppRouter() {
       {/* Nơi chứa nội dung Page */}
         <Route path="dashboard" element={<LandlordDashboard />} />
         <Route path="properties" element={<PropertiesPage />} />
+        <Route path="rooms" element={<RoomsPage />} />
       </Route>
 
       {/* Tuyến đường của Admin */}

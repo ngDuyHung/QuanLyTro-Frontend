@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import useAuthStore from "@/stores/authStore"; // Kiểm tra lại đường dẫn này cho đúng với dự án của bạn
 import { toast } from "react-toastify";
 
 export default function LandlordLayout() {
   const { user, clearAuth } = useAuthStore();
+  const location = useLocation();
   const navigate = useNavigate();
 
   // 1. STATE ĐIỀU KHIỂN SIDEBAR TRÊN MOBILE
@@ -22,6 +23,11 @@ export default function LandlordLayout() {
         ? "bg-brand text-white shadow-sm shadow-green-600/20"
         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
     }`;
+
+  // Hàm check active thủ công cho menu "Khu nhà & Phòng"
+  const isPropertiesGroupActive =
+    location.pathname.includes("/landlord/properties") ||
+    location.pathname.includes("/landlord/rooms");
 
   // Hàm đóng sidebar (dùng khi click vào overlay hoặc click vào 1 link trên mobile)
   const closeSidebar = () => setIsSidebarOpen(false);
@@ -50,7 +56,7 @@ export default function LandlordLayout() {
           </div>
           <div className="ml-3 truncate">
             <h1 className="text-[15px] font-bold text-brand leading-tight">
-              Nhà Trọ An Bình
+              Nhà Trọ Kiêu Giang
             </h1>
             <p className="text-[12px] text-slate-500">Quản lý nhà trọ</p>
           </div>
@@ -67,9 +73,14 @@ export default function LandlordLayout() {
             <span>Trang chủ</span>
           </NavLink>
 
+          {/* SỬ DỤNG CLASS ĐƯỢC CUSTOM RIÊNG CHO MENU NÀY */}
           <NavLink
             to="/landlord/properties"
-            className={navLinkClasses}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-colors ${
+              isPropertiesGroupActive
+                ? "bg-brand text-white shadow-sm shadow-green-600/20"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            }`}
             onClick={closeSidebar}
           >
             <i className="fa-solid fa-building w-5 text-center"></i>
@@ -263,7 +274,8 @@ export default function LandlordLayout() {
           {/* FOOTER ĐƠN GIẢN NHẤT */}
           <footer className="py-2 text-center border-t border-slate-200/60 mx-8">
             <p className="text-[12px] text-slate-400">
-              Phiên bản v1.0 — Được làm bởi <span className="font-medium text-slate-500">Duy Hùng</span>
+              Phiên bản v1.0 — Được làm bởi{" "}
+              <span className="font-medium text-slate-500">Duy Hùng</span>
             </p>
           </footer>
         </div>
