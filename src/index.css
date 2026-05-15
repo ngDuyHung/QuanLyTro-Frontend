@@ -1,0 +1,69 @@
+/* 1. Import Tailwind CSS và Google Font */
+@import "tailwindcss";
+
+/* 2. Hợp nhất cấu hình Theme */
+@theme {
+  /* Ghi đè font mặc định của Tailwind */
+  --font-sans: 'Inter', sans-serif;
+
+  /* Bảng màu Primary (Từ code cũ của bạn) */
+  --color-primary: #0d8a51;
+  --color-primary-light: #e8f5ed;
+  --color-primary-hover: #0a6d40;
+  --color-heading: #1e293b;
+  --color-body: #64748b;
+
+  /* Bảng màu Brand (Thêm mới cho trang Quản lý Khu nhà & Layout) */
+  --color-brand: #0e8b4d;
+  --color-brand-light: #10a35a;
+  --color-brand-dark: #0a6e3d;
+  --color-brand-50: #e6f4ed;
+}
+
+/* 3. Class tùy chỉnh */
+@utility bg-dots {
+  background-image: radial-gradient(#e2e8f0 2px, transparent 2px);
+  background-size: 24px 24px;
+}
+
+/* 4. Base Styles (Gom 2 thẻ body trùng lặp lại thành 1) */
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: #f4f7fe; 
+    @apply text-slate-800;
+  }
+}
+
+/* 5. Custom Utilities (Gom toàn bộ Scrollbar vào đây) */
+@layer utilities {
+  /* Scrollbar cho Sidebar */
+  .sidebar-scroll::-webkit-scrollbar {
+      width: 4px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+      background-color: #e2e8f0;
+      border-radius: 4px;
+  }
+  .sidebar-scroll:hover::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+  }
+
+  /* Scrollbar tùy chỉnh chung */
+  .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 6px;
+  }
+
+  /* Ẩn Scrollbar nhưng vẫn cho cuộn */
+  .no-scrollbar::-webkit-scrollbar {
+      display: none;
+  }
+  .no-scrollbar {
+      -ms-overflow-style: none; /* IE and Edge */
+      scrollbar-width: none;    /* Firefox */
+  }
+}
