@@ -17,7 +17,7 @@ export default function DashboardLayout() {
       {/* Sidebar đơn giản */}
       <aside className="w-64 bg-[#111c43] text-white hidden md:flex flex-col">
         <div className="h-20 flex items-center px-6 border-b border-white/10">
-          <span className="text-xl font-bold">RentHub 360</span>
+          <span className="text-xl font-bold">Quản lý Nhà trọ</span>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <div className="p-3 bg-blue-600 rounded-lg cursor-pointer">Dashboard</div>

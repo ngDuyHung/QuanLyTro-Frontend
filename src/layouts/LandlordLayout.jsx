@@ -51,9 +51,7 @@ export default function LandlordLayout() {
       >
         {/* LOGO & TITLE */}
         <div className="h-[80px] flex items-center px-6 shrink-0 border-b border-slate-100">
-          <div className="w-10 h-10 bg-brand rounded-lg flex items-center justify-center text-white text-xl shrink-0">
-            <i className="fa-solid fa-house-chimney"></i>
-          </div>
+          <img src="/icon-logo.png" alt="Logo" className="w-13 h-13" />
           <div className="ml-3 truncate">
             <h1 className="text-[15px] font-bold text-brand leading-tight">
               Nhà Trọ Kiêu Giang
