@@ -29,6 +29,7 @@ export default function AppRouter() {
       {/* Tuyến đường công khai (Auth) */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/login/zalo" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Route>
 
