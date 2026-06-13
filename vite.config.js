@@ -35,17 +35,17 @@ export default defineConfig({
 
         icons: [
           {
-            src: "/logo_kieugiang_icon-192x192.png",
+            src: "/icon-logo.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/logo_kieugiang_icon-512x512.png",
+            src: "/icon-logo.png",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "/logo_kieugiang_icon-512x512.png",
+            src: "/icon-logo.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
