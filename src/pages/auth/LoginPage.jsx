@@ -39,23 +39,31 @@ export default function LoginPage() {
 
   const onSubmit = async (data) => {
     setServerError("");
+
     try {
       const payload = {
         ...data,
         ...(zaloLinkToken ? { zalo_link_token: zaloLinkToken } : {}),
       };
 
-      const response = await authService.login(data);
+      console.log("Login payload:", payload);
+
+      const response = await authService.login(payload);
+
       const token = response.data.access_token;
       const user = response.data.user;
 
       setAuth(user, token);
-      if (zaloLinkToken) {
+
+      if (response.data.zalo_linked_now || user.zalo_linked) {
         toast.success("Liên kết Zalo và đăng nhập thành công!", {
           autoClose: 1500,
         });
+
         setZaloLinkToken("");
         setInfoMessage("");
+        sessionStorage.removeItem("zalo_link_token");
+        sessionStorage.removeItem("zalo_link_message");
       } else {
         toast.success("Đăng nhập thành công!", { autoClose: 1500 });
       }
