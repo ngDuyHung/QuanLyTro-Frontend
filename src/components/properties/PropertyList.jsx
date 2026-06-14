@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 const fallbackImages = [
   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=300",
   "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=300",
@@ -23,7 +25,55 @@ const getStatusConfig = (status) => {
   }
 };
 
-function PropertyCard({ property, index, isSelected, onSelect }) {
+function PropertyActionMenu({ property, onEdit, onDelete }) {
+  const totalRooms = property.total_rooms ?? property.rooms_count ?? 0;
+  const hasRooms = totalRooms > 0;
+
+  return (
+    <div className="absolute right-0 top-full mt-1 w-52 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 z-30 overflow-hidden">
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onEdit?.(property);
+        }}
+        className="w-full px-3.5 py-2.5 text-left text-[13px] font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
+      >
+        <i className="fa-regular fa-pen-to-square w-4 text-center text-[12px]"></i>
+        <span>Sửa thông tin</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onDelete?.(property);
+        }}
+        className="w-full px-3.5 py-2.5 text-left text-[13px] font-medium text-red-600 hover:bg-red-50 flex items-center gap-2.5"
+      >
+        <i className="fa-regular fa-trash-can w-4 text-center text-[12px]"></i>
+        <span>Xóa khu nhà</span>
+      </button>
+
+      {hasRooms && (
+        <div className="px-3.5 py-2 bg-slate-50 border-t border-slate-100 text-[11px] leading-4 text-slate-500">
+          Chỉ xóa được khi khu nhà chưa có phòng.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PropertyCard({
+  property,
+  index,
+  isSelected,
+  onSelect,
+  isMenuOpen,
+  onToggleMenu,
+  onEdit,
+  onDelete,
+}) {
   const status = getStatusConfig(property.status);
   const totalRooms = property.total_rooms ?? property.rooms_count ?? 0;
   const expectedRooms = property.expected_rooms_count ?? 0;
@@ -34,10 +84,16 @@ function PropertyCard({ property, index, isSelected, onSelect }) {
     fallbackImages[index % fallbackImages.length];
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(property.id)}
-      className={`text-left flex-shrink-0 w-[148px] lg:w-full bg-white rounded-xl p-2.5 lg:p-3.5 cursor-pointer shadow-sm flex flex-col lg:flex-row lg:gap-4 transition-all ${
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect?.(property.id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          onSelect?.(property.id);
+        }
+      }}
+      className={`relative text-left flex-shrink-0 w-[148px] lg:w-full bg-white rounded-xl p-2.5 lg:p-3.5 cursor-pointer shadow-sm flex flex-col lg:flex-row lg:gap-4 transition-all ${
         isSelected
           ? "border-2 border-brand"
           : "border border-slate-200 hover:border-brand"
@@ -69,9 +125,26 @@ function PropertyCard({ property, index, isSelected, onSelect }) {
               </span>
             </div>
 
-            <span className="hidden shrink-0 text-slate-400 lg:block">
-              <i className="fa-solid fa-ellipsis"></i>
-            </span>
+            <div className="hidden shrink-0 lg:block relative">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleMenu?.(property.id);
+                }}
+                className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 flex items-center justify-center"
+              >
+                <i className="fa-solid fa-ellipsis"></i>
+              </button>
+
+              {isMenuOpen && (
+                <PropertyActionMenu
+                  property={property}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              )}
+            </div>
           </div>
 
           <p className="hidden lg:flex text-[12px] text-slate-500 mt-1.5 items-start gap-1.5 line-clamp-2">
@@ -88,16 +161,37 @@ function PropertyCard({ property, index, isSelected, onSelect }) {
 
         <div className="mt-1 lg:mt-2 lg:pt-2 lg:border-t lg:border-slate-50">
           {/* Mobile */}
-          <div className="flex items-center justify-between lg:hidden">
+          <div className="flex items-center justify-between lg:hidden gap-2">
             <p className="text-[11px] text-slate-500">
               {totalRooms}/{expectedRooms || totalRooms} phòng
             </p>
 
-            <span
-              className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-md ${status.className}`}
-            >
-              {status.shortLabel}
-            </span>
+            <div className="flex items-center gap-1.5 relative">
+              <span
+                className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-md ${status.className}`}
+              >
+                {status.shortLabel}
+              </span>
+
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleMenu?.(property.id);
+                }}
+                className="w-7 h-7 rounded-lg border border-slate-200 text-slate-400 bg-white flex items-center justify-center"
+              >
+                <i className="fa-solid fa-ellipsis-vertical text-[11px]"></i>
+              </button>
+
+              {isMenuOpen && (
+                <PropertyActionMenu
+                  property={property}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              )}
+            </div>
           </div>
 
           {/* Desktop */}
@@ -141,7 +235,7 @@ function PropertyCard({ property, index, isSelected, onSelect }) {
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -163,13 +257,33 @@ export default function PropertyList({
   properties = [],
   selectedPropertyId,
   onSelectProperty,
+  onEditProperty,
+  onDeleteProperty,
   isLoading = false,
   pagination,
   page,
   onPageChange,
 }) {
+  const [activeMenuPropertyId, setActiveMenuPropertyId] = useState(null);
+
   const total = pagination?.total ?? properties.length;
   const lastPage = pagination?.last_page ?? 1;
+
+  const handleToggleMenu = (propertyId) => {
+    setActiveMenuPropertyId((currentId) =>
+      currentId === propertyId ? null : propertyId,
+    );
+  };
+
+  const handleEditProperty = (property) => {
+    setActiveMenuPropertyId(null);
+    onEditProperty?.(property);
+  };
+
+  const handleDeleteProperty = (property) => {
+    setActiveMenuPropertyId(null);
+    onDeleteProperty?.(property);
+  };
 
   if (isLoading) {
     return (
@@ -220,7 +334,11 @@ export default function PropertyList({
             property={property}
             index={index}
             isSelected={property.id === selectedPropertyId}
+            isMenuOpen={activeMenuPropertyId === property.id}
+            onToggleMenu={handleToggleMenu}
             onSelect={onSelectProperty}
+            onEdit={handleEditProperty}
+            onDelete={handleDeleteProperty}
           />
         ))}
       </div>

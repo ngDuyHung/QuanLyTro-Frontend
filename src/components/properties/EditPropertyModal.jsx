@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 const initialForm = {
+  property_type: "boarding_house",
   name: "",
   code: "",
   status: "active",
@@ -8,6 +9,9 @@ const initialForm = {
   expected_rooms_count: "",
   manager_name: "",
   address: "",
+  latitude: "",
+  longitude: "",
+  description: "",
   note: "",
 };
 
@@ -26,35 +30,61 @@ const generatePropertyCode = (name) => {
     .slice(0, 20);
 };
 
-export default function AddPropertyModal({
+export default function EditPropertyModal({
   open,
   onClose,
   onSubmit,
   isSubmitting = false,
+  property,
 }) {
   const [form, setForm] = useState(initialForm);
 
   useEffect(() => {
     if (!open) return;
 
-    const handleEsc = (event) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    document.addEventListener("keydown", handleEsc);
     document.body.style.overflow = "hidden";
 
     return () => {
-      document.removeEventListener("keydown", handleEsc);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open]);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+
+    if (!property) {
       setForm(initialForm);
+      return;
     }
-  }, [open]);
+
+    setForm({
+      property_type: property.property_type || "boarding_house",
+      name: property.name || "",
+      code: property.code || "",
+      status: property.status || "active",
+      address: property.address || "",
+      floors_count:
+        property.floors_count !== null && property.floors_count !== undefined
+          ? String(property.floors_count)
+          : "",
+      expected_rooms_count:
+        property.expected_rooms_count !== null &&
+        property.expected_rooms_count !== undefined
+          ? String(property.expected_rooms_count)
+          : "",
+      manager_name: property.manager_name || "",
+      latitude:
+        property.latitude !== null && property.latitude !== undefined
+          ? String(property.latitude)
+          : "",
+      longitude:
+        property.longitude !== null && property.longitude !== undefined
+          ? String(property.longitude)
+          : "",
+      description: property.description || "",
+      note: property.description || "",
+    });
+  }, [open, property]);
 
   if (!open) return null;
 
@@ -80,11 +110,24 @@ export default function AddPropertyModal({
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    const note = form.note?.trim() || "";
+
     onSubmit({
       ...form,
+      name: form.name.trim(),
+      code: form.code.trim(),
+      address: form.address.trim(),
+      manager_name: form.manager_name?.trim() || "",
       floors_count: Number(form.floors_count || 0),
       expected_rooms_count: Number(form.expected_rooms_count || 0),
+      description: note || null,
+      
     });
+  };
+
+  const handleClose = () => {
+    if (isSubmitting) return;
+    onClose();
   };
 
   return (
@@ -106,7 +149,6 @@ export default function AddPropertyModal({
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
         {/* Modal Container */}
         <div className="bg-slate-50 w-full h-[95vh] sm:h-auto sm:max-h-[90vh] sm:max-w-[800px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out]">
-          
           {/* Header (Sticky Top) */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white shrink-0 sticky top-0 z-20">
             <div className="flex items-center gap-3">
@@ -115,10 +157,10 @@ export default function AddPropertyModal({
               </div>
               <div>
                 <h2 className="text-[17px] sm:text-[19px] font-bold text-slate-800 leading-tight">
-                  Thêm khu nhà mới
+                  Chỉnh sửa khu nhà
                 </h2>
                 <p className="text-[12px] text-slate-500 mt-0.5 hidden sm:block">
-                  Thiết lập thông tin để quản lý phòng và khách thuê
+                  Cập nhật thông tin để quản lý phòng và khách thuê
                 </p>
               </div>
             </div>
@@ -133,14 +175,17 @@ export default function AddPropertyModal({
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col min-h-0 flex-1 overflow-hidden"
+          >
             {/* Body (Scrollable) */}
             <div className="overflow-y-auto no-scrollbar flex-1 pb-6 bg-slate-50">
-              
               {/* 1. Thông tin cơ bản */}
               <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200">
                 <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-circle-info text-[12px]"></i> 1. Thông tin cơ bản
+                  <i className="fa-solid fa-circle-info text-[12px]"></i> 1.
+                  Thông tin cơ bản
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-4">
@@ -209,7 +254,10 @@ export default function AddPropertyModal({
                   {/* Người quản lý */}
                   <div className="sm:col-span-1">
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Người quản lý <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                      Người quản lý{" "}
+                      <span className="text-slate-400 font-normal">
+                        (tùy chọn)
+                      </span>
                     </label>
                     <input
                       type="text"
@@ -260,7 +308,8 @@ export default function AddPropertyModal({
               {/* 2. Địa chỉ (Gộp thành 1 input duy nhất) */}
               <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
                 <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-map-location-dot text-[12px]"></i> 2. Địa chỉ
+                  <i className="fa-solid fa-map-location-dot text-[12px]"></i>{" "}
+                  2. Địa chỉ
                 </h3>
 
                 <div>
@@ -287,12 +336,16 @@ export default function AddPropertyModal({
               {/* 3. Ghi chú */}
               <div className="bg-white px-5 py-5 sm:p-6 mt-2 sm:mt-0">
                 <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-note-sticky text-[12px]"></i> 3. Ghi chú
+                  <i className="fa-solid fa-note-sticky text-[12px]"></i> 3. Ghi
+                  chú
                 </h3>
 
                 <div>
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                    Thông tin thêm <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                    Thông tin thêm{" "}
+                    <span className="text-slate-400 font-normal">
+                      (tùy chọn)
+                    </span>
                   </label>
                   <textarea
                     value={form.note}
@@ -308,7 +361,6 @@ export default function AddPropertyModal({
                   </div>
                 </div>
               </div>
-
             </div>
 
             {/* Footer (Sticky Bottom - Ưu tiên Mobile) */}
@@ -316,7 +368,7 @@ export default function AddPropertyModal({
               {/* Nút Hủy */}
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={isSubmitting}
                 className="px-5 py-3 sm:py-2.5 bg-slate-100 text-slate-600 rounded-xl text-[14px] font-semibold hover:bg-slate-200 transition-colors w-[100px] sm:w-auto text-center disabled:opacity-70"
               >
@@ -332,12 +384,12 @@ export default function AddPropertyModal({
                 {isSubmitting ? (
                   <>
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    Đang tạo...
+                    Đang cập nhật...
                   </>
                 ) : (
                   <>
                     <i className="fa-solid fa-check text-[14px]"></i>
-                    Tạo khu nhà
+                    Cập nhật khu nhà
                   </>
                 )}
               </button>
