@@ -26,11 +26,12 @@ const emptyStats = {
 
 function StatSkeleton() {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-4 animate-pulse">
-      <div className="w-12 h-12 rounded-full bg-slate-100 shrink-0"></div>
+    <div className="bg-white border border-slate-200 rounded-xl p-3 lg:p-4 shadow-sm flex items-center gap-3 lg:gap-4 animate-pulse">
+      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-slate-100 shrink-0"></div>
+
       <div className="flex-1 min-w-0">
-        <div className="h-5 bg-slate-100 rounded w-16 mb-2"></div>
-        <div className="h-3 bg-slate-100 rounded w-24"></div>
+        <div className="h-4 lg:h-5 bg-slate-100 rounded w-12 lg:w-16 mb-2"></div>
+        <div className="h-3 bg-slate-100 rounded w-20 lg:w-24"></div>
       </div>
     </div>
   );
@@ -95,7 +96,7 @@ export default function RoomStats({ stats = emptyStats, isLoading = false }) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4 mb-4 lg:mb-6">
         {Array.from({ length: 6 }).map((_, index) => (
           <StatSkeleton key={index} />
         ))}
@@ -104,55 +105,56 @@ export default function RoomStats({ stats = emptyStats, isLoading = false }) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4 mb-4 lg:mb-6">
       {statItems.map((stat, index) => (
         <div
           key={index}
-          className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-4"
+          className="bg-white border border-slate-200 rounded-xl p-3 lg:p-4 shadow-sm flex items-center gap-3 lg:gap-4 min-w-0"
         >
           <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center text-[20px] shrink-0 ${stat.bg} ${stat.color}`}
+            className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center text-[17px] lg:text-[20px] shrink-0 ${stat.bg} ${stat.color}`}
           >
             <i className={`fa-solid ${stat.icon}`}></i>
           </div>
 
           <div className="flex-1 min-w-0">
             {!stat.isCurrency ? (
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-[20px] font-bold text-slate-800 leading-none mb-1.5">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <p className="text-[18px] lg:text-[20px] font-bold text-slate-800 leading-none truncate">
                     {stat.value}
                   </p>
-                  <p className="text-[12px] text-slate-500 font-medium truncate">
-                    {stat.label}
-                  </p>
+
+                  {stat.badge && (
+                    <span
+                      className={`text-[10px] lg:text-[11px] font-bold px-1.5 lg:px-2 py-0.5 rounded-md whitespace-nowrap ${stat.badgeColor}`}
+                    >
+                      {stat.badge}
+                    </span>
+                  )}
                 </div>
 
-                {stat.badge && (
-                  <span
-                    className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${stat.badgeColor} whitespace-nowrap`}
-                  >
-                    {stat.badge}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col justify-center h-full">
-                <p className="text-[12px] text-slate-500 font-medium mb-1.5 truncate">
+                <p className="text-[11px] lg:text-[12px] text-slate-500 font-medium truncate mt-1">
                   {stat.label}
                 </p>
-
-                <div className="flex items-center gap-2">
-                  <p className="text-[15px] font-bold text-brand leading-none truncate">
-                    {stat.value}
+              </div>
+            ) : (
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <p className="text-[11px] lg:text-[12px] text-slate-500 font-medium truncate">
+                    {stat.label}
                   </p>
 
                   <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${stat.badgeColor} whitespace-nowrap`}
+                    className={`hidden sm:inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap ${stat.badgeColor}`}
                   >
                     {stat.badge}
                   </span>
                 </div>
+
+                <p className="text-[13px] lg:text-[15px] font-bold text-brand leading-none truncate">
+                  {stat.value}
+                </p>
               </div>
             )}
           </div>
