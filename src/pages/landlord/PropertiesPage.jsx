@@ -182,7 +182,7 @@ export default function PropertiesPage() {
     properties.find((property) => property.id === selectedPropertyId) || null;
 
   return (
-    <div className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-6 lg:p-8 flex flex-col h-full bg-slate-50">
+    <div className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-6 lg:p-6 flex flex-col h-full bg-slate-50">
       <div className="mb-4 lg:mb-5 flex flex-col lg:flex-row lg:items-center lg:justify-between lg:border-b lg:border-slate-200">
         <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 lg:border-none">
           <NavLink to="/landlord/properties" end className={tabClasses}>
@@ -193,7 +193,7 @@ export default function PropertiesPage() {
           </NavLink>
         </div>
 
-        <div className="flex items-center gap-2 mt-3 lg:mt-0 pb-1 lg:pb-0 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 mt-3 lg:mt-0 pb-1 lg:pb-1 overflow-x-auto no-scrollbar">
           <button className="bg-white border border-slate-200 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0">
             <i className="fa-solid fa-filter text-brand"></i>
             <span className="hidden sm:inline">Tất cả trạng thái</span>

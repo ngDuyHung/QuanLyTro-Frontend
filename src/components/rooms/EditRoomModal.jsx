@@ -31,53 +31,62 @@ const formatMoneyInput = (value) => {
   return new Intl.NumberFormat("vi-VN").format(number);
 };
 
-export default function AddRoomModal({
+const toForm = (room) => ({
+  property_id: room?.property_id || "",
+  name: room?.name || "",
+  floor_number:
+    room?.floor_number === null || room?.floor_number === undefined
+      ? ""
+      : String(room.floor_number),
+  area:
+    room?.area === null || room?.area === undefined ? "" : String(room.area),
+  current_price: formatMoneyInput(room?.current_price || ""),
+  max_occupants:
+    room?.max_occupants === null || room?.max_occupants === undefined
+      ? ""
+      : String(room.max_occupants),
+  status: room?.status || "available",
+  billing_day:
+    room?.billing_day === null || room?.billing_day === undefined
+      ? ""
+      : String(room.billing_day),
+  allow_shared: Boolean(room?.allow_shared),
+  is_public: Boolean(room?.is_public),
+  description: room?.description || "",
+});
+
+export default function EditRoomModal({
   open,
   onClose,
   onSubmit,
   isSubmitting = false,
-  property,
-  properties = [],
+  room,
 }) {
   const [form, setForm] = useState(initialForm);
-  const [images, setImages] = useState([]);
-  const [coverImageIndex, setCoverImageIndex] = useState(0);
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
+  const [deletedImageIds, setDeletedImageIds] = useState([]);
+  const [coverImage, setCoverImage] = useState({
+    type: "existing",
+    id: null,
+    index: null,
+  });
   const [clientError, setClientError] = useState("");
 
-  const selectedProperty = useMemo(() => {
-    if (property?.id) return property;
-
-    return (
-      properties.find((item) => String(item.id) === String(form.property_id)) ||
-      null
-    );
-  }, [property, properties, form.property_id]);
-
   const floorOptions = useMemo(() => {
-    const floorsCount = Number(selectedProperty?.floors_count || 0);
-
-    if (!floorsCount) {
-      return [
-        { value: "", label: "Không xác định" },
-        { value: "0", label: "Trệt" },
-        { value: "1", label: "Tầng 1" },
-        { value: "2", label: "Tầng 2" },
-        { value: "3", label: "Tầng 3" },
-      ];
-    }
-
     return [
       { value: "", label: "Không xác định" },
       { value: "0", label: "Trệt" },
-      ...Array.from({ length: floorsCount }).map((_, index) => ({
-        value: String(index + 1),
-        label: `Tầng ${index + 1}`,
-      })),
+      { value: "1", label: "Tầng 1" },
+      { value: "2", label: "Tầng 2" },
+      { value: "3", label: "Tầng 3" },
+      { value: "4", label: "Tầng 4" },
+      { value: "5", label: "Tầng 5" },
     ];
-  }, [selectedProperty?.floors_count]);
+  }, []);
 
   const clearImages = () => {
-    setImages((currentImages) => {
+    setNewImages((currentImages) => {
       currentImages.forEach((image) => {
         URL.revokeObjectURL(image.previewUrl);
       });
@@ -85,7 +94,13 @@ export default function AddRoomModal({
       return [];
     });
 
-    setCoverImageIndex(0);
+    setExistingImages([]);
+    setDeletedImageIds([]);
+    setCoverImage({
+      type: "existing",
+      id: null,
+      index: null,
+    });
   };
 
   const resetForm = () => {
@@ -104,9 +119,22 @@ export default function AddRoomModal({
   useEffect(() => {
     if (!open) return;
 
-    setForm(initialForm);
+    setForm(toForm(room));
     setClientError("");
-    setCoverImageIndex(0);
+
+    const roomImages = room?.images || [];
+    setExistingImages(roomImages);
+    setNewImages([]);
+    setDeletedImageIds([]);
+
+    const currentCover = roomImages.find((image) => image.is_cover);
+    const firstImage = roomImages[0];
+
+    setCoverImage({
+      type: "existing",
+      id: currentCover?.id || firstImage?.id || null,
+      index: null,
+    });
 
     const handleEsc = (event) => {
       if (event.key === "Escape") {
@@ -121,7 +149,7 @@ export default function AddRoomModal({
       document.removeEventListener("keydown", handleEsc);
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [open, room]);
 
   if (!open) return null;
 
@@ -144,7 +172,8 @@ export default function AddRoomModal({
 
     if (!selectedFiles.length) return;
 
-    const remainingSlots = MAX_IMAGES - images.length;
+    const remainingSlots =
+      MAX_IMAGES - existingImages.length - newImages.length;
 
     if (remainingSlots <= 0) {
       setClientError("Chỉ được tải tối đa 5 ảnh cho mỗi phòng.");
@@ -171,38 +200,114 @@ export default function AddRoomModal({
       previewUrl: URL.createObjectURL(file),
     }));
 
-    setImages((prev) => [...prev, ...previewImages]);
+    setNewImages((prev) => {
+      const nextImages = [...prev, ...previewImages];
+
+      if (
+        !coverImage.id &&
+        coverImage.index === null &&
+        nextImages.length > 0
+      ) {
+        setCoverImage({
+          type: "new",
+          id: null,
+          index: 0,
+        });
+      }
+
+      return nextImages;
+    });
 
     event.target.value = "";
   };
 
-  const handleRemoveImage = (index) => {
-    setImages((prev) => {
+  const handleRemoveExistingImage = (image) => {
+    setExistingImages((prev) => {
+      const nextImages = prev.filter((item) => item.id !== image.id);
+
+      if (coverImage.type === "existing" && coverImage.id === image.id) {
+        if (nextImages.length > 0) {
+          setCoverImage({
+            type: "existing",
+            id: nextImages[0].id,
+            index: null,
+          });
+        } else if (newImages.length > 0) {
+          setCoverImage({
+            type: "new",
+            id: null,
+            index: 0,
+          });
+        } else {
+          setCoverImage({
+            type: "existing",
+            id: null,
+            index: null,
+          });
+        }
+      }
+
+      return nextImages;
+    });
+
+    setDeletedImageIds((prev) => [...prev, image.id]);
+  };
+
+  const handleRemoveNewImage = (index) => {
+    setNewImages((prev) => {
       const targetImage = prev[index];
 
       if (targetImage?.previewUrl) {
         URL.revokeObjectURL(targetImage.previewUrl);
       }
 
-      return prev.filter((_, currentIndex) => currentIndex !== index);
-    });
+      const nextImages = prev.filter(
+        (_, currentIndex) => currentIndex !== index,
+      );
 
-    setCoverImageIndex((prev) => {
-      if (prev === index) return 0;
-      if (prev > index) return prev - 1;
-      return prev;
+      if (coverImage.type === "new") {
+        if (coverImage.index === index) {
+          if (existingImages.length > 0) {
+            setCoverImage({
+              type: "existing",
+              id: existingImages[0].id,
+              index: null,
+            });
+          } else if (nextImages.length > 0) {
+            setCoverImage({
+              type: "new",
+              id: null,
+              index: 0,
+            });
+          } else {
+            setCoverImage({
+              type: "existing",
+              id: null,
+              index: null,
+            });
+          }
+        } else if (coverImage.index > index) {
+          setCoverImage((prevCover) => ({
+            ...prevCover,
+            index: prevCover.index - 1,
+          }));
+        }
+      }
+
+      return nextImages;
     });
   };
+
+  const isOccupiedRoom = room?.status === "occupied";
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const targetPropertyId = property?.id || form.property_id;
-
-    if (!targetPropertyId) {
-      setClientError("Vui lòng chọn khu nhà trước khi thêm phòng.");
+    if (!room?.id) {
+      setClientError("Không tìm thấy phòng cần cập nhật.");
       return;
     }
+
     if (!form.name.trim()) {
       setClientError("Vui lòng nhập tên hoặc số phòng.");
       return;
@@ -215,6 +320,8 @@ export default function AddRoomModal({
 
     const payload = new FormData();
 
+    payload.append("_method", "PUT");
+
     payload.append("name", form.name.trim());
     payload.append("floor_number", form.floor_number);
     payload.append("area", form.area || "");
@@ -223,19 +330,31 @@ export default function AddRoomModal({
       "max_occupants",
       form.max_occupants === "" ? "0" : String(form.max_occupants),
     );
-    payload.append("status", form.status || "available");
+    if (!isOccupiedRoom) {
+      payload.append("status", form.status || "available");
+    }
     payload.append("billing_day", form.billing_day || "");
     payload.append("allow_shared", form.allow_shared ? "1" : "0");
     payload.append("is_public", form.is_public ? "1" : "0");
     payload.append("description", form.description || "");
 
-    images.forEach((image) => {
+    deletedImageIds.forEach((id) => {
+      payload.append("deleted_image_ids[]", String(id));
+    });
+
+    newImages.forEach((image) => {
       payload.append("images[]", image.file);
     });
 
-    payload.append("cover_image_index", String(coverImageIndex || 0));
+    if (coverImage.type === "existing" && coverImage.id) {
+      payload.append("cover_image_id", String(coverImage.id));
+    }
 
-    onSubmit(payload, targetPropertyId);
+    if (coverImage.type === "new" && coverImage.index !== null) {
+      payload.append("cover_image_index", String(coverImage.index));
+    }
+
+    onSubmit(payload, room);
   };
 
   return (
@@ -264,10 +383,10 @@ export default function AddRoomModal({
 
             <div>
               <h2 className="text-[17px] sm:text-[19px] font-bold text-slate-800 leading-tight">
-                Thêm phòng mới
+                Cập nhật phòng
               </h2>
               <p className="text-[12px] text-slate-500 mt-0.5 hidden sm:block">
-                Điền thông tin cơ bản để bắt đầu quản lý phòng
+                Cập nhật thông tin, hình ảnh và trạng thái phòng
               </p>
             </div>
           </div>
@@ -298,29 +417,12 @@ export default function AddRoomModal({
                   </label>
 
                   <div className="relative">
-                    <select
-                      value={property?.id || form.property_id}
-                      disabled={Boolean(property?.id)}
-                      onChange={handleChange("property_id")}
-                      className={`w-full pl-3.5 pr-10 py-2.5 sm:py-2 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand appearance-none ${
-                        property?.id
-                          ? "bg-slate-50 cursor-not-allowed"
-                          : "bg-white cursor-pointer"
-                      }`}
-                    >
-                      {property?.id ? (
-                        <option value={property.id}>{property.name}</option>
-                      ) : (
-                        <>
-                          <option value="">Chọn khu nhà</option>
-                          {properties.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </>
-                      )}
-                    </select>
+                    <input
+                      type="text"
+                      value={room?.property?.name || "Không xác định"}
+                      disabled
+                      className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-500 cursor-not-allowed"
+                    />
                     <i className="fa-solid fa-angle-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[12px] pointer-events-none"></i>
                   </div>
                 </div>
@@ -425,36 +527,43 @@ export default function AddRoomModal({
                     Trạng thái phòng
                   </label>
 
-                  <div className="flex gap-3">
-                    <label className="flex-1 relative cursor-pointer">
-                      <input
-                        type="radio"
-                        name="status"
-                        value="available"
-                        checked={form.status === "available"}
-                        onChange={handleChange("status")}
-                        required
-                        className="peer sr-only"
-                      />
-                      <div className="w-full text-center px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 peer-checked:border-brand peer-checked:bg-brand/5 peer-checked:text-brand transition-all">
-                        Trống
-                      </div>
-                    </label>
+                  {isOccupiedRoom ? (
+                    <div className="px-3 py-2 rounded-lg border border-green-200 bg-green-50 text-[13px] font-semibold text-green-600 flex items-center gap-2">
+                      <i className="fa-solid fa-building-circle-check"></i>
+                      Đang thuê - trạng thái này được quản lý bởi hợp đồng
+                    </div>
+                  ) : (
+                    <div className="flex gap-3">
+                      <label className="flex-1 relative cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          value="available"
+                          checked={form.status === "available"}
+                          onChange={handleChange("status")}
+                          required
+                          className="peer sr-only"
+                        />
+                        <div className="w-full text-center px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 peer-checked:border-brand peer-checked:bg-brand/5 peer-checked:text-brand transition-all">
+                          Trống
+                        </div>
+                      </label>
 
-                    <label className="flex-1 relative cursor-pointer">
-                      <input
-                        type="radio"
-                        name="status"
-                        value="maintenance"
-                        checked={form.status === "maintenance"}
-                        onChange={handleChange("status")}
-                        className="peer sr-only"
-                      />
-                      <div className="w-full text-center px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-600 transition-all">
-                        Bảo trì
-                      </div>
-                    </label>
-                  </div>
+                      <label className="flex-1 relative cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          value="maintenance"
+                          checked={form.status === "maintenance"}
+                          onChange={handleChange("status")}
+                          className="peer sr-only"
+                        />
+                        <div className="w-full text-center px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-600 transition-all">
+                          Bảo trì
+                        </div>
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -587,16 +696,59 @@ export default function AddRoomModal({
                       />
                     </label>
 
-                    {images.map((image, index) => (
+                    {existingImages.map((image) => (
+                      <div
+                        key={image.id}
+                        className="shrink-0 w-[100px] h-[100px] rounded-xl border border-slate-200 relative overflow-hidden group snap-start shadow-sm"
+                      >
+                        {coverImage.type === "existing" &&
+                          coverImage.id === image.id && (
+                            <div className="absolute top-0 left-0 bg-brand text-white text-[9px] font-bold px-1.5 py-0.5 rounded-br-lg z-10">
+                              Ảnh bìa
+                            </div>
+                          )}
+
+                        <img
+                          src={image.image_url}
+                          className="w-full h-full object-cover"
+                          alt="Room"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setCoverImage({
+                              type: "existing",
+                              id: image.id,
+                              index: null,
+                            })
+                          }
+                          className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 bg-black/50 hover:bg-brand rounded text-white text-[9px] font-semibold transition-all"
+                        >
+                          Bìa
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingImage(image)}
+                          className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/50 hover:bg-red-500 rounded-full text-white flex items-center justify-center text-[10px] opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                          <i className="fa-solid fa-xmark"></i>
+                        </button>
+                      </div>
+                    ))}
+
+                    {newImages.map((image, index) => (
                       <div
                         key={image.previewUrl}
                         className="shrink-0 w-[100px] h-[100px] rounded-xl border border-slate-200 relative overflow-hidden group snap-start shadow-sm"
                       >
-                        {coverImageIndex === index && (
-                          <div className="absolute top-0 left-0 bg-brand text-white text-[9px] font-bold px-1.5 py-0.5 rounded-br-lg z-10">
-                            Ảnh bìa
-                          </div>
-                        )}
+                        {coverImage.type === "new" &&
+                          coverImage.index === index && (
+                            <div className="absolute top-0 left-0 bg-brand text-white text-[9px] font-bold px-1.5 py-0.5 rounded-br-lg z-10">
+                              Ảnh bìa
+                            </div>
+                          )}
 
                         <img
                           src={image.previewUrl}
@@ -606,7 +758,13 @@ export default function AddRoomModal({
 
                         <button
                           type="button"
-                          onClick={() => setCoverImageIndex(index)}
+                          onClick={() =>
+                            setCoverImage({
+                              type: "new",
+                              id: null,
+                              index,
+                            })
+                          }
                           className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 bg-black/50 hover:bg-brand rounded text-white text-[9px] font-semibold transition-all"
                         >
                           Bìa
@@ -614,7 +772,7 @@ export default function AddRoomModal({
 
                         <button
                           type="button"
-                          onClick={() => handleRemoveImage(index)}
+                          onClick={() => handleRemoveNewImage(index)}
                           className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/50 hover:bg-red-500 rounded-full text-white flex items-center justify-center text-[10px] opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all"
                         >
                           <i className="fa-solid fa-xmark"></i>
@@ -659,18 +817,18 @@ export default function AddRoomModal({
 
             <button
               type="submit"
-              disabled={isSubmitting || !(property?.id || form.property_id)}
+              disabled={isSubmitting || !room?.id}
               className="flex-1 sm:flex-none px-8 py-3 sm:py-2.5 bg-brand text-white rounded-xl text-[14px] font-bold hover:bg-brand-dark transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand/30 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  Đang tạo...
+                  Đang lưu...
                 </>
               ) : (
                 <>
                   <i className="fa-solid fa-check text-[14px]"></i>
-                  Tạo phòng ngay
+                  Lưu thay đổi
                 </>
               )}
             </button>

@@ -1,15 +1,53 @@
-export default function RoomTable() {
-  const rooms = [
-    { id: "A101", floor: "Tầng 1", building: "Khu A", address: "Đường Lê Văn Sỹ", area: "25 m²", price: "2.800.000đ", status: "Đang thuê", paymentStatus: "Đã thanh toán", tenant: "Nguyễn Văn B", phone: "0901 234 567", expire: "10/06/2024", expireDays: "21 ngày" },
-    { id: "A102", floor: "Tầng 1", building: "Khu A", address: "Đường Lê Văn Sỹ", area: "22 m²", price: "2.600.000đ", status: "Đang thuê", paymentStatus: "Quá hạn 3 ngày", isLate: true, tenant: "Trần Thị C", phone: "0902 345 678", expire: "08/06/2024", expireDays: "19 ngày", isExpireNear: true },
-    { id: "A103", floor: "Tầng 1", building: "Khu A", address: "Đường Lê Văn Sỹ", area: "20 m²", price: "2.500.000đ", status: "Trống", paymentStatus: "—", tenant: "—", phone: "—", expire: "—", expireDays: "" },
-    { id: "B201", floor: "Tầng 2", building: "Khu B", address: "Đường Nguyễn Văn Đậu", area: "24 m²", price: "2.700.000đ", status: "Đang thuê", paymentStatus: "Sắp đến hạn", isWarning: true, tenant: "Phạm Thị E", phone: "0904 567 890", expire: "25/05/2024", expireDays: "5 ngày", isExpireNear: true },
-    { id: "B202", floor: "Tầng 2", building: "Khu B", address: "Đường Nguyễn Văn Đậu", area: "22 m²", price: "2.600.000đ", status: "Đang thuê", paymentStatus: "Đã thanh toán", tenant: "Hoàng Văn F", phone: "0905 678 901", expire: "05/06/2024", expireDays: "16 ngày" },
-    { id: "C301", floor: "Tầng 3", building: "Khu C", address: "Đường Hoàng Văn Thụ", area: "28 m²", price: "3.000.000đ", status: "Đang thuê", paymentStatus: "Quá hạn 7 ngày", isLate: true, tenant: "Lê Văn D", phone: "0903 456 789", expire: "03/06/2024", expireDays: "14 ngày", isExpireNear: true },
-    { id: "C302", floor: "Tầng 3", building: "Khu C", address: "Đường Hoàng Văn Thụ", area: "25 m²", price: "2.800.000đ", status: "Bảo trì", paymentStatus: "—", tenant: "—", phone: "—", expire: "—", expireDays: "" },
-    { id: "D101", floor: "Tầng 1", building: "Khu D", address: "Đường Tô Hiến Thành", area: "20 m²", price: "2.500.000đ", status: "Trống", paymentStatus: "—", tenant: "—", phone: "—", expire: "—", expireDays: "" },
-  ];
+const formatCurrency = (value) => {
+  const number = Number(value || 0);
+  return `${new Intl.NumberFormat("vi-VN").format(number)}đ`;
+};
 
+const getStatusConfig = (status) => {
+  switch (status) {
+    case "occupied":
+      return {
+        label: "Đang thuê",
+        className: "bg-green-50 text-green-600",
+      };
+
+    case "maintenance":
+      return {
+        label: "Bảo trì",
+        className: "bg-orange-50 text-orange-500",
+      };
+
+    case "available":
+    default:
+      return {
+        label: "Trống",
+        className: "bg-blue-50 text-blue-500",
+      };
+  }
+};
+
+const formatFloor = (floorNumber) => {
+  if (floorNumber === null || floorNumber === undefined || floorNumber === "") {
+    return "Không xác định";
+  }
+
+  if (Number(floorNumber) === 0) return "Trệt";
+
+  return `Tầng ${floorNumber}`;
+};
+
+export default function RoomTable({
+  rooms = [],
+  pagination,
+  page,
+  onPageChange,
+  isLoading = false,
+  searchText = "",
+  onSearchTextChange,
+  status = "",
+  onStatusChange,
+  onEditRoom,
+}) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm mb-6 flex flex-col">
       {/* Filters */}
@@ -17,10 +55,23 @@ export default function RoomTable() {
         <div className="flex flex-wrap gap-3 flex-1">
           <div className="relative w-[240px]">
             <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" placeholder="Tìm kiếm phòng, người thuê, SĐT..." className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand focus:ring-1 focus:ring-brand outline-none" />
+            <input
+              type="text"
+              value={searchText}
+              onChange={(event) => onSearchTextChange?.(event.target.value)}
+              placeholder="Tìm kiếm phòng, khu nhà..."
+              className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+            />
           </div>
-          <select className="border border-slate-200 rounded-lg text-[13px] px-3 py-2 text-slate-600 outline-none focus:border-brand">
-            <option>Tất cả khu nhà</option>
+          <select
+            value={status}
+            onChange={(event) => onStatusChange?.(event.target.value)}
+            className="border border-slate-200 rounded-lg text-[13px] px-3 py-2 text-slate-600 outline-none focus:border-brand"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="available">Phòng trống</option>
+            <option value="occupied">Đang thuê</option>
+            <option value="maintenance">Bảo trì</option>
           </select>
           <select className="border border-slate-200 rounded-lg text-[13px] px-3 py-2 text-slate-600 outline-none focus:border-brand">
             <option>Trạng thái thuê</option>
@@ -36,7 +87,9 @@ export default function RoomTable() {
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <button className="text-[13px] text-slate-500 hover:text-slate-800 px-2">Xóa lọc</button>
+          <button className="text-[13px] text-slate-500 hover:text-slate-800 px-2">
+            Xóa lọc
+          </button>
           <button className="bg-brand-50 text-brand border border-green-200 rounded-lg px-3 py-2 text-[13px] font-medium hover:bg-green-100 flex items-center gap-2">
             <i className="fa-regular fa-floppy-disk"></i> Lưu bộ lọc
           </button>
@@ -48,96 +101,202 @@ export default function RoomTable() {
         <table className="w-full text-left whitespace-nowrap">
           <thead className="bg-slate-50/50 text-[12px] text-slate-500 font-medium">
             <tr>
-              <th className="py-3 px-4 border-b border-slate-100 w-[40px]"><input type="checkbox" className="rounded border-slate-300 text-brand focus:ring-brand" /></th>
-              <th className="py-3 px-4 border-b border-slate-100">Phòng <i className="fa-solid fa-sort ml-1 text-slate-300"></i></th>
-              <th className="py-3 px-4 border-b border-slate-100">Khu nhà <i className="fa-solid fa-sort ml-1 text-slate-300"></i></th>
-              <th className="py-3 px-4 border-b border-slate-100">Diện tích <i className="fa-solid fa-sort ml-1 text-slate-300"></i></th>
-              <th className="py-3 px-4 border-b border-slate-100">Giá phòng <i className="fa-solid fa-sort ml-1 text-slate-300"></i></th>
-              <th className="py-3 px-4 border-b border-slate-100">Trạng thái thuê <i className="fa-solid fa-sort ml-1 text-slate-300"></i></th>
-              <th className="py-3 px-4 border-b border-slate-100">Thanh toán <i className="fa-solid fa-sort ml-1 text-slate-300"></i></th>
-              <th className="py-3 px-4 border-b border-slate-100">Người thuê <i className="fa-solid fa-sort ml-1 text-slate-300"></i></th>
-              <th className="py-3 px-4 border-b border-slate-100">HĐ hết hạn <i className="fa-solid fa-sort ml-1 text-slate-300"></i></th>
-              <th className="py-3 px-4 border-b border-slate-100 text-center">Thao tác</th>
+              <th className="py-3 px-4 border-b border-slate-100 w-[40px]">
+                <input
+                  type="checkbox"
+                  className="rounded border-slate-300 text-brand focus:ring-brand"
+                />
+              </th>
+              <th className="py-3 px-4 border-b border-slate-100">
+                Phòng <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
+              </th>
+              <th className="py-3 px-4 border-b border-slate-100">
+                Khu nhà <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
+              </th>
+              <th className="py-3 px-4 border-b border-slate-100">
+                Diện tích{" "}
+                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
+              </th>
+              <th className="py-3 px-4 border-b border-slate-100">
+                Giá phòng{" "}
+                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
+              </th>
+              <th className="py-3 px-4 border-b border-slate-100">
+                Trạng thái thuê{" "}
+                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
+              </th>
+              <th className="py-3 px-4 border-b border-slate-100">
+                Thanh toán{" "}
+                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
+              </th>
+              <th className="py-3 px-4 border-b border-slate-100">
+                Người thuê{" "}
+                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
+              </th>
+              <th className="py-3 px-4 border-b border-slate-100">
+                HĐ hết hạn{" "}
+                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
+              </th>
+              <th className="py-3 px-4 border-b border-slate-100 text-center">
+                Thao tác
+              </th>
             </tr>
           </thead>
           <tbody className="text-[13px]">
-            {rooms.map((room, idx) => (
-              <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                <td className="py-3 px-4"><input type="checkbox" className="rounded border-slate-300 text-brand focus:ring-brand" /></td>
-                <td className="py-3 px-4">
-                  <p className="font-bold text-slate-800">{room.id}</p>
-                  <p className="text-[11px] text-slate-500">{room.floor}</p>
-                </td>
-                <td className="py-3 px-4">
-                  <p className="font-bold text-slate-800">{room.building}</p>
-                  <p className="text-[11px] text-slate-500">{room.address}</p>
-                </td>
-                <td className="py-3 px-4 text-slate-600">{room.area}</td>
-                <td className="py-3 px-4 font-bold text-slate-800">{room.price}</td>
-                <td className="py-3 px-4">
-                  {room.status === "Đang thuê" && <span className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-green-50 text-green-600">Đang thuê</span>}
-                  {room.status === "Trống" && <span className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-500">Trống</span>}
-                  {room.status === "Bảo trì" && <span className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-orange-50 text-orange-500">Bảo trì</span>}
-                </td>
-                <td className="py-3 px-4">
-                  {room.paymentStatus === "Đã thanh toán" && <span className="px-2.5 py-1 rounded-full border border-green-200 text-[11px] font-medium text-green-600 bg-green-50/50 flex items-center w-max gap-1.5"><i className="fa-regular fa-circle-check"></i> Đã thanh toán</span>}
-                  {room.isLate && <span className="px-2.5 py-1 rounded-full border border-red-200 text-[11px] font-medium text-red-600 bg-red-50/50 flex items-center w-max gap-1.5"><i className="fa-solid fa-triangle-exclamation"></i> {room.paymentStatus}</span>}
-                  {room.isWarning && <span className="px-2.5 py-1 rounded-full border border-orange-200 text-[11px] font-medium text-orange-500 bg-orange-50/50 flex items-center w-max gap-1.5"><i className="fa-regular fa-clock"></i> {room.paymentStatus}</span>}
-                  {room.paymentStatus === "—" && <span className="text-slate-400">—</span>}
-                </td>
-                <td className="py-3 px-4">
-                  {room.tenant !== "—" ? (
-                    <>
-                      <p className="font-semibold text-slate-800">{room.tenant}</p>
-                      <p className="text-[11px] text-slate-500">{room.phone}</p>
-                    </>
-                  ) : <span className="text-slate-400">—</span>}
-                </td>
-                <td className="py-3 px-4">
-                   {room.expire !== "—" ? (
-                    <>
-                      <p className={`font-semibold ${room.isExpireNear ? 'text-red-500' : 'text-slate-800'}`}>{room.expire}</p>
-                      <p className={`text-[11px] ${room.isExpireNear ? 'text-orange-500' : 'text-slate-500'}`}>{room.expireDays}</p>
-                    </>
-                  ) : <span className="text-slate-400">—</span>}
-                </td>
-                <td className="py-3 px-4">
-                  {room.status === "Trống" ? (
-                    <div className="flex justify-center gap-2">
-                       <button className="w-8 h-8 rounded border border-green-200 text-brand hover:bg-green-50 flex items-center justify-center"><i className="fa-solid fa-plus"></i></button>
-                       <button className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i className="fa-regular fa-eye"></i></button>
-                       <button className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i className="fa-solid fa-ellipsis-vertical"></i></button>
-                    </div>
-                  ) : (
-                    <div className="flex justify-center gap-2">
-                      <button className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i className="fa-regular fa-eye"></i></button>
-                      <button className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i className="fa-solid fa-file-contract"></i></button>
-                      <button className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i className="fa-solid fa-droplet"></i></button>
-                      <button className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i className="fa-solid fa-ellipsis-vertical"></i></button>
-                    </div>
-                  )}
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <tr
+                  key={index}
+                  className="border-b border-slate-50 animate-pulse"
+                >
+                  <td colSpan={10} className="py-3 px-4">
+                    <div className="h-8 bg-slate-100 rounded"></div>
+                  </td>
+                </tr>
+              ))
+            ) : rooms.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={10}
+                  className="py-10 px-4 text-center text-slate-400"
+                >
+                  Chưa có phòng phù hợp.
                 </td>
               </tr>
-            ))}
+            ) : (
+              rooms.map((room) => {
+                const statusConfig = getStatusConfig(room.status);
+
+                return (
+                  <tr
+                    key={room.id}
+                    className="border-b border-slate-50 hover:bg-slate-50 transition-colors"
+                  >
+                    <td className="py-3 px-4">
+                      <input
+                        type="checkbox"
+                        className="rounded border-slate-300 text-brand focus:ring-brand"
+                      />
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <p className="font-bold text-slate-800">{room.name}</p>
+                      <p className="text-[11px] text-slate-500">
+                        {formatFloor(room.floor_number)}
+                      </p>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <p className="font-bold text-slate-800">
+                        {room.property?.name || "—"}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        {room.property?.address || "—"}
+                      </p>
+                    </td>
+
+                    <td className="py-3 px-4 text-slate-600">
+                      {room.area ? `${room.area} m²` : "—"}
+                    </td>
+
+                    <td className="py-3 px-4 font-bold text-slate-800">
+                      {formatCurrency(room.current_price)}
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-medium ${statusConfig.className}`}
+                      >
+                        {room.status_label || statusConfig.label}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className="text-slate-400">—</span>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className="text-slate-400">—</span>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className="text-slate-400">—</span>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <div className="flex justify-center gap-2">
+                        <button
+                          type="button"
+                          className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center"
+                          title="Xem chi tiết"
+                        >
+                          <i className="fa-regular fa-eye"></i>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onEditRoom?.(room)}
+                          className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-brand hover:border-green-200 hover:bg-green-50 flex items-center justify-center"
+                          title="Sửa phòng"
+                        >
+                          <i className="fa-regular fa-pen-to-square"></i>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center"
+                          title="Thao tác khác"
+                        >
+                          <i className="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Pagination */}
       <div className="p-4 border-t border-slate-100 flex items-center justify-between">
-        <span className="text-[13px] text-slate-500">Hiển thị 1 - 10 trong tổng số 120 phòng</span>
+        <span className="text-[13px] text-slate-500">
+          {pagination ? (
+            <>
+              Hiển thị {pagination.from || 0} - {pagination.to || 0} trong tổng
+              số {pagination.total || 0} phòng
+            </>
+          ) : (
+            "Chưa có dữ liệu phòng"
+          )}
+        </span>
+
         <div className="flex items-center gap-4">
           <div className="flex gap-1">
-            <button className="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50"><i className="fa-solid fa-angle-left"></i></button>
-            <button className="w-8 h-8 rounded bg-brand text-white font-medium flex items-center justify-center">1</button>
-            <button className="w-8 h-8 rounded border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 flex items-center justify-center">2</button>
-            <button className="w-8 h-8 rounded border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 flex items-center justify-center">3</button>
-            <button className="w-8 h-8 rounded border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 flex items-center justify-center">4</button>
-            <button className="w-8 h-8 rounded border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 flex items-center justify-center">5</button>
-            <span className="w-8 h-8 flex items-center justify-center text-slate-400">...</span>
-            <button className="w-8 h-8 rounded border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 flex items-center justify-center">12</button>
-            <button className="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50"><i className="fa-solid fa-angle-right"></i></button>
+            <button
+              type="button"
+              disabled={!pagination || page <= 1}
+              onClick={() => onPageChange?.(Math.max(1, page - 1))}
+              className="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <i className="fa-solid fa-angle-left"></i>
+            </button>
+
+            <button className="w-8 h-8 rounded bg-brand text-white font-medium flex items-center justify-center">
+              {pagination?.current_page || 1}
+            </button>
+
+            <button
+              type="button"
+              disabled={!pagination || page >= pagination.last_page}
+              onClick={() => onPageChange?.(page + 1)}
+              className="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <i className="fa-solid fa-angle-right"></i>
+            </button>
           </div>
+
           <select className="border border-slate-200 rounded-lg text-[13px] px-3 py-1.5 text-slate-600 outline-none focus:border-brand">
             <option>10 / trang</option>
           </select>

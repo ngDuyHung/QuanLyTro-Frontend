@@ -1,6 +1,7 @@
 import api from "./api";
 
 const roomService = {
+  getAll: (params) => api.get("/rooms", { params }),
   getByProperty: (propertyId, params) =>
     api.get(`/properties/${propertyId}/rooms`, { params }),
 
@@ -9,7 +10,7 @@ const roomService = {
 
   getById: (id) => api.get(`/rooms/${id}`),
 
-  update: (id, data) => api.put(`/rooms/${id}`, data),
+  update: (id, data) => api.post(`/rooms/${id}`, data),
 
   delete: (id) => api.delete(`/rooms/${id}`),
 
