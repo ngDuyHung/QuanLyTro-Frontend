@@ -1,11 +1,5 @@
 import { useState } from "react";
 
-const fallbackImages = [
-  "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=300",
-  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=300",
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=300",
-];
-
 const getStatusConfig = (status) => {
   switch (status) {
     case "inactive":
@@ -30,7 +24,7 @@ function PropertyActionMenu({ property, onEdit, onDelete }) {
   const hasRooms = totalRooms > 0;
 
   return (
-    <div className="absolute right-0 top-full mt-1 w-52 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 z-30 overflow-hidden">
+    <div className="absolute right-0 top-full mt-1 w-56 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 z-30 overflow-hidden">
       <button
         type="button"
         onClick={(event) => {
@@ -39,27 +33,129 @@ function PropertyActionMenu({ property, onEdit, onDelete }) {
         }}
         className="w-full px-3.5 py-2.5 text-left text-[13px] font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
       >
-        <i className="fa-regular fa-pen-to-square w-4 text-center text-[12px]"></i>
+        <i className="fa-regular fa-pen-to-square w-4 text-center text-[12px] text-brand"></i>
         <span>Sửa thông tin</span>
       </button>
 
       <button
         type="button"
+        disabled={hasRooms}
         onClick={(event) => {
           event.stopPropagation();
+
+          if (hasRooms) return;
+
           onDelete?.(property);
         }}
-        className="w-full px-3.5 py-2.5 text-left text-[13px] font-medium text-red-600 hover:bg-red-50 flex items-center gap-2.5"
+        className={`w-full px-3.5 py-2.5 text-left text-[13px] font-medium flex items-center gap-2.5 ${
+          hasRooms
+            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
+            : "text-red-600 hover:bg-red-50"
+        }`}
       >
         <i className="fa-regular fa-trash-can w-4 text-center text-[12px]"></i>
         <span>Xóa khu nhà</span>
       </button>
 
       {hasRooms && (
-        <div className="px-3.5 py-2 bg-slate-50 border-t border-slate-100 text-[11px] leading-4 text-slate-500">
+        <div className="px-3.5 py-2 bg-amber-50 border-t border-amber-100 text-[11px] leading-4 text-amber-700">
           Chỉ xóa được khi khu nhà chưa có phòng.
         </div>
       )}
+    </div>
+  );
+}
+
+function MobilePropertyActionSheet({
+  property,
+  open,
+  onClose,
+  onEdit,
+  onDelete,
+}) {
+  if (!open || !property) return null;
+
+  const totalRooms = property.total_rooms ?? property.rooms_count ?? 0;
+  const hasRooms = totalRooms > 0;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] lg:hidden bg-slate-900/50 backdrop-blur-[2px] flex items-end"
+      onClick={onClose}
+    >
+      <div
+        className="w-full bg-white rounded-t-2xl shadow-2xl animate-[slideUp_0.2s_ease-out] overflow-hidden"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="px-5 pt-3 pb-4 border-b border-slate-100">
+          <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-4"></div>
+
+          <p className="text-[13px] text-slate-500">Thao tác khu nhà</p>
+          <h3 className="text-[16px] font-bold text-slate-800 mt-0.5 line-clamp-1">
+            {property.name}
+          </h3>
+        </div>
+
+        <div className="p-3">
+          <button
+            type="button"
+            onClick={() => {
+              onClose?.();
+              onEdit?.(property);
+            }}
+            className="w-full px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-slate-700 hover:bg-slate-50 active:bg-slate-100 flex items-center gap-3"
+          >
+            <span className="w-9 h-9 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0">
+              <i className="fa-regular fa-pen-to-square text-[15px]"></i>
+            </span>
+            <span>Sửa thông tin khu nhà</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={hasRooms}
+            onClick={() => {
+              if (hasRooms) return;
+
+              onClose?.();
+              onDelete?.(property);
+            }}
+            className={`w-full mt-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold flex items-center gap-3 ${
+              hasRooms
+                ? "text-slate-400 bg-slate-50 cursor-not-allowed"
+                : "text-red-600 hover:bg-red-50 active:bg-red-100"
+            }`}
+          >
+            <span
+              className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                hasRooms
+                  ? "bg-slate-100 text-slate-400"
+                  : "bg-red-50 text-red-600"
+              }`}
+            >
+              <i className="fa-regular fa-trash-can text-[15px]"></i>
+            </span>
+            <span>Xóa khu nhà</span>
+          </button>
+
+          {hasRooms && (
+            <div className="mt-2 mx-1 px-3 py-2 rounded-lg bg-amber-50 text-[12px] leading-5 text-amber-700">
+              Khu nhà đang có phòng nên chưa thể xóa. Hãy xóa hoặc chuyển phòng
+              trước.
+            </div>
+          )}
+        </div>
+
+        <div className="px-3 pb-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-3 rounded-xl bg-slate-100 text-[14px] font-semibold text-slate-600 active:bg-slate-200"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -78,10 +174,7 @@ function PropertyCard({
   const totalRooms = property.total_rooms ?? property.rooms_count ?? 0;
   const expectedRooms = property.expected_rooms_count ?? 0;
 
-  const imageUrl =
-    property.cover_image_url ||
-    property.cover_image_path ||
-    fallbackImages[index % fallbackImages.length];
+  const imageUrl = property.cover_image_url || "";
 
   return (
     <div
@@ -101,13 +194,28 @@ function PropertyCard({
     >
       {/* Ảnh Cover */}
       <div className="w-full h-[66px] lg:w-[130px] lg:h-[130px] rounded-lg overflow-hidden shrink-0 mb-2 lg:mb-0">
-        <img
-          src={imageUrl}
-          alt={property.name}
-          className={`w-full h-full object-cover ${
-            property.status === "inactive" ? "grayscale" : ""
-          }`}
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={property.name}
+            className={`w-full h-full object-cover ${
+              property.status === "inactive" ? "grayscale" : ""
+            }`}
+          />
+        ) : (
+          <div
+            className={`w-full h-full flex flex-col items-center justify-center ${
+              property.status === "inactive" ? "grayscale opacity-70" : ""
+            }`}
+          >
+            <div className="w-8 h-8 lg:w-12 lg:h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center">
+              <i className="fa-regular fa-building text-[15px] lg:text-[22px]"></i>
+            </div>
+            <span className="hidden lg:block text-[11px] text-slate-400 mt-2">
+              Chưa có ảnh
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 flex flex-col justify-between min-w-0">
@@ -183,14 +291,6 @@ function PropertyCard({
               >
                 <i className="fa-solid fa-ellipsis-vertical text-[11px]"></i>
               </button>
-
-              {isMenuOpen && (
-                <PropertyActionMenu
-                  property={property}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              )}
             </div>
           </div>
 
@@ -268,6 +368,8 @@ export default function PropertyList({
 
   const total = pagination?.total ?? properties.length;
   const lastPage = pagination?.last_page ?? 1;
+  const activeMenuProperty =
+    properties.find((property) => property.id === activeMenuPropertyId) || null;
 
   const handleToggleMenu = (propertyId) => {
     setActiveMenuPropertyId((currentId) =>
@@ -309,9 +411,7 @@ export default function PropertyList({
           <i className="fa-regular fa-building text-lg"></i>
         </div>
 
-        <p className="text-[14px] font-bold text-slate-700">
-          Chưa có khu nhà
-        </p>
+        <p className="text-[14px] font-bold text-slate-700">Chưa có khu nhà</p>
 
         <p className="text-[12px] text-slate-500 mt-1">
           Bấm “Thêm khu nhà” để tạo khu nhà đầu tiên.
@@ -383,6 +483,13 @@ export default function PropertyList({
           </button>
         </div>
       )}
+      <MobilePropertyActionSheet
+        open={Boolean(activeMenuProperty)}
+        property={activeMenuProperty}
+        onClose={() => setActiveMenuPropertyId(null)}
+        onEdit={handleEditProperty}
+        onDelete={handleDeleteProperty}
+      />
     </>
   );
 }

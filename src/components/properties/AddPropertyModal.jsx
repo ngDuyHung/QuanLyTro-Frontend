@@ -9,6 +9,8 @@ const initialForm = {
   manager_name: "",
   address: "",
   note: "",
+  cover_image: null,
+  cover_image_preview: "",
 };
 
 const generatePropertyCode = (name) => {
@@ -33,6 +35,14 @@ export default function AddPropertyModal({
   isSubmitting = false,
 }) {
   const [form, setForm] = useState(initialForm);
+
+  useEffect(() => {
+    return () => {
+      if (form.cover_image_preview) {
+        URL.revokeObjectURL(form.cover_image_preview);
+      }
+    };
+  }, [form.cover_image_preview]);
 
   useEffect(() => {
     if (!open) return;
@@ -77,14 +87,63 @@ export default function AddPropertyModal({
     });
   };
 
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    setForm((prev) => {
+      if (prev.cover_image_preview) {
+        URL.revokeObjectURL(prev.cover_image_preview);
+      }
+
+      return {
+        ...prev,
+        cover_image: file,
+        cover_image_preview: URL.createObjectURL(file),
+      };
+    });
+
+    event.target.value = "";
+  };
+
+  const handleRemoveImage = () => {
+    setForm((prev) => {
+      if (prev.cover_image_preview) {
+        URL.revokeObjectURL(prev.cover_image_preview);
+      }
+
+      return {
+        ...prev,
+        cover_image: null,
+        cover_image_preview: "",
+      };
+    });
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    onSubmit({
-      ...form,
-      floors_count: Number(form.floors_count || 0),
-      expected_rooms_count: Number(form.expected_rooms_count || 0),
-    });
+    const formData = new FormData();
+
+    formData.append("property_type", "boarding_house");
+    formData.append("name", form.name.trim());
+    formData.append("code", form.code.trim());
+    formData.append("status", form.status);
+    formData.append("floors_count", Number(form.floors_count || 0));
+    formData.append(
+      "expected_rooms_count",
+      Number(form.expected_rooms_count || 0),
+    );
+    formData.append("manager_name", form.manager_name?.trim() || "");
+    formData.append("address", form.address.trim());
+    formData.append("description", form.note?.trim() || "");
+
+    if (form.cover_image) {
+      formData.append("cover_image", form.cover_image);
+    }
+
+    onSubmit(formData);
   };
 
   return (
@@ -106,7 +165,6 @@ export default function AddPropertyModal({
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
         {/* Modal Container */}
         <div className="bg-slate-50 w-full h-[95vh] sm:h-auto sm:max-h-[90vh] sm:max-w-[800px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out]">
-          
           {/* Header (Sticky Top) */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white shrink-0 sticky top-0 z-20">
             <div className="flex items-center gap-3">
@@ -133,14 +191,17 @@ export default function AddPropertyModal({
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col min-h-0 flex-1 overflow-hidden"
+          >
             {/* Body (Scrollable) */}
             <div className="overflow-y-auto no-scrollbar flex-1 pb-6 bg-slate-50">
-              
               {/* 1. Thông tin cơ bản */}
               <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200">
                 <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-circle-info text-[12px]"></i> 1. Thông tin cơ bản
+                  <i className="fa-solid fa-circle-info text-[12px]"></i> 1.
+                  Thông tin cơ bản
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-4">
@@ -209,7 +270,10 @@ export default function AddPropertyModal({
                   {/* Người quản lý */}
                   <div className="sm:col-span-1">
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Người quản lý <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                      Người quản lý{" "}
+                      <span className="text-slate-400 font-normal">
+                        (tùy chọn)
+                      </span>
                     </label>
                     <input
                       type="text"
@@ -257,10 +321,71 @@ export default function AddPropertyModal({
                 </div>
               </div>
 
+              {/* 2. Ảnh đại diện */}
+              <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
+                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
+                  <i className="fa-regular fa-image text-[12px]"></i> 2. Ảnh đại
+                  diện
+                </h3>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-[220px] h-[140px] rounded-xl border border-dashed border-slate-300 bg-slate-50 overflow-hidden flex items-center justify-center">
+                    {form.cover_image_preview ? (
+                      <img
+                        src={form.cover_image_preview}
+                        alt="Ảnh đại diện khu nhà"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-center px-4">
+                        <div className="w-11 h-11 mx-auto rounded-full bg-brand/10 text-brand flex items-center justify-center mb-2">
+                          <i className="fa-regular fa-image text-[18px]"></i>
+                        </div>
+                        <p className="text-[12px] font-medium text-slate-600">
+                          Chưa chọn ảnh
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          JPG, PNG, WEBP tối đa 4MB
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 flex flex-col justify-center">
+                    <label className="inline-flex w-fit items-center gap-2 px-4 py-2.5 rounded-xl bg-brand text-white text-[13px] font-bold cursor-pointer hover:bg-brand-dark transition-colors">
+                      <i className="fa-solid fa-upload text-[12px]"></i>
+                      Chọn ảnh đại diện
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {form.cover_image_preview && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="mt-2 w-fit text-[13px] font-semibold text-red-600 hover:text-red-700"
+                      >
+                        Xóa ảnh đã chọn
+                      </button>
+                    )}
+
+                    <p className="text-[12px] text-slate-500 mt-3 leading-5">
+                      Ảnh này sẽ hiển thị ở danh sách khu nhà và trang giới
+                      thiệu phòng trọ cho khách thuê.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* 2. Địa chỉ (Gộp thành 1 input duy nhất) */}
               <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
                 <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-map-location-dot text-[12px]"></i> 2. Địa chỉ
+                  <i className="fa-solid fa-map-location-dot text-[12px]"></i>{" "}
+                  3. Địa chỉ
                 </h3>
 
                 <div>
@@ -287,12 +412,16 @@ export default function AddPropertyModal({
               {/* 3. Ghi chú */}
               <div className="bg-white px-5 py-5 sm:p-6 mt-2 sm:mt-0">
                 <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-note-sticky text-[12px]"></i> 3. Ghi chú
+                  <i className="fa-solid fa-note-sticky text-[12px]"></i> 4. Ghi
+                  chú
                 </h3>
 
                 <div>
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                    Thông tin thêm <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                    Thông tin thêm{" "}
+                    <span className="text-slate-400 font-normal">
+                      (tùy chọn)
+                    </span>
                   </label>
                   <textarea
                     value={form.note}
@@ -308,7 +437,6 @@ export default function AddPropertyModal({
                   </div>
                 </div>
               </div>
-
             </div>
 
             {/* Footer (Sticky Bottom - Ưu tiên Mobile) */}

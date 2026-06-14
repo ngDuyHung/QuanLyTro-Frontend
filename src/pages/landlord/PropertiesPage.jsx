@@ -86,21 +86,7 @@ export default function PropertiesPage() {
     try {
       setIsCreating(true);
 
-      const payload = {
-        property_type: formData.property_type || "boarding_house",
-        name: formData.name,
-        code: formData.code,
-        status: formData.status || "active",
-        address: formData.address,
-        floors_count: formData.floors_count,
-        expected_rooms_count: formData.expected_rooms_count,
-        manager_name: formData.manager_name || null,
-        latitude: formData.latitude || null,
-        longitude: formData.longitude || null,
-        description: formData.description || formData.note || null,
-      };
-
-      const response = await propertyService.create(payload);
+      const response = await propertyService.create(formData);
 
       toast.success("Tạo khu nhà thành công!", {
         autoClose: 1500,
@@ -131,21 +117,7 @@ export default function PropertiesPage() {
     try {
       setIsUpdating(true);
 
-      const payload = {
-        property_type: formData.property_type || "boarding_house",
-        name: formData.name,
-        code: formData.code,
-        status: formData.status || "active",
-        address: formData.address,
-        floors_count: formData.floors_count,
-        expected_rooms_count: formData.expected_rooms_count,
-        manager_name: formData.manager_name || null,
-        latitude: formData.latitude || null,
-        longitude: formData.longitude || null,
-        description: formData.description || formData.note || null,
-      };
-
-      await propertyService.update(editingProperty.id, payload);
+      await propertyService.update(editingProperty.id, formData);
 
       toast.success("Cập nhật khu nhà thành công!", {
         autoClose: 1500,

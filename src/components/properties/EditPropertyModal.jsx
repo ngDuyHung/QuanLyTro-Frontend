@@ -13,6 +13,9 @@ const initialForm = {
   longitude: "",
   description: "",
   note: "",
+  cover_image: null,
+  cover_image_preview: "",
+  existing_cover_image_url: "",
 };
 
 const generatePropertyCode = (name) => {
@@ -38,6 +41,14 @@ export default function EditPropertyModal({
   property,
 }) {
   const [form, setForm] = useState(initialForm);
+
+  useEffect(() => {
+    return () => {
+      if (form.cover_image_preview) {
+        URL.revokeObjectURL(form.cover_image_preview);
+      }
+    };
+  }, [form.cover_image_preview]);
 
   useEffect(() => {
     if (!open) return;
@@ -83,6 +94,9 @@ export default function EditPropertyModal({
           : "",
       description: property.description || "",
       note: property.description || "",
+      cover_image: null,
+      cover_image_preview: "",
+      existing_cover_image_url: property.cover_image_url || "",
     });
   }, [open, property]);
 
@@ -107,22 +121,74 @@ export default function EditPropertyModal({
     });
   };
 
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    setForm((prev) => {
+      if (prev.cover_image_preview) {
+        URL.revokeObjectURL(prev.cover_image_preview);
+      }
+
+      return {
+        ...prev,
+        cover_image: file,
+        cover_image_preview: URL.createObjectURL(file),
+      };
+    });
+
+    event.target.value = "";
+  };
+
+  const handleRemoveSelectedImage = () => {
+    setForm((prev) => {
+      if (prev.cover_image_preview) {
+        URL.revokeObjectURL(prev.cover_image_preview);
+      }
+
+      return {
+        ...prev,
+        cover_image: null,
+        cover_image_preview: "",
+      };
+    });
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
     const note = form.note?.trim() || "";
 
-    onSubmit({
-      ...form,
-      name: form.name.trim(),
-      code: form.code.trim(),
-      address: form.address.trim(),
-      manager_name: form.manager_name?.trim() || "",
-      floors_count: Number(form.floors_count || 0),
-      expected_rooms_count: Number(form.expected_rooms_count || 0),
-      description: note || null,
-      
-    });
+    const formData = new FormData();
+
+    formData.append("_method", "PUT");
+    formData.append("property_type", form.property_type);
+    formData.append("name", form.name.trim());
+    formData.append("code", form.code.trim());
+    formData.append("status", form.status);
+    formData.append("address", form.address.trim());
+    formData.append("manager_name", form.manager_name?.trim() || "");
+    formData.append("floors_count", Number(form.floors_count || 0));
+    formData.append(
+      "expected_rooms_count",
+      Number(form.expected_rooms_count || 0),
+    );
+    formData.append("description", note || "");
+
+    if (form.latitude) {
+      formData.append("latitude", form.latitude);
+    }
+
+    if (form.longitude) {
+      formData.append("longitude", form.longitude);
+    }
+
+    if (form.cover_image) {
+      formData.append("cover_image", form.cover_image);
+    }
+
+    onSubmit(formData);
   };
 
   const handleClose = () => {
@@ -167,7 +233,7 @@ export default function EditPropertyModal({
 
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isSubmitting}
               className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors shrink-0 disabled:opacity-60"
             >
@@ -305,11 +371,79 @@ export default function EditPropertyModal({
                 </div>
               </div>
 
+              {/* 2. Ảnh đại diện */}
+              <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
+                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
+                  <i className="fa-regular fa-image text-[12px]"></i> 2. Ảnh đại
+                  diện
+                </h3>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-[220px] h-[140px] rounded-xl border border-dashed border-slate-300 bg-slate-50 overflow-hidden flex items-center justify-center">
+                    {form.cover_image_preview ? (
+                      <img
+                        src={form.cover_image_preview}
+                        alt="Ảnh đại diện mới"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : form.existing_cover_image_url ? (
+                      <img
+                        src={form.existing_cover_image_url}
+                        alt="Ảnh đại diện hiện tại"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-center px-4">
+                        <div className="w-11 h-11 mx-auto rounded-full bg-brand/10 text-brand flex items-center justify-center mb-2">
+                          <i className="fa-regular fa-image text-[18px]"></i>
+                        </div>
+                        <p className="text-[12px] font-medium text-slate-600">
+                          Chưa có ảnh đại diện
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          JPG, PNG, WEBP tối đa 4MB
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 flex flex-col justify-center">
+                    <label className="inline-flex w-fit items-center gap-2 px-4 py-2.5 rounded-xl bg-brand text-white text-[13px] font-bold cursor-pointer hover:bg-brand-dark transition-colors">
+                      <i className="fa-solid fa-upload text-[12px]"></i>
+                      {form.existing_cover_image_url || form.cover_image_preview
+                        ? "Đổi ảnh đại diện"
+                        : "Chọn ảnh đại diện"}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {form.cover_image_preview && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveSelectedImage}
+                        className="mt-2 w-fit text-[13px] font-semibold text-red-600 hover:text-red-700"
+                      >
+                        Hủy ảnh mới chọn
+                      </button>
+                    )}
+
+                    <p className="text-[12px] text-slate-500 mt-3 leading-5">
+                      Nếu chọn ảnh mới, hệ thống sẽ thay thế ảnh đại diện hiện
+                      tại của khu nhà.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* 2. Địa chỉ (Gộp thành 1 input duy nhất) */}
               <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
                 <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
                   <i className="fa-solid fa-map-location-dot text-[12px]"></i>{" "}
-                  2. Địa chỉ
+                  3. Địa chỉ
                 </h3>
 
                 <div>
@@ -336,7 +470,7 @@ export default function EditPropertyModal({
               {/* 3. Ghi chú */}
               <div className="bg-white px-5 py-5 sm:p-6 mt-2 sm:mt-0">
                 <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-note-sticky text-[12px]"></i> 3. Ghi
+                  <i className="fa-solid fa-note-sticky text-[12px]"></i> 4. Ghi
                   chú
                 </h3>
 
