@@ -309,6 +309,7 @@ export default function AddRoomModal({
                     value={form.name}
                     onChange={handleChange("name")}
                     placeholder="VD: 101"
+                    required
                     className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-medium"
                   />
                 </div>
@@ -321,6 +322,7 @@ export default function AddRoomModal({
                   <select
                     value={form.floor_number}
                     onChange={handleChange("floor_number")}
+                    required
                     className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand appearance-none cursor-pointer"
                   >
                     {floorOptions.map((floor) => (
@@ -344,6 +346,7 @@ export default function AddRoomModal({
                     min="0"
                     step="0.1"
                     placeholder="VD: 25"
+                    required
                     className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
@@ -359,6 +362,7 @@ export default function AddRoomModal({
                       value={form.current_price}
                       onChange={handleChange("current_price")}
                       placeholder="VD: 2.800.000"
+                      required
                       className="w-full pl-3.5 pr-8 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-bold text-brand"
                     />
 
@@ -380,6 +384,7 @@ export default function AddRoomModal({
                       onChange={handleChange("max_occupants")}
                       min="0"
                       placeholder="VD: 3"
+                      required
                       className="w-full pl-3.5 pr-12 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                     />
 
@@ -402,6 +407,7 @@ export default function AddRoomModal({
                         value="available"
                         checked={form.status === "available"}
                         onChange={handleChange("status")}
+                        required
                         className="peer sr-only"
                       />
                       <div className="w-full text-center px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 peer-checked:border-brand peer-checked:bg-brand/5 peer-checked:text-brand transition-all">

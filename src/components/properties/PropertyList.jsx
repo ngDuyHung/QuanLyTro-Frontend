@@ -259,12 +259,6 @@ function PropertyCard({
             <i className="fa-solid fa-location-dot mt-0.5 text-slate-400 shrink-0"></i>
             {property.address}
           </p>
-
-          {property.code && (
-            <p className="hidden lg:block text-[11px] text-slate-400 mt-1">
-              Mã khu: <span className="font-semibold">{property.code}</span>
-            </p>
-          )}
         </div>
 
         <div className="mt-1 lg:mt-2 lg:pt-2 lg:border-t lg:border-slate-50">
@@ -326,11 +320,19 @@ function PropertyCard({
               </div>
             </div>
 
-            <div className="text-[10px] text-slate-400 mt-2.5">
-              Cập nhật:{" "}
-              {property.updated_at
-                ? new Date(property.updated_at).toLocaleDateString("vi-VN")
-                : "—"}
+            <div className="flex justify-between items-center text-slate-400 mt-2.5 text-[10px] lg:text-[11px]">
+              {property.code && (
+                <p className="hidden lg:block">
+                  Mã khu: <span className="font-semibold">{property.code}</span>
+                </p>
+              )}
+
+              <div>
+                Cập nhật:{" "}
+                {property.updated_at
+                  ? new Date(property.updated_at).toLocaleDateString("vi-VN")
+                  : "—"}
+              </div>
             </div>
           </div>
         </div>

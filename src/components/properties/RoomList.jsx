@@ -218,7 +218,9 @@ export default function RoomList({ property }) {
   const roomStats = useMemo(() => {
     const total = pagination?.total ?? rooms.length;
     const occupied = rooms.filter((room) => room.status === "occupied").length;
-    const available = rooms.filter((room) => room.status === "available").length;
+    const available = rooms.filter(
+      (room) => room.status === "available",
+    ).length;
     const maintenance = rooms.filter(
       (room) => room.status === "maintenance",
     ).length;
@@ -285,7 +287,8 @@ export default function RoomList({ property }) {
 
   const canGoPrev = Boolean(pagination?.current_page > 1);
   const canGoNext = Boolean(
-    pagination?.current_page && pagination?.current_page < pagination?.last_page,
+    pagination?.current_page &&
+    pagination?.current_page < pagination?.last_page,
   );
 
   return (
@@ -367,28 +370,22 @@ export default function RoomList({ property }) {
                 >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                     <div className="flex items-center gap-3 min-w-0">
-                      {coverImage ? (
-                        <img
-                          src={coverImage}
-                          alt={room.name}
-                          className="w-9 h-9 rounded-lg object-cover shrink-0"
-                        />
-                      ) : (
-                        <div
-                          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${statusConfig.iconClass}`}
-                        >
-                          <i
-                            className={`fa-solid ${statusConfig.icon} text-sm`}
-                          ></i>
-                        </div>
-                      )}
+                      <div
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${statusConfig.iconClass}`}
+                      >
+                        <i
+                          className={`fa-solid ${statusConfig.icon} text-sm`}
+                        ></i>
+                      </div>
 
                       <div className="min-w-0">
                         <p className="text-[14px] font-bold text-slate-800 leading-none truncate">
                           {room.name}
                         </p>
                         <p className="text-[11px] text-slate-400 mt-0.5">
-                          {room.area ? `${room.area} m²` : "Chưa nhập diện tích"}
+                          {room.area
+                            ? `${room.area} m²`
+                            : "Chưa nhập diện tích"}
                         </p>
                       </div>
                     </div>
@@ -536,15 +533,7 @@ export default function RoomList({ property }) {
                       >
                         <td className="py-3 px-5 font-semibold text-slate-800">
                           <div className="flex items-center gap-2 min-w-0">
-                            {coverImage ? (
-                              <img
-                                src={coverImage}
-                                alt={room.name}
-                                className="w-7 h-7 rounded object-cover shrink-0"
-                              />
-                            ) : (
-                              <i className="fa-solid fa-door-open text-slate-400 shrink-0"></i>
-                            )}
+                            <i className="fa-solid fa-door-open text-slate-400 shrink-0"></i>
                             <span className="truncate">{room.name}</span>
                           </div>
                         </td>
@@ -646,7 +635,9 @@ export default function RoomList({ property }) {
           <button
             type="button"
             disabled={!canGoPrev}
-            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+            onClick={() =>
+              setPage((currentPage) => Math.max(1, currentPage - 1))
+            }
             className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
