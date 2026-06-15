@@ -7,6 +7,7 @@ import LandlordLayout from "@/layouts/LandlordLayout";
 import LandlordDashboard from "@/pages/landlord/DashboardPage";
 import PropertiesPage from "@/pages/landlord/PropertiesPage";
 import RoomsPage from "@/pages/landlord/RoomsPage";
+import TenantsPage from "@/pages/landlord/TenantsPage";
 // Component bảo vệ Route: Chỉ cho vào nếu có Token và đúng Role
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = useAuthStore((state) => state.user);
@@ -46,6 +47,7 @@ export default function AppRouter() {
         <Route path="dashboard" element={<LandlordDashboard />} />
         <Route path="properties" element={<PropertiesPage />} />
         <Route path="rooms" element={<RoomsPage />} />
+        <Route path="tenants" element={<TenantsPage />} />
       </Route>
 
       {/* Tuyến đường của Admin */}

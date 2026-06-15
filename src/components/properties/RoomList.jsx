@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import AddRoomModal from "@/components/rooms/AddRoomModal";
 import roomService from "@/services/roomService";
-
+import ViewRoomModal from "@/components/rooms/ViewRoomModal";
 const PER_PAGE = 8;
 
 const formatCurrency = (value) => {
@@ -178,6 +178,10 @@ export default function RoomList({ property }) {
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [activeActionRoomId, setActiveActionRoomId] = useState(null);
 
+  const [isViewRoomOpen, setIsViewRoomOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [isLoadingRoomDetail, setIsLoadingRoomDetail] = useState(false);
+
   const propertyId = property?.id || null;
 
   const fetchRooms = useCallback(async () => {
@@ -209,6 +213,8 @@ export default function RoomList({ property }) {
   useEffect(() => {
     setPage(1);
     setActiveActionRoomId(null);
+    setIsViewRoomOpen(false);
+    setSelectedRoom(null);
   }, [propertyId]);
 
   useEffect(() => {
@@ -265,9 +271,43 @@ export default function RoomList({ property }) {
     }
   };
 
+  const handleOpenRoomDetail = async (room) => {
+    if (!room?.id) return;
+
+    try {
+      setIsLoadingRoomDetail(true);
+
+      const response = await roomService.getById(room.id);
+
+      const roomDetail = response.data.data || response.data;
+
+      setSelectedRoom(roomDetail);
+      setIsViewRoomOpen(true);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Không thể tải chi tiết phòng. Vui lòng thử lại.",
+      );
+
+      setSelectedRoom(null);
+      setIsViewRoomOpen(false);
+    } finally {
+      setIsLoadingRoomDetail(false);
+    }
+  };
+
+  const handleCloseRoomDetail = () => {
+    setIsViewRoomOpen(false);
+    setSelectedRoom(null);
+  };
+
   const handleAction = (actionKey, room) => {
     setActiveActionRoomId(null);
 
+    if (actionKey === "view") {
+      handleOpenRoomDetail(room);
+      return;
+    }
     const actionLabels = {
       view: "Xem chi tiết phòng",
       edit: "Chỉnh sửa phòng",
@@ -660,6 +700,13 @@ export default function RoomList({ property }) {
           </button>
         </div>
       </div>
+
+      <ViewRoomModal
+        open={isViewRoomOpen}
+        onClose={handleCloseRoomDetail}
+        room={selectedRoom}
+        isLoading={isLoadingRoomDetail}
+      />
 
       <AddRoomModal
         open={isAddRoomOpen}

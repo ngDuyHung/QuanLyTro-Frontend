@@ -233,7 +233,7 @@ export default function LandlordLayout() {
                 Hệ thống Quản lý
               </h2>
               <div className="hidden sm:flex items-center text-[12px] text-slate-500 mt-0.5">
-                <span className="text-slate-700">RentHub 360</span>
+                <span className="text-slate-700">Tiện lợi - nhanh chóng - đa nền tảng</span>
               </div>
             </div>
           </div>
