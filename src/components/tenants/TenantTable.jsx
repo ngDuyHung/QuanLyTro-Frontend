@@ -7,16 +7,32 @@ const getRoleConfig = (role) => {
 
 const getStatusConfig = (status) => {
   switch (status) {
-    case "active": return { label: "Đang thuê", className: "bg-green-50 text-green-600 border-green-200" };
-    case "expiring": return { label: "Sắp hết hạn", className: "bg-orange-50 text-orange-500 border-orange-200" };
-    case "left": return { label: "Đã trả phòng", className: "bg-red-50 text-red-500 border-red-200" };
-    case "liquidated": return { label: "Đã thanh lý", className: "bg-slate-100 text-slate-500 border-slate-200" };
-    default: return { label: "Chưa rõ", className: "bg-slate-100 text-slate-500 border-slate-200" };
+    case "active":
+      return {
+        label: "Đang ở",
+        className: "bg-green-50 text-green-600 border-green-200",
+      };
+    case "pending":
+      return {
+        label: "Chờ gắn HĐ",
+        className: "bg-orange-50 text-orange-500 border-orange-200",
+      };
+    case "left":
+      return {
+        label: "Đã rời phòng",
+        className: "bg-red-50 text-red-500 border-red-200",
+      };
+    default:
+      return {
+        label: "Chưa rõ",
+        className: "bg-slate-100 text-slate-500 border-slate-200",
+      };
   }
 };
 
 export default function TenantTable({
   tenants = [],
+  properties = [],
   pagination,
   page,
   onPageChange,
@@ -28,6 +44,7 @@ export default function TenantTable({
   status = "",
   onStatusChange,
   onOpenAddModal,
+  onOpenEditModal,
   onOpenScanModal,
 }) {
   return (
@@ -55,8 +72,11 @@ export default function TenantTable({
               className="w-full pl-3.5 pr-8 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-700 focus:outline-none focus:border-brand appearance-none cursor-pointer shadow-sm"
             >
               <option value="">Khu nhà: Tất cả</option>
-              <option value="1">Khu A - Lê Văn Sỹ</option>
-              <option value="2">Khu B - Tô Hiến Thành</option>
+              {properties.map((property) => (
+                <option key={property.id} value={property.id}>
+                  {property.name}
+                </option>
+              ))}
             </select>
             <i className="fa-solid fa-angle-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[11px] pointer-events-none"></i>
           </div>
@@ -70,7 +90,7 @@ export default function TenantTable({
             >
               <option value="">Trạng thái: Tất cả</option>
               <option value="active">Đang thuê</option>
-              <option value="expiring">Sắp hết hạn</option>
+              <option value="pending">Chờ gắn HĐ</option>
               <option value="left">Đã trả phòng</option>
             </select>
             <i className="fa-solid fa-angle-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[11px] pointer-events-none"></i>
@@ -85,21 +105,21 @@ export default function TenantTable({
         {/* Cụm Nút chức năng phải */}
         <div className="flex items-center gap-3 w-full lg:w-auto ml-auto">
           {/* Nút Quét CCCD mẫu tối ưu */}
-          
-                    <button
-                        className="bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-slate-50 transition-colors flex items-center gap-2.5 shadow-sm relative">
-                        <div className="relative flex items-center justify-center">
-                            <i className="fa-solid fa-expand text-slate-500 text-[16px]"></i>
-                            <i className="fa-solid fa-barcode absolute text-[8px] text-slate-400"></i>
-                            <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-[#0e8b4d] rounded-full"></span>
-                            <span
-                                className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-[#0e8b4d] rounded-full animate-ping opacity-75"></span>
-                        </div>
-                        Quét CCCD
-                    </button>
+
+          <button
+            className="bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-slate-50 transition-colors flex items-center gap-2.5 shadow-sm relative">
+            <div className="relative flex items-center justify-center">
+              <i className="fa-solid fa-expand text-slate-500 text-[16px]"></i>
+              <i className="fa-solid fa-barcode absolute text-[8px] text-slate-400"></i>
+              <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-[#0e8b4d] rounded-full"></span>
+              <span
+                className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-[#0e8b4d] rounded-full animate-ping opacity-75"></span>
+            </div>
+            Quét CCCD
+          </button>
 
           {/* Nút Thêm khách thuê */}
-          <button 
+          <button
             onClick={onOpenAddModal}
             className="flex-1 lg:flex-none bg-brand text-white px-5 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-sm shadow-green-600/20"
           >
@@ -145,6 +165,28 @@ export default function TenantTable({
                   const statusConfig = getStatusConfig(tenant.status);
                   const isActiveStyle = index === 0 ? "bg-green-50/20 relative" : ""; // Giả lập dòng đầu tiên đang được chọn
 
+                  const currentResidence = tenant.current_residence || null;
+
+                  const roomName =
+                    tenant.room ||
+                    currentResidence?.room?.name ||
+                    "Chưa gắn phòng";
+
+                  const propertyName =
+                    tenant.property ||
+                    currentResidence?.room?.property?.name ||
+                    "—";
+
+                  const leaseId =
+                    currentResidence?.lease_id ||
+                    currentResidence?.lease?.id ||
+                    null;
+
+                  const moveInDate =
+                    tenant.move_in_date ||
+                    currentResidence?.move_in_date ||
+                    null;
+
                   return (
                     <tr key={tenant.id} className={`hover:bg-slate-50 border-b border-slate-100 transition-colors group ${isActiveStyle}`}>
                       <td className="py-3 px-4 text-center relative">
@@ -153,24 +195,34 @@ export default function TenantTable({
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          <img src={`https://i.pravatar.cc/150?img=${tenant.avatarId}`} alt="avatar" className="w-9 h-9 rounded-full object-cover shadow-sm border border-slate-200" />
+                          <div className="w-9 h-9 rounded-full bg-green-50 text-brand flex items-center justify-center shadow-sm border border-green-100">
+                            <i className="fa-regular fa-user"></i>
+                          </div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-800 text-[14px]">{tenant.name}</span>
-                            <span className="text-[11px] text-slate-500 mt-0.5">CCCD: {tenant.cccd}</span>
+                            <span className="font-bold text-slate-800 text-[14px]">
+                              {tenant.name || tenant.full_name}
+                            </span>
+                            <span className="text-[11px] text-slate-500 mt-0.5">
+                              CCCD: {tenant.cccd || tenant.id_card_number || "—"}
+                            </span>
                           </div>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-slate-700 font-medium">{tenant.phone}</td>
                       <td className="py-3 px-4">
                         <div className="flex flex-col">
-                          <span className="font-medium text-slate-800">{tenant.room}</span>
-                          <span className="text-[11px] text-slate-500 mt-0.5">{tenant.area} m²</span>
+                          <span className="font-medium text-slate-800">{roomName}</span>
+                          <span className="text-[11px] text-slate-500 mt-0.5">{propertyName}</span>
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex flex-col">
-                          <span className="font-medium text-slate-800">{tenant.contractCode || "—"}</span>
-                          <span className="text-[11px] text-slate-500 mt-0.5">{tenant.contractDuration || ""}</span>
+                          <span className="font-medium text-slate-800">
+                            {leaseId ? `HĐ #${leaseId}` : "Chưa gắn HĐ"}
+                          </span>
+                          <span className="text-[11px] text-slate-500 mt-0.5">
+                            {moveInDate ? `Vào ở: ${moveInDate}` : ""}
+                          </span>
                         </div>
                       </td>
                       <td className="py-3 px-4">
@@ -188,7 +240,12 @@ export default function TenantTable({
                           <button className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-brand hover:border-brand hover:bg-green-50 flex items-center justify-center bg-white transition-colors" title="Xem chi tiết">
                             <i className="fa-regular fa-eye"></i>
                           </button>
-                          <button className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-600 hover:bg-blue-50 flex items-center justify-center bg-white transition-colors" title="Chỉnh sửa">
+                          <button
+                            type="button"
+                            onClick={() => onOpenEditModal?.(tenant)}
+                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-600 hover:bg-blue-50 flex items-center justify-center bg-white transition-colors"
+                            title="Chỉnh sửa"
+                          >
                             <i className="fa-solid fa-pen-to-square text-[12px]"></i>
                           </button>
                           <button className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center justify-center bg-white transition-colors" title="Thêm thao tác">
@@ -211,12 +268,23 @@ export default function TenantTable({
           </span>
           <div className="flex items-center gap-4">
             <div className="flex gap-1">
-              <button disabled={page === 1} onClick={() => onPageChange?.(page - 1)} className="w-8 h-8 rounded flex items-center justify-center text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50">
+              <button
+                disabled={page <= 1}
+                onClick={() => onPageChange?.(page - 1)}
+                className="w-8 h-8 rounded flex items-center justify-center text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
                 <i className="fa-solid fa-angle-left text-[12px]"></i>
               </button>
-              <button className="w-8 h-8 rounded flex items-center justify-center bg-brand text-white font-medium text-[13px]">{page}</button>
-              <button onClick={() => onPageChange?.(page + 1)} className="w-8 h-8 rounded flex items-center justify-center text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors font-medium text-[13px]">{page + 1}</button>
-              <button onClick={() => onPageChange?.(page + 1)} className="w-8 h-8 rounded flex items-center justify-center text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors">
+
+              <button className="w-8 h-8 rounded flex items-center justify-center bg-brand text-white font-medium text-[13px]">
+                {page}
+              </button>
+
+              <button
+                disabled={!pagination?.next_page_url}
+                onClick={() => onPageChange?.(page + 1)}
+                className="w-8 h-8 rounded flex items-center justify-center text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
                 <i className="fa-solid fa-angle-right text-[12px]"></i>
               </button>
             </div>

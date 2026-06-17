@@ -56,9 +56,13 @@ export default function TenantStats({ stats, isLoading = false }) {
           <i className="fa-regular fa-clock text-xl"></i>
         </div>
         <div>
-          <p className="text-[13px] text-slate-500 font-medium">Sắp hết hạn HĐ</p>
-          <p className="text-[24px] font-bold text-slate-800 leading-tight mt-0.5">{stats?.expiring || 0}</p>
-          <p className="text-[12px] text-orange-500 font-bold mt-0.5">{stats?.expiring_rate || 0}%</p>
+          <p className="text-[13px] text-slate-500 font-medium">Chờ gắn HĐ</p>
+          <p className="text-[24px] font-bold text-slate-800 leading-tight mt-0.5">
+            {stats?.pending || 0}
+          </p>
+          <p className="text-[12px] text-orange-500 font-bold mt-0.5">
+            {stats?.pending_rate || 0}%
+          </p>
         </div>
       </div>
 
