@@ -4,25 +4,20 @@ function StatSkeleton() {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm animate-pulse">
       <div className="flex justify-between items-start mb-3">
-        {/* Title skeleton */}
-        <div className="h-3.5 bg-slate-100 rounded w-20 mt-1"></div>
-        {/* Icon skeleton */}
-        <div className="w-8 h-8 rounded-full bg-slate-100 shrink-0"></div>
+        <div className="h-3.5 bg-slate-100 rounded w-24 mt-1"></div>
+        <div className="w-8 h-8 rounded-md bg-slate-100 shrink-0"></div>
       </div>
       <div className="flex items-end gap-2">
-        {/* Value skeleton */}
         <div className="h-7 bg-slate-100 rounded w-12"></div>
-        {/* Rate skeleton */}
         <div className="h-3 bg-slate-100 rounded w-8 mb-1"></div>
       </div>
     </div>
   );
 }
 
-export default function TenantStats({ stats, isLoading = false }) {
+export default function LeasesStats({ stats, isLoading = false }) {
   if (isLoading) {
     return (
-      // Mobile: 2 cột | Tablet: 4 cột | Desktop: 4 cột
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         {Array.from({ length: 4 }).map((_, index) => (
           <StatSkeleton key={index} />
@@ -33,14 +28,13 @@ export default function TenantStats({ stats, isLoading = false }) {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
-      {/* Card 1: Tổng khách thuê */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="flex justify-between items-start mb-1">
           <p className="text-[12px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
-            Tổng khách thuê
+            Tổng hợp đồng
           </p>
           <div className="w-8 h-8 rounded-md bg-green-50 flex items-center justify-center text-green-600 shrink-0">
-            <i className="fa-solid fa-users text-sm"></i>
+            <i className="fa-solid fa-file-contract text-sm"></i>
           </div>
         </div>
         <div className="flex items-baseline gap-1.5">
@@ -53,11 +47,10 @@ export default function TenantStats({ stats, isLoading = false }) {
         </div>
       </div>
 
-      {/* Card 2: Đang thuê */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="flex justify-between items-start mb-1">
           <p className="text-[12px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
-            Đang thuê
+            Đang hiệu lực
           </p>
           <div className="w-8 h-8 rounded-md bg-green-50 flex items-center justify-center text-green-600 shrink-0">
             <i className="fa-regular fa-circle-check text-sm"></i>
@@ -73,11 +66,10 @@ export default function TenantStats({ stats, isLoading = false }) {
         </div>
       </div>
 
-      {/* Card 3: Chờ gắn HĐ */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="flex justify-between items-start mb-1">
           <p className="text-[12px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
-            Chờ gắn HĐ
+            Sắp hết hạn
           </p>
           <div className="w-8 h-8 rounded-md bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
             <i className="fa-regular fa-clock text-sm"></i>
@@ -85,19 +77,18 @@ export default function TenantStats({ stats, isLoading = false }) {
         </div>
         <div className="flex items-baseline gap-1.5">
           <p className="text-[22px] md:text-[24px] font-bold text-slate-800 leading-none">
-            {stats?.pending || 0}
+            {stats?.expiring || 0}
           </p>
           <p className="text-[11px] md:text-[12px] text-orange-500 font-bold bg-orange-50 px-1.5 py-0.5 rounded">
-            {stats?.pending_rate || 0}%
+            {stats?.expiring_rate || 0}%
           </p>
         </div>
       </div>
 
-      {/* Card 4: Đã trả phòng */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="flex justify-between items-start mb-1">
           <p className="text-[12px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
-            Đã trả phòng
+            Đã kết thúc
           </p>
           <div className="w-8 h-8 rounded-md bg-red-50 flex items-center justify-center text-red-500 shrink-0">
             <i className="fa-regular fa-calendar-xmark text-sm"></i>
@@ -105,10 +96,10 @@ export default function TenantStats({ stats, isLoading = false }) {
         </div>
         <div className="flex items-baseline gap-1.5">
           <p className="text-[22px] md:text-[24px] font-bold text-slate-800 leading-none">
-            {stats?.left || 0}
+            {stats?.ended || 0}
           </p>
           <p className="text-[11px] md:text-[12px] text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded">
-            {stats?.left_rate || 0}%
+            {stats?.ended_rate || 0}%
           </p>
         </div>
       </div>

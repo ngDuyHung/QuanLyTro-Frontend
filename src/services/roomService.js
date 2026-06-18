@@ -5,6 +5,15 @@ const roomService = {
   getByProperty: (propertyId, params) =>
     api.get(`/properties/${propertyId}/rooms`, { params }),
 
+  getActiveLeaseRoomsByProperty: (propertyId, params = {}) =>
+    api.get(`/properties/${propertyId}/rooms`, {
+      params: {
+        ...params,
+        status: "occupied",
+        has_active_lease: 1,
+      },
+    }),
+
   create: (propertyId, data) =>
     api.post(`/properties/${propertyId}/rooms`, data),
 

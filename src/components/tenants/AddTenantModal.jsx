@@ -12,6 +12,41 @@ const initialForm = {
     note: "",
 };
 
+const hasActiveLease = (room) => {
+    return Boolean(
+        room.has_active_lease ||
+        room.active_lease ||
+        room.activeLease ||
+        room.current_lease ||
+        room.currentLease ||
+        room.active_lease_id ||
+        room.lease_id ||
+        room.status === "occupied"
+    );
+};
+
+const getRoomActiveLeaseText = (room) => {
+    const lease =
+        room.active_lease ||
+        room.activeLease ||
+        room.current_lease ||
+        room.currentLease ||
+        null;
+
+    const tenantName =
+        lease?.tenant?.full_name ||
+        lease?.tenant_name ||
+        room.tenant_name ||
+        room.current_tenant_name ||
+        "";
+
+    if (tenantName) {
+        return `Đang thuê - ${tenantName}`;
+    }
+
+    return "Đang có hợp đồng";
+};
+
 export default function AddTenantModal({
     open,
     onClose,
@@ -28,6 +63,7 @@ export default function AddTenantModal({
 
     const [rooms, setRooms] = useState([]);
     const [isLoadingRooms, setIsLoadingRooms] = useState(false);
+    const [roomNotice, setRoomNotice] = useState("");
 
 
     useEffect(() => {
@@ -52,20 +88,36 @@ export default function AddTenantModal({
     useEffect(() => {
         if (!open || !form.property_id) {
             setRooms([]);
+            setRoomNotice("");
             return;
         }
 
         const fetchRooms = async () => {
             try {
                 setIsLoadingRooms(true);
+                setRoomNotice("");
 
-                const response = await roomService.getByProperty(form.property_id, {
-                    per_page: 100,
-                });
+                const response = await roomService.getActiveLeaseRoomsByProperty(
+                    form.property_id,
+                    {
+                        per_page: 100,
+                    }
+                );
 
-                setRooms(response.data.data || []);
+                const allRooms = response.data.data || [];
+
+                const activeLeaseRooms = allRooms.filter(hasActiveLease);
+
+                setRooms(activeLeaseRooms);
+
+                if (activeLeaseRooms.length === 0) {
+                    setRoomNotice(
+                        "Khu nhà này chưa có phòng nào đang có hợp đồng hiệu lực. Vui lòng tạo hợp đồng trước khi thêm khách thuê."
+                    );
+                }
             } catch (error) {
                 setRooms([]);
+                setRoomNotice("");
                 setClientError(
                     error.response?.data?.message ||
                     "Không thể tải danh sách phòng của khu nhà."
@@ -83,9 +135,12 @@ export default function AddTenantModal({
     const handleChange = (field) => (event) => {
         setClientError("");
 
+        setRoomNotice("");
+
         setForm((prev) => ({
             ...prev,
-            [field]: event.target.value,
+            property_id: event.target.value,
+            room_id: "",
         }));
     };
 
@@ -94,9 +149,9 @@ export default function AddTenantModal({
         setFrontImage(null);
         setBackImage(null);
         setClientError("");
+        setRoomNotice("");
         setRooms([]);
     };
-
     const handleClose = () => {
         if (isSubmitting) return;
 
@@ -428,11 +483,15 @@ export default function AddTenantModal({
 
                                             {rooms.map((room) => (
                                                 <option key={room.id} value={room.id}>
-                                                    {room.name}
-                                                    {room.status_label ? ` - ${room.status_label}` : ""}
+                                                    {room.name} - {getRoomActiveLeaseText(room)}
                                                 </option>
                                             ))}
                                         </select>
+                                        {roomNotice && (
+                                            <p className="mt-1.5 text-[12px] text-orange-600 leading-relaxed">
+                                                {roomNotice}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div>
@@ -451,8 +510,11 @@ export default function AddTenantModal({
                                         <i className="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
                                         <p>
                                             Khách thuê sẽ được thêm vào phòng với vai trò{" "}
-                                            <b>người ở ghép</b>. Nếu phòng có hợp đồng hiệu lực, hệ
-                                            thống tự gắn khách vào hợp đồng.
+                                            <b>người ở ghép</b>.
+                                            <p>
+                                                Chỉ hiển thị các phòng đang có hợp đồng hiệu lực. Khách thuê sẽ được
+                                                thêm vào phòng với vai trò <b>người ở ghép</b>.
+                                            </p>
                                         </p>
                                     </div>
                                 </div>
