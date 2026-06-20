@@ -52,16 +52,13 @@ const getRoomCoverImage = (room) => {
 };
 
 const getTenantName = (room) =>
-  room.tenant?.name ||
-  room.current_tenant?.name ||
-  room.current_lease?.tenant?.name ||
+  room.representative?.tenant?.full_name ||
+  room.representative?.tenant?.name ||
   room.tenant_name ||
   "";
 
 const getTenantPhone = (room) =>
-  room.tenant?.phone ||
-  room.current_tenant?.phone ||
-  room.current_lease?.tenant?.phone ||
+  room.representative?.tenant?.phone ||
   room.tenant_phone ||
   "";
 
@@ -101,29 +98,29 @@ function RoomActionsMenu({ room, onAction }) {
     },
     ...(status === "available"
       ? [
-          {
-            key: "createLease",
-            label: "Tạo hợp đồng / thêm khách",
-            icon: "fa-solid fa-user-plus",
-            className: "text-brand",
-          },
-          {
-            key: "maintenance",
-            label: "Chuyển sang bảo trì",
-            icon: "fa-solid fa-wrench",
-            className: "text-orange-600",
-          },
-        ]
+        {
+          key: "createLease",
+          label: "Tạo hợp đồng / thêm khách",
+          icon: "fa-solid fa-user-plus",
+          className: "text-brand",
+        },
+        {
+          key: "maintenance",
+          label: "Chuyển sang bảo trì",
+          icon: "fa-solid fa-wrench",
+          className: "text-orange-600",
+        },
+      ]
       : []),
     ...(status === "maintenance"
       ? [
-          {
-            key: "available",
-            label: "Đánh dấu phòng trống",
-            icon: "fa-solid fa-door-open",
-            className: "text-brand",
-          },
-        ]
+        {
+          key: "available",
+          label: "Đánh dấu phòng trống",
+          icon: "fa-solid fa-door-open",
+          className: "text-brand",
+        },
+      ]
       : []),
     {
       key: "delete",
@@ -198,6 +195,8 @@ export default function RoomList({ property }) {
         page,
         per_page: PER_PAGE,
       });
+      console.log("response data", response.data.data);
+
 
       setRooms(response.data.data || []);
       setPagination(response.data.meta || null);
@@ -264,7 +263,7 @@ export default function RoomList({ property }) {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Không thể tạo phòng. Vui lòng thử lại.",
+        "Không thể tạo phòng. Vui lòng thử lại.",
       );
     } finally {
       setIsCreatingRoom(false);
@@ -286,7 +285,7 @@ export default function RoomList({ property }) {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Không thể tải chi tiết phòng. Vui lòng thử lại.",
+        "Không thể tải chi tiết phòng. Vui lòng thử lại.",
       );
 
       setSelectedRoom(null);
