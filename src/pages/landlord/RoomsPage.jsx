@@ -62,7 +62,7 @@ export default function RoomsPage() {
       const response = await propertyService.getAll({
         per_page: 100,
       });
-
+     
       setProperties(response.data.data || []);
     } catch (error) {
       toast.error(
@@ -82,7 +82,7 @@ export default function RoomsPage() {
         status: status || undefined,
         property_id: propertyId || undefined,
       });
-
+      console.log("Fetched rooms:", response.data.data);
       setRooms(response.data.data || []);
       setPagination(response.data.meta || null);
       setRoomStats(response.data.stats || emptyRoomStats);

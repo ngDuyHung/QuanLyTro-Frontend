@@ -79,50 +79,6 @@ function RoomActionsMenu({ room, onAction }) {
       className: "text-slate-700",
     },
     {
-      key: "images",
-      label: "Cập nhật hình ảnh",
-      icon: "fa-regular fa-images",
-      className: "text-slate-700",
-    },
-    {
-      key: "meter",
-      label: "Ghi điện nước",
-      icon: "fa-solid fa-gauge-high",
-      className: "text-slate-700",
-    },
-    {
-      key: "invoice",
-      label: "Xem hóa đơn",
-      icon: "fa-solid fa-file-invoice-dollar",
-      className: "text-slate-700",
-    },
-    ...(status === "available"
-      ? [
-        {
-          key: "createLease",
-          label: "Tạo hợp đồng / thêm khách",
-          icon: "fa-solid fa-user-plus",
-          className: "text-brand",
-        },
-        {
-          key: "maintenance",
-          label: "Chuyển sang bảo trì",
-          icon: "fa-solid fa-wrench",
-          className: "text-orange-600",
-        },
-      ]
-      : []),
-    ...(status === "maintenance"
-      ? [
-        {
-          key: "available",
-          label: "Đánh dấu phòng trống",
-          icon: "fa-solid fa-door-open",
-          className: "text-brand",
-        },
-      ]
-      : []),
-    {
       key: "delete",
       label: "Xóa phòng",
       icon: "fa-regular fa-trash-can",
@@ -165,7 +121,7 @@ function EmptyRoomState({ property }) {
   );
 }
 
-export default function RoomList({ property }) {
+export default function RoomList({ property, onEditRoom, refreshKey, }) {
   const [rooms, setRooms] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [page, setPage] = useState(1);
@@ -218,7 +174,7 @@ export default function RoomList({ property }) {
 
   useEffect(() => {
     fetchRooms();
-  }, [fetchRooms]);
+  }, [fetchRooms, refreshKey]);
 
   const roomStats = useMemo(() => {
     const total = pagination?.total ?? rooms.length;
@@ -307,6 +263,12 @@ export default function RoomList({ property }) {
       handleOpenRoomDetail(room);
       return;
     }
+
+    if (actionKey === "edit") {
+      onEditRoom?.(room);
+      console.log("Edit room", room);
+      return;
+    }
     const actionLabels = {
       view: "Xem chi tiết phòng",
       edit: "Chỉnh sửa phòng",
@@ -319,7 +281,7 @@ export default function RoomList({ property }) {
       delete: "Xóa phòng",
     };
 
-    toast.info(`${actionLabels[actionKey] || "Thao tác"}: ${room.name}`, {
+    toast.info(`${actionLabels[actionKey] || "Thao tác"}: ${room.name} đang update`, {
       autoClose: 1200,
     });
   };

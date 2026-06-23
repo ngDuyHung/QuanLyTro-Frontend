@@ -10,6 +10,9 @@ import EditPropertyModal from "@/components/properties/EditPropertyModal";
 
 import propertyService from "@/services/propertyService";
 
+import EditRoomModal from "@/components/rooms/EditRoomModal";
+import roomService from "@/services/roomService";
+
 export default function PropertiesPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -29,6 +32,11 @@ export default function PropertiesPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
 
+
+  const [editingRoom, setEditingRoom] = useState(null);
+  const [isEditRoomOpen, setIsEditRoomOpen] = useState(false);
+  const [isUpdatingRoom, setIsUpdatingRoom] = useState(false);
+  const [roomRefreshKey, setRoomRefreshKey] = useState(0);
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchText.trim());
@@ -104,7 +112,7 @@ export default function PropertiesPage() {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Không thể tạo khu nhà. Vui lòng thử lại.",
+        "Không thể tạo khu nhà. Vui lòng thử lại.",
       );
     } finally {
       setIsCreating(false);
@@ -134,7 +142,7 @@ export default function PropertiesPage() {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Không thể cập nhật khu nhà. Vui lòng thử lại.",
+        "Không thể cập nhật khu nhà. Vui lòng thử lại.",
       );
     } finally {
       setIsUpdating(false);
@@ -166,16 +174,55 @@ export default function PropertiesPage() {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Không thể xóa khu nhà. Vui lòng thử lại.",
+        "Không thể xóa khu nhà. Vui lòng thử lại.",
       );
     }
   };
 
+
+  const handleOpenEditRoom = (room) => {
+    setEditingRoom(room);
+    setIsEditRoomOpen(true);
+  };
+
+  const handleCloseEditRoom = () => {
+    setIsEditRoomOpen(false);
+    setEditingRoom(null);
+  };
+
+  const handleUpdateRoom = async (formData, room) => {
+    if (!room?.id) {
+      toast.warning("Không tìm thấy phòng cần cập nhật.");
+      return;
+    }
+
+    try {
+      setIsUpdatingRoom(true);
+
+      await roomService.update(room.id, formData);
+
+      setRoomRefreshKey(prev => prev + 1);
+      toast.success("Cập nhật phòng thành công!", {
+        autoClose: 1500,
+      });
+      
+      handleCloseEditRoom();
+
+      //await fetchRooms();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        "Không thể cập nhật phòng. Vui lòng thử lại.",
+      );
+    } finally {
+      setIsUpdatingRoom(false);
+    }
+  };
+
   const tabClasses = ({ isActive }) =>
-    `px-4 sm:px-5 py-3 text-[13px] sm:text-[14px] transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${
-      isActive
-        ? "font-bold text-brand border-brand"
-        : "font-medium text-slate-500 hover:text-slate-800 border-transparent"
+    `px-4 sm:px-5 py-3 text-[13px] sm:text-[14px] transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${isActive
+      ? "font-bold text-brand border-brand"
+      : "font-medium text-slate-500 hover:text-slate-800 border-transparent"
     }`;
 
   const selectedProperty =
@@ -252,7 +299,10 @@ export default function PropertiesPage() {
           </div>
 
           <div className="flex-1 flex flex-col min-h-0">
-            <RoomList property={selectedProperty} />
+            <RoomList
+              property={selectedProperty}
+              onEditRoom={handleOpenEditRoom}
+              refreshKey={roomRefreshKey} />
           </div>
         </div>
       </div>
@@ -273,6 +323,14 @@ export default function PropertiesPage() {
         property={editingProperty}
         onSubmit={handleUpdateProperty}
         isSubmitting={isUpdating}
+      />
+
+      <EditRoomModal
+        open={isEditRoomOpen}
+        room={editingRoom}
+        onClose={handleCloseEditRoom}
+        onSubmit={handleUpdateRoom}
+        isSubmitting={isUpdatingRoom}
       />
     </div>
   );
