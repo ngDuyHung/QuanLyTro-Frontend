@@ -1,6 +1,7 @@
 import { BrowserRouter } from "react-router-dom";
-import { ToastContainer, Slide } from "react-toastify";
+import { ToastContainer, Bounce } from "react-toastify"; // Thay Slide bằng Bounce
 import "react-toastify/dist/ReactToastify.css";
+import "./assets/css/toast-custom.css";
 import AppRouter from "./router";
 
 function App() {
@@ -8,16 +9,20 @@ function App() {
     <BrowserRouter>
       <AppRouter />
       
-      {/* Toast thông báo toàn cục */}
       <ToastContainer
         position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
+        autoClose={5000} // Tăng lên 5 giây cho người lớn tuổi dễ đọc
+        hideProgressBar={false} // BẬT LẠI thanh chạy để tạo cảm giác kiểm soát thời gian
         newestOnTop={true}
         closeOnClick
-        pauseOnHover={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover={true} // Giữ thông báo khi đưa chuột vào
         theme="light"
-        transition={Slide}
+        transition={Bounce} // Hiệu ứng nảy nhẹ, gây chú ý tốt hơn
+        toastClassName="custom-toast"
+        bodyClassName="custom-toast-body"
       />
     </BrowserRouter>
   );

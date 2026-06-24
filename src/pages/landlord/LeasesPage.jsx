@@ -5,7 +5,7 @@ import LeasesTable from "@/components/leases/LeasesTable";
 import AddLeaseModal from "@/components/leases/AddLeaseModal";
 import leasesService from "@/services/leasesService";
 import propertyService from "@/services/propertyService";
-
+import ContractTemplateModal from "@/components/leases/ContractTemplateModal";
 const isExpiringSoon = (lease) => {
   if (!lease.end_date || lease.status !== "active") return false;
 
@@ -55,6 +55,8 @@ export default function LeasesPage() {
   const [properties, setProperties] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCreatingLease, setIsCreatingLease] = useState(false);
+
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
   const fetchProperties = useCallback(async () => {
     try {
@@ -119,7 +121,7 @@ export default function LeasesPage() {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Không thể thêm hợp đồng. Vui lòng thử lại."
+        "Không thể thêm hợp đồng. Vui lòng thử lại."
       );
     } finally {
       setIsCreatingLease(false);
@@ -140,14 +142,16 @@ export default function LeasesPage() {
     }
   };
 
-  const handleOpenEditModal = (lease) => {
-    toast.info("Chức năng chỉnh sửa hợp đồng sẽ làm ở bước tiếp theo.");
-    console.log("Edit lease:", lease);
-  };
+
 
   const handleOpenViewModal = (lease) => {
     toast.info("Chức năng xem chi tiết hợp đồng sẽ làm ở bước tiếp theo.");
     console.log("View lease:", lease);
+  };
+
+  const handleCopyPhone = (phone) => {
+    navigator.clipboard.writeText(phone);
+    toast.success("Đã sao chép số điện thoại!");
   };
 
   return (
@@ -169,9 +173,10 @@ export default function LeasesPage() {
           status={status}
           onStatusChange={setStatus}
           onOpenAddModal={() => setIsAddModalOpen(true)}
-          onOpenEditModal={handleOpenEditModal}
           onOpenViewModal={handleOpenViewModal}
           onEndLease={handleEndLease}
+          onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
+          onCopyPhone={handleCopyPhone}
         />
       </div>
 
@@ -185,6 +190,10 @@ export default function LeasesPage() {
         onSubmit={handleCreateLease}
         isSubmitting={isCreatingLease}
         properties={properties}
+      />
+      <ContractTemplateModal
+        open={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
       />
     </div>
   );

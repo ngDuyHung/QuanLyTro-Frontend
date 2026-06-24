@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import roomService from "@/services/roomService";
-
+import ocrService from "@/services/ocrService";
 const initialForm = {
   property_id: "",
   room_id: "",
@@ -33,6 +33,11 @@ export default function AddLeaseModal({
   const [rooms, setRooms] = useState([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [roomNotice, setRoomNotice] = useState("");
+
+  // --- QUẢN LÝ QUÉT CCCD ---
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanMessage, setScanMessage] = useState({ type: "", text: "" });
+  // ---
 
   const frontImagePreview = frontImage ? URL.createObjectURL(frontImage) : null;
   const backImagePreview = backImage ? URL.createObjectURL(backImage) : null;
@@ -86,7 +91,7 @@ export default function AddLeaseModal({
         setRoomNotice("");
         setClientError(
           error.response?.data?.message ||
-            "Không thể tải danh sách phòng của khu nhà."
+          "Không thể tải danh sách phòng của khu nhà."
         );
       } finally {
         setIsLoadingRooms(false);
@@ -97,6 +102,44 @@ export default function AddLeaseModal({
   }, [open, form.property_id]);
 
   if (!open) return null;
+
+  const handleScanCCCD = async (file) => {
+    if (!file) return;
+
+    setIsScanning(true);
+    setScanMessage({ type: "", text: "" }); // Xóa thông báo cũ đi
+
+    const payload = new FormData();
+    payload.append("image", file);
+
+    try {
+      const response = await ocrService.scanIdCard(payload);
+
+      // Axios tự động parse JSON và lưu vào response.data
+      const result = response.data;
+
+      if (result.data) {
+        // ĐỔI TỪ if (result.success) THÀNH if (result.data)
+        if (result.data) {
+          // Điền tự động vào form
+          setForm((prev) => ({
+            ...prev,
+            full_name: result.data.full_name || prev.full_name,
+            id_card_number: result.data.id_card_number || prev.id_card_number,
+          }));
+          // Lấy luôn message từ API trả về cho sinh động
+          setScanMessage({ type: "success", text: result.message || "Trích xuất thông tin thành công!" });
+        }
+      }
+    } catch (error) {
+      // Lấy câu message lỗi từ backend trả về (hoặc dùng câu mặc định)
+      const errorMsg = error.response?.data?.message || "Không đọc được CCCD, vui lòng nhập tay.";
+      setScanMessage({ type: "error", text: errorMsg });
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
 
   const handleChange = (field) => (event) => {
     setClientError("");
@@ -110,6 +153,7 @@ export default function AddLeaseModal({
     setClientError("");
     setRooms([]);
     setRoomNotice("");
+    setScanMessage({ type: "", text: "" });
   };
 
   const handleClose = () => {
@@ -370,7 +414,11 @@ export default function AddLeaseModal({
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(event) => setFrontImage(event.target.files?.[0] || null)}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] || null;
+                        setFrontImage(file);
+                        handleScanCCCD(file);
+                      }}
                       className="hidden"
                     />
                   </label>
@@ -410,6 +458,29 @@ export default function AddLeaseModal({
                     />
                   </label>
                 </div>
+
+                {/* Scan Message */}
+                {(isScanning || scanMessage.text) && (
+                  <div className="mb-4">
+                    {isScanning && (
+                      <p className="text-[13px] text-brand font-medium flex items-center gap-2">
+                        <i className="fa-solid fa-spinner animate-spin"></i>
+                        Đang dùng AI trích xuất dữ liệu thẻ...
+                      </p>
+                    )}
+                    {!isScanning && scanMessage.text && (
+                      <p className={`text-[13px] font-medium flex items-center gap-2 ${scanMessage.type === "success" ? "text-green-600" : "text-orange-500"
+                        }`}>
+                        {scanMessage.type === "success"
+                          ? <i className="fa-solid fa-check"></i>
+                          : <i className="fa-solid fa-circle-exclamation"></i>
+                        }
+                        {scanMessage.text}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {/* Scan Message */}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
                   <div>

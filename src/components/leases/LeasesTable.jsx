@@ -1,5 +1,5 @@
 import React from "react";
-
+import settingService from "@/services/settingService";
 const formatMoney = (value) => {
   const numberValue = Number(value || 0);
   return numberValue.toLocaleString("vi-VN") + "đ";
@@ -55,7 +55,30 @@ export default function LeasesTable({
   onOpenEditModal,
   onOpenViewModal,
   onEndLease,
+  onOpenTemplateModal,
+  onCopyPhone,
 }) {
+
+  // ---  HÀM XUẤT PDF VÀO ĐÂY ---
+  const handleExportPdf = async (leaseId) => {
+    try {
+      const response = await settingService.exportLeasePdf(leaseId);
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Hop_dong_thue_${leaseId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Lỗi xuất PDF:", error);
+    }
+  };
+  // ---------------------------------
+
   return (
     <>
       <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-4">
@@ -103,6 +126,15 @@ export default function LeasesTable({
         </div>
 
         <div className="flex items-center gap-3 w-full lg:w-auto ml-auto">
+          {/* ---  NÚT MẪU HỢP ĐỒNG --- */}
+          <button
+            type="button"
+            onClick={onOpenTemplateModal}
+            className="flex-1 lg:flex-none bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 shadow-sm"
+          >
+            <i className="fa-solid fa-file-signature text-[13px] text-blue-600"></i> Cấu hình mẫu
+          </button>
+          {/* ----------------------------- */}
           <button
             type="button"
             onClick={onOpenAddModal}
@@ -176,7 +208,20 @@ export default function LeasesTable({
                       <td className="py-3 px-4">
                         <div className="flex flex-col">
                           <span className="font-medium text-slate-800">{tenantName}</span>
-                          <span className="text-[11px] text-slate-500 mt-0.5">{tenantPhone || "Chưa có SĐT"}</span>
+                          <span className="text-[11px] text-slate-500 mt-0.5">
+                            SĐT: {tenantPhone || "Chưa có SĐT"}
+                            {/* icon copy số điện thoại */}
+                            {tenantPhone && (
+                              <button
+                                className="ml-2 text-slate-400 hover:text-brand"
+                                title="Sao chép SĐT"
+                                onClick={() => onCopyPhone?.(tenantPhone)}
+                              >
+                                <i className="fa-solid fa-copy"></i>
+                              </button>
+                            )}
+                          </span>
+
                         </div>
                       </td>
                       <td className="py-3 px-4">
@@ -206,6 +251,16 @@ export default function LeasesTable({
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-center gap-1.5">
+                          {/* ---  NÚT IN PDF --- */}
+                          <button
+                            type="button"
+                            onClick={() => handleExportPdf(lease.id)}
+                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-green-600 hover:border-green-600 hover:bg-green-50 flex items-center justify-center bg-white transition-colors"
+                            title="In hợp đồng (PDF)"
+                          >
+                            <i className="fa-solid fa-print text-[12px]"></i>
+                          </button>
+                          {/* ----------------------- */}
                           <button
                             type="button"
                             onClick={() => onOpenViewModal?.(lease)}
@@ -214,15 +269,7 @@ export default function LeasesTable({
                           >
                             <i className="fa-regular fa-eye"></i>
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => onOpenEditModal?.(lease)}
-                            disabled={lease.status !== "active"}
-                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-600 hover:bg-blue-50 flex items-center justify-center bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                            title="Chỉnh sửa"
-                          >
-                            <i className="fa-solid fa-pen-to-square text-[12px]"></i>
-                          </button>
+
                           <button
                             type="button"
                             onClick={() => onEndLease?.(lease)}
