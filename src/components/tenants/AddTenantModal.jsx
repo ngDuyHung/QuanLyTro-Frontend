@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import roomService from "@/services/roomService";
+import ocrService from "@/services/ocrService";
 
 const initialForm = {
     full_name: "",
@@ -61,6 +62,10 @@ export default function AddTenantModal({
     const backImagePreview = backImage ? URL.createObjectURL(backImage) : null;
     const [clientError, setClientError] = useState("");
 
+    // --- QUẢN LÝ QUÉT CCCD ---
+    const [isScanning, setIsScanning] = useState(false);
+    const [scanMessage, setScanMessage] = useState({ type: "", text: "" });
+    // ---
     const [rooms, setRooms] = useState([]);
     const [isLoadingRooms, setIsLoadingRooms] = useState(false);
     const [roomNotice, setRoomNotice] = useState("");
@@ -132,6 +137,43 @@ export default function AddTenantModal({
 
     if (!open) return null;
 
+    const handleScanCCCD = async (file) => {
+        if (!file) return;
+
+        setIsScanning(true);
+        setScanMessage({ type: "", text: "" }); // Xóa thông báo cũ đi
+
+        const payload = new FormData();
+        payload.append("image", file);
+
+        try {
+            const response = await ocrService.scanIdCard(payload);
+
+            // Axios tự động parse JSON và lưu vào response.data
+            const result = response.data;
+
+            if (result.data) {
+                // ĐỔI TỪ if (result.success) THÀNH if (result.data)
+                if (result.data) {
+                    // Điền tự động vào form
+                    setForm((prev) => ({
+                        ...prev,
+                        full_name: result.data.full_name || prev.full_name,
+                        id_card_number: result.data.id_card_number || prev.id_card_number,
+                    }));
+                    // Lấy luôn message từ API trả về cho sinh động
+                    setScanMessage({ type: "success", text: result.message || "Trích xuất thông tin thành công!" });
+                }
+            }
+        } catch (error) {
+            // Lấy câu message lỗi từ backend trả về (hoặc dùng câu mặc định)
+            const errorMsg = error.response?.data?.message || "Không đọc được CCCD, vui lòng nhập tay.";
+            setScanMessage({ type: "error", text: errorMsg });
+        } finally {
+            setIsScanning(false);
+        }
+    };
+
     const handleChange = (field) => (event) => {
         setClientError("");
 
@@ -149,6 +191,7 @@ export default function AddTenantModal({
         setFrontImage(null);
         setBackImage(null);
         setClientError("");
+        setScanMessage({ type: "", text: "" });
         setRoomNotice("");
         setRooms([]);
     };
@@ -315,7 +358,11 @@ export default function AddTenantModal({
                                         <input
                                             type="file"
                                             accept="image/*"
-                                            onChange={(event) => setFrontImage(event.target.files?.[0] || null)}
+                                            onChange={(event) => {
+                                                const file = event.target.files?.[0] || null;
+                                                setFrontImage(file);
+                                                handleScanCCCD(file);
+                                            }}
                                             className="hidden"
                                         />
                                     </label>
@@ -365,6 +412,28 @@ export default function AddTenantModal({
                                         />
                                     </label>
                                 </div>
+                                {/* Scan Message */}
+                                {(isScanning || scanMessage.text) && (
+                                    <div className="mb-4">
+                                        {isScanning && (
+                                            <p className="text-[13px] text-brand font-medium flex items-center gap-2">
+                                                <i className="fa-solid fa-spinner animate-spin"></i>
+                                                Đang dùng AI trích xuất dữ liệu thẻ...
+                                            </p>
+                                        )}
+                                        {!isScanning && scanMessage.text && (
+                                            <p className={`text-[13px] font-medium flex items-center gap-2 ${scanMessage.type === "success" ? "text-green-600" : "text-orange-500"
+                                                }`}>
+                                                {scanMessage.type === "success"
+                                                    ? <i className="fa-solid fa-check"></i>
+                                                    : <i className="fa-solid fa-circle-exclamation"></i>
+                                                }
+                                                {scanMessage.text}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                                {/* Scan Message */}
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
                                     <div>
@@ -508,14 +577,14 @@ export default function AddTenantModal({
 
                                     <div className="bg-blue-50 border border-blue-100 text-blue-700 px-4 py-3 rounded-lg text-[13px] flex items-start gap-3">
                                         <i className="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
-                                        <p>
+                                        <div>
                                             Khách thuê sẽ được thêm vào phòng với vai trò{" "}
                                             <b>người ở ghép</b>.
                                             <p>
                                                 Chỉ hiển thị các phòng đang có hợp đồng hiệu lực. Khách thuê sẽ được
                                                 thêm vào phòng với vai trò <b>người ở ghép</b>.
                                             </p>
-                                        </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
