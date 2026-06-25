@@ -3,7 +3,10 @@ import { toast } from "react-toastify";
 import UtilitiesTable from "@/components/utilities/UtilitiesTable";
 import utilityService from "@/services/utilityService";
 import propertyService from "@/services/propertyService";
-
+import AddUtilityModal from "@/components/utilities/AddUtilityModal";
+import EditUtilityModal from "@/components/utilities/EditUtilityModal";
+import DeleteUtilityModal from "@/components/utilities/DeleteUtilityModal";
+import ViewUtilityModal from "@/components/utilities/ViewUtilityModal";
 export default function UtilitiesPage() {
   const [readings, setReadings] = useState([]);
   const [properties, setProperties] = useState([]);
@@ -18,9 +21,14 @@ export default function UtilitiesPage() {
 
   // --- Quản lý Modal (Sẽ làm ở bước sau) ---
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isCreatingReading, setIsCreatingReading] = useState(false);
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isUpdatingReading, setIsUpdatingReading] = useState(false);
+
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeletingReading, setIsDeletingReading] = useState(false);
   const [selectedReading, setSelectedReading] = useState(null);
 
   // 1. Kéo danh sách Khu nhà cho bộ lọc
@@ -65,7 +73,7 @@ export default function UtilitiesPage() {
 
   // --- Handlers mở Modal ---
   const handleOpenAddModal = () => setIsAddModalOpen(true);
-  
+
   const handleOpenEditModal = (reading) => {
     setSelectedReading(reading);
     setIsEditModalOpen(true);
@@ -81,9 +89,58 @@ export default function UtilitiesPage() {
     setIsDeleteModalOpen(true);
   };
 
+  const handleCreateReading = async (formData) => {
+    try {
+      setIsCreatingReading(true);
+
+      await utilityService.create(formData);
+      toast.success("Ghi chỉ số thành công!");
+
+      setIsAddModalOpen(false);
+      await fetchReadings();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể lưu chỉ số.");
+    } finally {
+      setIsCreatingReading(false);
+    }
+  };
+
+  const handleUpdateReading = async (id, formData) => {
+    try {
+      setIsUpdatingReading(true);
+      await utilityService.update(id, formData);
+      toast.success("Cập nhật chỉ số thành công!");
+
+      setIsEditModalOpen(false);
+      setSelectedReading(null);
+      await fetchReadings();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể cập nhật chỉ số.");
+    } finally {
+      setIsUpdatingReading(false);
+    }
+  };
+
+  const handleDeleteReading = async (id) => {
+    try {
+      setIsDeletingReading(true);
+      await utilityService.delete(id);
+
+      toast.success("Đã xóa chỉ số thành công!");
+
+      setIsDeleteModalOpen(false);
+      setSelectedReading(null);
+      await fetchReadings(); // Kéo lại dữ liệu bảng
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể xóa chỉ số này.");
+    } finally {
+      setIsDeletingReading(false);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 md:p-6 lg:p-6 pt-6 flex flex-col h-full bg-slate-50">
-      
+
       {/* Tiêu đề trang (Tùy chọn, bạn có thể tự style thêm Stats giống Tenant) */}
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -100,7 +157,7 @@ export default function UtilitiesPage() {
           page={page}
           onPageChange={setPage}
           isLoading={isLoading}
-          
+
           // Filters
           propertyId={propertyId}
           onPropertyIdChange={(val) => { setPropertyId(val); setPage(1); }}
@@ -108,7 +165,7 @@ export default function UtilitiesPage() {
           onTypeChange={(val) => { setType(val); setPage(1); }}
           month={month}
           onMonthChange={(val) => { setMonth(val); setPage(1); }}
-          
+
           // Actions
           onOpenAddModal={handleOpenAddModal}
           onOpenEditModal={handleOpenEditModal}
@@ -118,6 +175,41 @@ export default function UtilitiesPage() {
       </div>
 
       {/* --- CÁC MODAL SẼ ĐƯỢC CHÈN VÀO ĐÂY Ở BƯỚC TỚI --- */}
+      <AddUtilityModal
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleCreateReading}
+        isSubmitting={isCreatingReading}
+        properties={properties}
+      />
+      <EditUtilityModal
+        open={isEditModalOpen}
+        reading={selectedReading}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedReading(null);
+        }}
+        onSubmit={handleUpdateReading}
+        isSubmitting={isUpdatingReading}
+      />
+      <DeleteUtilityModal
+        open={isDeleteModalOpen}
+        reading={selectedReading}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedReading(null);
+        }}
+        onConfirm={handleDeleteReading}
+        isDeleting={isDeletingReading}
+      />
+      <ViewUtilityModal
+        open={isViewModalOpen}
+        reading={selectedReading}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedReading(null);
+        }}
+      />
     </div>
   );
 }
