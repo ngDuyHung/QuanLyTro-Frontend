@@ -132,7 +132,118 @@ export default function TenantTable({
 
       {/* BẢNG DỮ LIỆU */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-        <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+
+        {/* --- GIAO DIỆN MOBILE (Dạng Card ẩn trên PC) --- */}
+        <div className="lg:hidden flex flex-col gap-3 p-3 bg-slate-50/50">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-40 bg-white border border-slate-200 rounded-xl animate-pulse"></div>
+            ))
+          ) : tenants.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 bg-white rounded-xl border border-slate-200 text-[13px]">
+              Chưa có dữ liệu khách thuê.
+            </div>
+          ) : (
+            tenants.map((tenant) => {
+              const roleConfig = getRoleConfig(tenant.role);
+              const statusConfig = getStatusConfig(tenant.status);
+              const currentResidence = tenant.current_residence || null;
+
+              const roomName = tenant.room || currentResidence?.room?.name || "Chưa gắn phòng";
+              const propertyName = tenant.property || currentResidence?.room?.property?.name || "—";
+              const leaseId = currentResidence?.lease_id || currentResidence?.lease?.id || null;
+              const moveInDate = tenant.move_in_date || currentResidence?.move_in_date || null;
+              const tenantName = tenant.name || tenant.full_name;
+              const cccd = tenant.cccd || tenant.id_card_number || "—";
+
+              return (
+                <div key={tenant.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+
+                  {/* Header: Tên khách + Trạng thái */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-green-50 text-brand flex items-center justify-center border border-green-100 shrink-0">
+                        <i className="fa-regular fa-user text-[12px]"></i>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-800 text-[14px] leading-none">{tenantName}</span>
+                        <span className="text-[11px] text-slate-500 mt-1">CCCD: {cccd}</span>
+                      </div>
+                    </div>
+                    <span className={`px-2.5 py-1 border text-[10px] font-semibold rounded-md whitespace-nowrap ${statusConfig.className}`}>
+                      {statusConfig.label}
+                    </span>
+                  </div>
+
+                  {/* Body: Thông tin chi tiết */}
+                  <div className="p-4 flex flex-col gap-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[11px] text-slate-500 mb-0.5">Liên hệ</span>
+                        <span className="font-semibold text-slate-800 text-[13px]">{tenant.phone || "—"}</span>
+                        <span className={`mt-1.5 w-fit px-2 py-0.5 border text-[10px] rounded ${roleConfig.className}`}>
+                          {roleConfig.label}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-end shrink-0 text-right">
+                        <span className="text-[11px] text-slate-500 mb-0.5">Phòng / Khu</span>
+                        <span className="font-semibold text-slate-800 text-[13px]">{roomName}</span>
+                        <span className="text-[11px] text-slate-500 mt-0.5">{propertyName}</span>
+                      </div>
+                    </div>
+
+                    <div className="w-full h-px bg-slate-50"></div>
+
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex flex-col">
+                        <span className="text-[11px] text-slate-500 mb-0.5">Hợp đồng</span>
+                        <span className="font-medium text-slate-800 text-[12px]">
+                          {leaseId ? `HĐ #${leaseId}` : "Chưa gắn HĐ"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end text-right">
+                        <span className="text-[11px] text-slate-500 mb-0.5">Ngày vào ở</span>
+                        <span className="font-medium text-slate-800 text-[12px]">{moveInDate || "—"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer: Nút thao tác */}
+                  <div className="px-3 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onOpenViewModal?.(tenant)}
+                      className="flex-1 py-2 border border-slate-200 rounded-lg bg-white text-[12px] font-medium text-slate-600 active:bg-slate-100 flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <i className="fa-regular fa-eye"></i> Xem
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onOpenEditModal?.(tenant)}
+                      className="flex-1 py-2 border border-blue-100 rounded-lg bg-white text-[12px] font-medium text-blue-600 active:bg-blue-50 flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <i className="fa-solid fa-pen-to-square"></i> Sửa
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onOpenDeleteModal?.(tenant)}
+                      className="w-10 flex shrink-0 items-center justify-center border border-red-100 rounded-lg bg-white text-[12px] text-red-500 active:bg-red-50 shadow-sm"
+                    >
+                      <i className="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
+
+                </div>
+              );
+            })
+          )}
+        </div>
+        {/* --- KẾT THÚC GIAO DIỆN MOBILE --- */}
+
+        <div className="hidden lg:block overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <table className="w-full text-left border-collapse whitespace-nowrap min-w-[1000px]">
             <thead className="bg-white border-b border-slate-200">
               <tr>

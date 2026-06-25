@@ -179,7 +179,131 @@ export default function LeasesTable({
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-        <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+
+        {/* --- GIAO DIỆN MOBILE (Dạng Card ẩn trên PC) --- */}
+        <div className="lg:hidden flex flex-col gap-3 p-3 bg-slate-50/50">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-40 bg-white border border-slate-200 rounded-xl animate-pulse"></div>
+            ))
+          ) : leases.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 bg-white rounded-xl border border-slate-200 text-[13px]">
+              Chưa có dữ liệu hợp đồng.
+            </div>
+          ) : (
+            leases.map((lease) => {
+              const statusConfig = getStatusConfig(lease.status);
+              const roomName = lease.room?.name || "—";
+              const propertyName = lease.room?.property?.name || "—";
+              const tenantName = lease.tenant?.full_name || "—";
+              const tenantPhone = lease.tenant?.phone || "";
+              const leaseCode = `HĐ #${lease.id}`;
+
+              return (
+                <div key={lease.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+
+                  {/* Header: Mã HĐ + Trạng thái */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-green-50 text-brand flex items-center justify-center border border-green-100 shrink-0">
+                        <i className="fa-solid fa-file-contract text-[12px]"></i>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-800 text-[14px] leading-none">{leaseCode}</span>
+                        <span className="text-[11px] text-slate-500 mt-1">Tạo: {formatDate(lease.created_at)}</span>
+                      </div>
+                    </div>
+                    <span className={`px-2.5 py-1 border text-[10px] font-semibold rounded-md whitespace-nowrap ${statusConfig.className}`}>
+                      {lease.status_label || statusConfig.label}
+                    </span>
+                  </div>
+
+                  {/* Body: Thông tin chi tiết */}
+                  <div className="p-4 flex flex-col gap-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[11px] text-slate-500 mb-0.5">Khách thuê</span>
+                        <span className="font-semibold text-slate-800 text-[13px] truncate">{tenantName}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[12px] text-slate-600">{tenantPhone || "Chưa có SĐT"}</span>
+                          {tenantPhone && (
+                            <button onClick={() => onCopyPhone?.(tenantPhone)} className="text-slate-400 hover:text-brand" title="Copy">
+                              <i className="fa-solid fa-copy text-[11px]"></i>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end shrink-0 text-right">
+                        <span className="text-[11px] text-slate-500 mb-0.5">Phòng</span>
+                        <span className="font-semibold text-slate-800 text-[13px]">{roomName}</span>
+                        <span className="text-[11px] text-slate-500 mt-0.5">{propertyName}</span>
+                      </div>
+                    </div>
+
+                    <div className="w-full h-px bg-slate-50"></div>
+
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex flex-col">
+                        <span className="text-[11px] text-slate-500 mb-0.5">Thời hạn</span>
+                        <span className="font-medium text-slate-800 text-[12px]">{formatDate(lease.start_date)}</span>
+                        <span className="text-[11px] text-slate-500 mt-0.5">
+                          {lease.end_date ? `Đến ${formatDate(lease.end_date)}` : "Không thời hạn"}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-end text-right">
+                        <span className="text-[11px] text-slate-500 mb-0.5">Tiền cọc</span>
+                        <span className="font-bold text-slate-800 text-[13px] text-brand">{formatMoney(lease.deposit)}</span>
+                        <span className="text-[11px] text-slate-500 mt-0.5">Thu ngày {lease.billing_day || 1}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer: Nút thao tác */}
+                  <div className="px-3 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onOpenViewModal?.(lease)}
+                      className="flex-1 py-2 border border-slate-200 rounded-lg bg-white text-[12px] font-medium text-slate-600 active:bg-slate-100 flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <i className="fa-regular fa-eye"></i> Xem
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleExportPdf(lease.id)}
+                      className="flex-1 py-2 border border-slate-200 rounded-lg bg-white text-[12px] font-medium text-slate-600 active:bg-green-50 active:text-green-600 flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <i className="fa-solid fa-share-nodes"></i> Share
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onEndLease?.(lease)}
+                      disabled={lease.status !== "active"}
+                      className="w-10 flex shrink-0 items-center justify-center border border-slate-200 rounded-lg bg-white text-[12px] text-slate-500 active:bg-red-50 active:text-red-600 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                    >
+                      <i className="fa-solid fa-right-from-bracket"></i>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onOpenDeleteModal?.(lease)}
+                      className="w-10 flex shrink-0 items-center justify-center border border-red-100 rounded-lg bg-white text-[12px] text-red-500 active:bg-red-50 shadow-sm"
+                    >
+                      <i className="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
+
+                </div>
+              );
+            })
+          )}
+        </div>
+        {/* --- KẾT THÚC GIAO DIỆN MOBILE --- */}
+
+        <div className="hidden lg:block overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <table className="w-full text-left border-collapse whitespace-nowrap min-w-[1100px]">
             <thead className="bg-white border-b border-slate-200">
               <tr>
