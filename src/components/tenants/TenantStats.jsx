@@ -2,18 +2,14 @@ import React from "react";
 
 function StatSkeleton() {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm animate-pulse">
-      <div className="flex justify-between items-start mb-3">
-        {/* Title skeleton */}
-        <div className="h-3.5 bg-slate-100 rounded w-20 mt-1"></div>
-        {/* Icon skeleton */}
-        <div className="w-8 h-8 rounded-full bg-slate-100 shrink-0"></div>
+    <div className="bg-white rounded-xl border border-slate-200 p-2.5 md:p-4 shadow-sm animate-pulse">
+      <div className="flex justify-between items-start mb-1.5 md:mb-3">
+        <div className="h-3 bg-slate-100 rounded w-16 md:w-24 mt-0.5"></div>
+        <div className="w-6 h-6 md:w-8 md:h-8 rounded bg-slate-100 shrink-0"></div>
       </div>
-      <div className="flex items-end gap-2">
-        {/* Value skeleton */}
-        <div className="h-7 bg-slate-100 rounded w-12"></div>
-        {/* Rate skeleton */}
-        <div className="h-3 bg-slate-100 rounded w-8 mb-1"></div>
+      <div className="flex items-end gap-1 md:gap-2">
+        <div className="h-5 md:h-7 bg-slate-100 rounded w-8 md:w-12"></div>
+        <div className="h-2.5 md:h-3 bg-slate-100 rounded w-6 md:w-8 mb-0.5"></div>
       </div>
     </div>
   );
@@ -22,8 +18,7 @@ function StatSkeleton() {
 export default function TenantStats({ stats, isLoading = false }) {
   if (isLoading) {
     return (
-      // Mobile: 2 cột | Tablet: 4 cột | Desktop: 4 cột
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
         {Array.from({ length: 4 }).map((_, index) => (
           <StatSkeleton key={index} />
         ))}
@@ -32,82 +27,82 @@ export default function TenantStats({ stats, isLoading = false }) {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
       {/* Card 1: Tổng khách thuê */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <div className="flex justify-between items-start mb-1">
-          <p className="text-[12px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
+      <div className="bg-white rounded-xl border border-slate-200 p-2.5 md:p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="flex justify-between items-start mb-0.5 md:mb-1">
+          <p className="text-[11px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
             Tổng khách thuê
           </p>
-          <div className="w-8 h-8 rounded-md bg-green-50 flex items-center justify-center text-green-600 shrink-0">
-            <i className="fa-solid fa-users text-sm"></i>
+          <div className="w-6 h-6 md:w-8 md:h-8 rounded bg-green-50 flex items-center justify-center text-green-600 shrink-0">
+            <i className="fa-solid fa-users text-[11px] md:text-sm"></i>
           </div>
         </div>
-        <div className="flex items-baseline gap-1.5">
-          <p className="text-[22px] md:text-[24px] font-bold text-slate-800 leading-none">
+        <div className="flex items-baseline gap-1 md:gap-1.5">
+          <p className="text-[18px] md:text-[24px] font-bold text-slate-800 leading-none">
             {stats?.total || 0}
           </p>
-          <p className="text-[11px] md:text-[12px] text-slate-400 font-medium">
+          <p className="text-[10px] md:text-[12px] text-slate-400 font-medium">
             Tất cả
           </p>
         </div>
       </div>
 
       {/* Card 2: Đang thuê */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <div className="flex justify-between items-start mb-1">
-          <p className="text-[12px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
+      <div className="bg-white rounded-xl border border-slate-200 p-2.5 md:p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="flex justify-between items-start mb-0.5 md:mb-1">
+          <p className="text-[11px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
             Đang thuê
           </p>
-          <div className="w-8 h-8 rounded-md bg-green-50 flex items-center justify-center text-green-600 shrink-0">
-            <i className="fa-regular fa-circle-check text-sm"></i>
+          <div className="w-6 h-6 md:w-8 md:h-8 rounded bg-green-50 flex items-center justify-center text-green-600 shrink-0">
+            <i className="fa-regular fa-circle-check text-[11px] md:text-sm"></i>
           </div>
         </div>
-        <div className="flex items-baseline gap-1.5">
-          <p className="text-[22px] md:text-[24px] font-bold text-slate-800 leading-none">
+        <div className="flex items-baseline gap-1 md:gap-1.5">
+          <p className="text-[18px] md:text-[24px] font-bold text-slate-800 leading-none">
             {stats?.active || 0}
           </p>
-          <p className="text-[11px] md:text-[12px] text-green-600 font-bold bg-green-50 px-1.5 py-0.5 rounded">
+          <p className="text-[10px] md:text-[11px] text-green-600 font-bold bg-green-50 px-1 md:px-1.5 py-0.5 rounded">
             {stats?.active_rate || 0}%
           </p>
         </div>
       </div>
 
       {/* Card 3: Chờ gắn HĐ */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <div className="flex justify-between items-start mb-1">
-          <p className="text-[12px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
+      <div className="bg-white rounded-xl border border-slate-200 p-2.5 md:p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="flex justify-between items-start mb-0.5 md:mb-1">
+          <p className="text-[11px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
             Chờ gắn HĐ
           </p>
-          <div className="w-8 h-8 rounded-md bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
-            <i className="fa-regular fa-clock text-sm"></i>
+          <div className="w-6 h-6 md:w-8 md:h-8 rounded bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
+            <i className="fa-regular fa-clock text-[11px] md:text-sm"></i>
           </div>
         </div>
-        <div className="flex items-baseline gap-1.5">
-          <p className="text-[22px] md:text-[24px] font-bold text-slate-800 leading-none">
+        <div className="flex items-baseline gap-1 md:gap-1.5">
+          <p className="text-[18px] md:text-[24px] font-bold text-slate-800 leading-none">
             {stats?.pending || 0}
           </p>
-          <p className="text-[11px] md:text-[12px] text-orange-500 font-bold bg-orange-50 px-1.5 py-0.5 rounded">
+          <p className="text-[10px] md:text-[11px] text-orange-500 font-bold bg-orange-50 px-1 md:px-1.5 py-0.5 rounded">
             {stats?.pending_rate || 0}%
           </p>
         </div>
       </div>
 
       {/* Card 4: Đã trả phòng */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <div className="flex justify-between items-start mb-1">
-          <p className="text-[12px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
+      <div className="bg-white rounded-xl border border-slate-200 p-2.5 md:p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="flex justify-between items-start mb-0.5 md:mb-1">
+          <p className="text-[11px] md:text-[13px] text-slate-500 font-medium line-clamp-1 pr-1">
             Đã trả phòng
           </p>
-          <div className="w-8 h-8 rounded-md bg-red-50 flex items-center justify-center text-red-500 shrink-0">
-            <i className="fa-regular fa-calendar-xmark text-sm"></i>
+          <div className="w-6 h-6 md:w-8 md:h-8 rounded bg-red-50 flex items-center justify-center text-red-500 shrink-0">
+            <i className="fa-regular fa-calendar-xmark text-[11px] md:text-sm"></i>
           </div>
         </div>
-        <div className="flex items-baseline gap-1.5">
-          <p className="text-[22px] md:text-[24px] font-bold text-slate-800 leading-none">
+        <div className="flex items-baseline gap-1 md:gap-1.5">
+          <p className="text-[18px] md:text-[24px] font-bold text-slate-800 leading-none">
             {stats?.left || 0}
           </p>
-          <p className="text-[11px] md:text-[12px] text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded">
+          <p className="text-[10px] md:text-[11px] text-red-500 font-bold bg-red-50 px-1 md:px-1.5 py-0.5 rounded">
             {stats?.left_rate || 0}%
           </p>
         </div>

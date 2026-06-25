@@ -178,10 +178,10 @@ export default function LeasesTable({
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+      <div className="bg-transparent lg:bg-white border-none lg:border lg:border-slate-200 lg:rounded-xl shadow-none lg:shadow-sm lg:overflow-hidden flex flex-col">
 
         {/* --- GIAO DIỆN MOBILE (Dạng Card ẩn trên PC) --- */}
-        <div className="lg:hidden flex flex-col gap-3 p-3 bg-slate-50/50">
+        <div className="lg:hidden flex flex-col gap-3 pb-4">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-40 bg-white border border-slate-200 rounded-xl animate-pulse"></div>
@@ -455,7 +455,7 @@ export default function LeasesTable({
           </table>
         </div>
 
-        <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="px-5 py-3 lg:border-t border-slate-200 bg-transparent lg:bg-white flex flex-col sm:flex-row justify-between items-center gap-4">
           <span className="text-[12px] text-slate-500">
             Hiển thị 1 - {leases.length} trong tổng số {pagination?.total ?? leases.length} hợp đồng
           </span>
