@@ -117,10 +117,6 @@ export default function UtilitiesPage() {
         />
       </div>
 
-      <div className="mt-8 mb-2 flex justify-center items-center text-[12px] text-slate-400">
-        <p>© 2024 Nhà Trọ Kiêu Giang. Tất cả quyền được bảo lưu.</p>
-      </div>
-
       {/* --- CÁC MODAL SẼ ĐƯỢC CHÈN VÀO ĐÂY Ở BƯỚC TỚI --- */}
     </div>
   );
