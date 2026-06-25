@@ -1,14 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const initialForm = {
   full_name: "",
   phone: "",
   email: "",
   id_card_number: "",
-  property_name: "",
-  room_name: "",
-  move_in_date: "",
-  note: "",
 };
 
 export default function EditTenantModal({
@@ -19,325 +15,201 @@ export default function EditTenantModal({
   isSubmitting = false,
 }) {
   const [form, setForm] = useState(initialForm);
-
+  
+  // Quản lý ảnh mặt trước
   const [frontImage, setFrontImage] = useState(null);
-  const [backImage, setBackImage] = useState(null);
-
   const [frontPreview, setFrontPreview] = useState("");
-  const [backPreview, setBackPreview] = useState("");
+  const [existingFrontUrl, setExistingFrontUrl] = useState("");
 
-  const [existingFrontImage, setExistingFrontImage] = useState("");
-  const [existingBackImage, setExistingBackImage] = useState("");
+  // Quản lý ảnh mặt sau
+  const [backImage, setBackImage] = useState(null);
+  const [backPreview, setBackPreview] = useState("");
+  const [existingBackUrl, setExistingBackUrl] = useState("");
 
   const [clientError, setClientError] = useState("");
 
+  // Cleanup object URLs để tránh memory leak
   useEffect(() => {
-    if (!open || !tenant) return;
+    return () => {
+      if (frontPreview) URL.revokeObjectURL(frontPreview);
+      if (backPreview) URL.revokeObjectURL(backPreview);
+    };
+  }, [frontPreview, backPreview]);
 
-    const currentResidence = tenant.current_residence || null;
+  // Khóa cuộn trang nền khi mở Modal
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  // Đổ dữ liệu tenant vào form khi mở
+  useEffect(() => {
+    if (!open) return;
+
+    if (!tenant) {
+      setForm(initialForm);
+      return;
+    }
 
     setForm({
       full_name: tenant.full_name || tenant.name || "",
       phone: tenant.phone || "",
       email: tenant.email || "",
       id_card_number: tenant.id_card_number || tenant.cccd || "",
-
-      property_name:
-        tenant.property ||
-        currentResidence?.room?.property?.name ||
-        "",
-
-      room_name:
-        tenant.room ||
-        currentResidence?.room?.name ||
-        "",
-
-      move_in_date:
-        tenant.move_in_date ||
-        currentResidence?.move_in_date ||
-        "",
-
-      note:
-        currentResidence?.note ||
-        tenant.note ||
-        "",
     });
 
-    setExistingFrontImage(tenant.id_card_front_image || "");
-    setExistingBackImage(tenant.id_card_back_image || "");
-
+    setExistingFrontUrl(tenant.id_card_front_image || "");
+    setExistingBackUrl(tenant.id_card_back_image || "");
+    
     setFrontImage(null);
+    setFrontPreview("");
     setBackImage(null);
+    setBackPreview("");
     setClientError("");
   }, [open, tenant]);
 
-  useEffect(() => {
-    if (!open) return;
-
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!frontImage) {
-      setFrontPreview(existingFrontImage || "");
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(frontImage);
-    setFrontPreview(objectUrl);
-
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-    };
-  }, [frontImage, existingFrontImage]);
-
-  useEffect(() => {
-    if (!backImage) {
-      setBackPreview(existingBackImage || "");
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(backImage);
-    setBackPreview(objectUrl);
-
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-    };
-  }, [backImage, existingBackImage]);
-
-  if (!open || !tenant) return null;
+  if (!open) return null;
 
   const handleChange = (field) => (event) => {
     setClientError("");
-
     setForm((prev) => ({
       ...prev,
       [field]: event.target.value,
     }));
   };
 
-  const resetForm = () => {
-    setForm(initialForm);
-    setFrontImage(null);
-    setBackImage(null);
-    setFrontPreview("");
-    setBackPreview("");
-    setExistingFrontImage("");
-    setExistingBackImage("");
-    setClientError("");
+  const handleFrontChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (frontPreview) URL.revokeObjectURL(frontPreview);
+    setFrontImage(file);
+    setFrontPreview(URL.createObjectURL(file));
+    event.target.value = "";
   };
 
-  const handleClose = () => {
-    if (isSubmitting) return;
+  const handleBackChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    resetForm();
-    onClose?.();
+    if (backPreview) URL.revokeObjectURL(backPreview);
+    setBackImage(file);
+    setBackPreview(URL.createObjectURL(file));
+    event.target.value = "";
+  };
+
+  const handleRemoveNewFront = () => {
+    if (frontPreview) URL.revokeObjectURL(frontPreview);
+    setFrontImage(null);
+    setFrontPreview("");
+  };
+
+  const handleRemoveNewBack = () => {
+    if (backPreview) URL.revokeObjectURL(backPreview);
+    setBackImage(null);
+    setBackPreview("");
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!form.full_name.trim()) {
-      setClientError("Vui lòng nhập họ và tên khách thuê.");
-      return;
-    }
-
-    if (!form.phone.trim()) {
-      setClientError("Vui lòng nhập số điện thoại.");
-      return;
-    }
-
-    if (!form.id_card_number.trim()) {
-      setClientError("Vui lòng nhập số CCCD/CMND.");
-      return;
-    }
+    if (!form.full_name.trim()) return setClientError("Vui lòng nhập họ và tên khách thuê.");
+    if (!form.phone.trim()) return setClientError("Vui lòng nhập số điện thoại.");
+    if (!form.id_card_number.trim()) return setClientError("Vui lòng nhập số CCCD/CMND.");
 
     const payload = new FormData();
-
-    /*
-      Nếu tenantService.update đang dùng api.post(`/tenants/${id}`, data)
-      thì cần _method = PUT để Laravel hiểu đây là request cập nhật.
-    */
+    // Khai báo _method PUT để Laravel nhận diện Update qua FormData
     payload.append("_method", "PUT");
-
     payload.append("full_name", form.full_name.trim());
     payload.append("phone", form.phone.trim());
-    payload.append("email", form.email.trim());
     payload.append("id_card_number", form.id_card_number.trim());
-
-    if (frontImage) {
-      payload.append("id_card_front_image", frontImage);
+    
+    if (form.email.trim()) {
+      payload.append("email", form.email.trim());
     }
 
-    if (backImage) {
-      payload.append("id_card_back_image", backImage);
-    }
+    if (frontImage) payload.append("id_card_front_image", frontImage);
+    if (backImage) payload.append("id_card_back_image", backImage);
 
-    onSubmit?.(tenant.id, payload);
+    onSubmit(tenant.id, payload);
+  };
+
+  const handleClose = () => {
+    if (isSubmitting) return;
+    onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-4 sm:p-6 overflow-hidden">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[980px] flex flex-col h-[95vh] sm:h-auto sm:max-h-[95vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0 bg-white">
-          <div>
-            <h2 className="text-[18px] font-bold text-slate-800">
-              Chỉnh sửa khách thuê
-            </h2>
-            <p className="text-[12px] text-slate-500 mt-0.5">
-              Chỉ chỉnh thông tin hồ sơ. Đổi phòng hoặc chuyển đại diện sẽ làm ở chức năng riêng.
-            </p>
+    <>
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
+      <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
+        {/* Modal Container */}
+        <div className="bg-slate-50 w-full h-[95vh] sm:h-auto sm:max-h-[90vh] sm:max-w-[700px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out]">
+          
+          {/* Header (Sticky Top) */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white shrink-0 sticky top-0 z-20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                <i className="fa-solid fa-user-pen text-[18px]"></i>
+              </div>
+              <div>
+                <h2 className="text-[17px] sm:text-[19px] font-bold text-slate-800 leading-tight">
+                  Chỉnh sửa hồ sơ
+                </h2>
+                <p className="text-[12px] text-slate-500 mt-0.5 hidden sm:block">
+                  Cập nhật thông tin cá nhân và giấy tờ của khách thuê
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors shrink-0 disabled:opacity-60"
+            >
+              <i className="fa-solid fa-xmark text-[16px]"></i>
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className="text-slate-400 hover:text-slate-600 transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-50 disabled:opacity-60"
-          >
-            <i className="fa-solid fa-xmark text-[20px]"></i>
-          </button>
-        </div>
+          <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+            {/* Body (Scrollable) */}
+            <div className="overflow-y-auto no-scrollbar flex-1 pb-6 bg-slate-50">
+              
+              {/* Error Message */}
+              {clientError && (
+                <div className="mx-5 mt-5 sm:mx-6 sm:mt-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-[13px] flex items-center gap-2 shadow-sm">
+                  <i className="fa-solid fa-circle-exclamation"></i>
+                  {clientError}
+                </div>
+              )}
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Cột trái */}
-            <div className="lg:col-span-7 flex flex-col gap-8">
               {/* 1. Thông tin cá nhân */}
-              <div>
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">
-                    1
-                  </div>
-                  <h3 className="text-[15px] font-bold text-slate-800">
-                    Thông tin khách thuê
-                  </h3>
-                </div>
+              <div className={`bg-white px-5 py-5 sm:p-6 border-b border-slate-200 ${clientError ? 'mt-4' : ''}`}>
+                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
+                  <i className="fa-solid fa-address-card text-[13px]"></i> 1. Thông tin liên hệ
+                </h3>
 
-                {clientError && (
-                  <div className="mb-4 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-lg text-[13px]">
-                    {clientError}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  {/* Mặt trước CCCD */}
-                  <label className="border-2 border-dashed border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:border-brand hover:bg-green-50/30 transition-all group min-h-[170px] overflow-hidden">
-                    <p className="text-[13px] font-semibold text-slate-700 mb-3 group-hover:text-brand transition-colors">
-                      Mặt trước CCCD
-                    </p>
-
-                    {frontPreview ? (
-                      <div className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-slate-50 mb-2">
-                        <img
-                          src={frontPreview}
-                          alt="Mặt trước CCCD"
-                          className="w-full h-full object-cover"
-                        />
-
-                        {frontImage && (
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              setFrontImage(null);
-                            }}
-                            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 text-slate-500 hover:text-red-500 hover:bg-white flex items-center justify-center shadow-sm"
-                            title="Bỏ ảnh mới chọn"
-                          >
-                            <i className="fa-solid fa-xmark text-[12px]"></i>
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="w-12 h-10 border border-slate-300 rounded flex items-center justify-center text-slate-400 mb-2 group-hover:border-brand group-hover:text-brand transition-colors relative">
-                        <i className="fa-regular fa-address-card text-xl"></i>
-                        <i className="fa-solid fa-user absolute text-[10px] right-2 bottom-2"></i>
-                      </div>
-                    )}
-
-                    <span className="text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center line-clamp-1 max-w-full">
-                      {frontImage
-                        ? frontImage.name
-                        : frontPreview
-                          ? "Bấm để thay ảnh mặt trước"
-                          : "Chụp hoặc tải ảnh lên"}
-                    </span>
-
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) =>
-                        setFrontImage(event.target.files?.[0] || null)
-                      }
-                      className="hidden"
-                    />
-                  </label>
-
-                  {/* Mặt sau CCCD */}
-                  <label className="border-2 border-dashed border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:border-brand hover:bg-green-50/30 transition-all group min-h-[170px] overflow-hidden">
-                    <p className="text-[13px] font-semibold text-slate-700 mb-3 group-hover:text-brand transition-colors">
-                      Mặt sau CCCD
-                    </p>
-
-                    {backPreview ? (
-                      <div className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-slate-50 mb-2">
-                        <img
-                          src={backPreview}
-                          alt="Mặt sau CCCD"
-                          className="w-full h-full object-cover"
-                        />
-
-                        {backImage && (
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              setBackImage(null);
-                            }}
-                            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 text-slate-500 hover:text-red-500 hover:bg-white flex items-center justify-center shadow-sm"
-                            title="Bỏ ảnh mới chọn"
-                          >
-                            <i className="fa-solid fa-xmark text-[12px]"></i>
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="w-12 h-10 border border-slate-300 rounded flex items-center justify-center text-slate-400 mb-2 group-hover:border-brand group-hover:text-brand transition-colors relative">
-                        <i className="fa-regular fa-address-card text-xl"></i>
-                        <i className="fa-solid fa-qrcode absolute text-[10px] right-2 bottom-2"></i>
-                      </div>
-                    )}
-
-                    <span className="text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center line-clamp-1 max-w-full">
-                      {backImage
-                        ? backImage.name
-                        : backPreview
-                          ? "Bấm để thay ảnh mặt sau"
-                          : "Chụp hoặc tải ảnh lên"}
-                    </span>
-
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) =>
-                        setBackImage(event.target.files?.[0] || null)
-                      }
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
+                  <div className="sm:col-span-2">
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                       Họ và tên <span className="text-red-500">*</span>
                     </label>
@@ -345,8 +217,8 @@ export default function EditTenantModal({
                       type="text"
                       value={form.full_name}
                       onChange={handleChange("full_name")}
-                      placeholder="Nhập họ và tên"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                      placeholder="VD: Nguyễn Văn A"
+                      className="w-full px-3.5 py-3 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-medium"
                     />
                   </div>
 
@@ -355,11 +227,11 @@ export default function EditTenantModal({
                       Số điện thoại <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="text"
+                      type="tel"
                       value={form.phone}
                       onChange={handleChange("phone")}
                       placeholder="Nhập số điện thoại"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                      className="w-full px-3.5 py-3 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-medium"
                     />
                   </div>
 
@@ -371,185 +243,135 @@ export default function EditTenantModal({
                       type="text"
                       value={form.id_card_number}
                       onChange={handleChange("id_card_number")}
-                      placeholder="Nhập số CCCD/CMND"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                      placeholder="Nhập số CCCD"
+                      className="w-full px-3.5 py-3 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-medium"
                     />
                   </div>
 
-                  <div>
+                  <div className="sm:col-span-2">
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Email{" "}
-                      <span className="text-slate-400 font-normal">
-                        (tùy chọn)
-                      </span>
+                      Địa chỉ Email <span className="text-slate-400 font-normal">(tùy chọn)</span>
                     </label>
                     <input
                       type="email"
                       value={form.email}
                       onChange={handleChange("email")}
-                      placeholder="VD: khachthue@gmail.com"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                      placeholder="VD: khachthue@email.com"
+                      className="w-full px-3.5 py-3 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-medium"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="h-px w-full bg-slate-100"></div>
+              {/* 2. Ảnh giấy tờ */}
+              <div className="bg-white px-5 py-5 sm:p-6 mt-2 sm:mt-0">
+                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
+                  <i className="fa-regular fa-images text-[13px]"></i> 2. Ảnh CCCD / CMND
+                </h3>
 
-              {/* 2. Thông tin lưu trú */}
-              <div>
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">
-                    2
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* Mặt trước */}
+                  <div className="flex flex-col">
+                    <span className="text-[12px] font-semibold text-slate-600 mb-2 text-center uppercase tracking-wide">Mặt trước</span>
+                    <div className="relative w-full aspect-[8/5] rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 overflow-hidden flex items-center justify-center group hover:border-brand transition-colors">
+                      {frontPreview ? (
+                        <img src={frontPreview} alt="Mặt trước mới" className="w-full h-full object-cover" />
+                      ) : existingFrontUrl ? (
+                        <img src={existingFrontUrl} alt="Mặt trước hiện tại" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-center text-slate-400">
+                          <i className="fa-regular fa-image text-2xl mb-1 group-hover:text-brand transition-colors"></i>
+                          <p className="text-[11px]">Chưa có ảnh</p>
+                        </div>
+                      )}
+
+                      {/* Nút Upload đè lên */}
+                      <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-[1px]">
+                        <div className="bg-white text-slate-700 px-3 py-1.5 rounded-lg text-[12px] font-semibold shadow-sm flex items-center gap-1.5">
+                          <i className="fa-solid fa-camera"></i> {existingFrontUrl || frontPreview ? 'Đổi ảnh' : 'Tải lên'}
+                        </div>
+                        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFrontChange} className="hidden" />
+                      </label>
+                    </div>
+                    {frontPreview && (
+                      <button type="button" onClick={handleRemoveNewFront} className="mt-2 text-[12px] font-semibold text-red-500 hover:text-red-600 text-center">
+                        Hủy ảnh mới chọn
+                      </button>
+                    )}
                   </div>
-                  <h3 className="text-[15px] font-bold text-slate-800">
-                    Thông tin lưu trú hiện tại
-                  </h3>
+
+                  {/* Mặt sau */}
+                  <div className="flex flex-col">
+                    <span className="text-[12px] font-semibold text-slate-600 mb-2 text-center uppercase tracking-wide">Mặt sau</span>
+                    <div className="relative w-full aspect-[8/5] rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 overflow-hidden flex items-center justify-center group hover:border-brand transition-colors">
+                      {backPreview ? (
+                        <img src={backPreview} alt="Mặt sau mới" className="w-full h-full object-cover" />
+                      ) : existingBackUrl ? (
+                        <img src={existingBackUrl} alt="Mặt sau hiện tại" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-center text-slate-400">
+                          <i className="fa-regular fa-image text-2xl mb-1 group-hover:text-brand transition-colors"></i>
+                          <p className="text-[11px]">Chưa có ảnh</p>
+                        </div>
+                      )}
+
+                      <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-[1px]">
+                        <div className="bg-white text-slate-700 px-3 py-1.5 rounded-lg text-[12px] font-semibold shadow-sm flex items-center gap-1.5">
+                          <i className="fa-solid fa-camera"></i> {existingBackUrl || backPreview ? 'Đổi ảnh' : 'Tải lên'}
+                        </div>
+                        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleBackChange} className="hidden" />
+                      </label>
+                    </div>
+                    {backPreview && (
+                      <button type="button" onClick={handleRemoveNewBack} className="mt-2 text-[12px] font-semibold text-red-500 hover:text-red-600 text-center">
+                        Hủy ảnh mới chọn
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Khu nhà
-                    </label>
-                    <input
-                      type="text"
-                      value={form.property_name || "—"}
-                      disabled
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-500 cursor-not-allowed"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Phòng
-                    </label>
-                    <input
-                      type="text"
-                      value={form.room_name || "—"}
-                      disabled
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-500 cursor-not-allowed"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Ngày vào ở
-                    </label>
-                    <input
-                      type="text"
-                      value={form.move_in_date || "—"}
-                      disabled
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-500 cursor-not-allowed"
-                    />
-                  </div>
-
-                  <div className="bg-blue-50 border border-blue-100 text-blue-700 px-4 py-3 rounded-lg text-[13px] flex items-start gap-3">
-                    <i className="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
-                    <p>
-                      Đổi phòng hoặc ghi nhận rời phòng sẽ làm bằng chức năng riêng
-                      để giữ đúng lịch sử cư trú.
-                    </p>
-                  </div>
+                <div className="mt-4 bg-blue-50 border border-blue-100 p-3.5 rounded-xl text-[12px] text-blue-700 flex items-start gap-2.5">
+                  <i className="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
+                  <p className="leading-relaxed">Nếu bạn tải ảnh mới lên, ảnh cũ sẽ tự động được thay thế. Dung lượng ảnh tối đa 4MB.</p>
                 </div>
               </div>
+
             </div>
 
-            {/* Cột phải */}
-            <div className="lg:col-span-5 flex flex-col gap-6">
-              <div className="bg-slate-50 border border-slate-100 rounded-xl p-5 shadow-sm">
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">
-                    3
-                  </div>
-                  <h3 className="text-[15px] font-bold text-slate-800">
-                    Vai trò & tài khoản
-                  </h3>
-                </div>
+            {/* Footer (Sticky Bottom) */}
+            <div className="border-t border-slate-200 px-5 py-3.5 bg-white shrink-0 sticky bottom-0 z-20 flex items-center justify-between gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+              {/* Nút Hủy */}
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={isSubmitting}
+                className="px-5 py-3 sm:py-2.5 bg-slate-100 text-slate-600 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] font-semibold hover:bg-slate-200 transition-colors w-[100px] sm:w-auto text-center disabled:opacity-70"
+              >
+                Hủy
+              </button>
 
-                <div className="bg-white border border-blue-100 shadow-sm p-4 rounded-xl text-[13px] text-slate-700">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                      <i className="fa-solid fa-user-group"></i>
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-800 mb-1">
-                        Không chỉnh vai trò ở đây
-                      </p>
-                      <p className="text-slate-500 leading-relaxed">
-                        Người ở ghép, đại diện hợp đồng và tài khoản đăng nhập sẽ
-                        được xử lý trong chức năng hợp đồng hoặc chuyển đại diện.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 bg-orange-50 border border-orange-100 p-3.5 rounded-xl text-[13px] text-orange-800 flex items-start gap-3">
-                  <i className="fa-solid fa-circle-exclamation mt-0.5 text-orange-500 shrink-0"></i>
-                  <div className="leading-relaxed">
-                    <p className="font-semibold mb-0.5">
-                      Không nên sửa phòng trực tiếp trong form hồ sơ.
-                    </p>
-                    <p>
-                      Nếu cho sửa trực tiếp sẽ mất ý nghĩa lịch sử vào ở, rời phòng
-                      hoặc chuyển phòng.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white">
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">
-                    4
-                  </div>
-                  <h3 className="text-[14px] font-bold text-slate-800">
-                    Ghi chú lưu trú
-                  </h3>
-                </div>
-
-                <div className="relative">
-                  <textarea
-                    value={form.note}
-                    disabled
-                    placeholder="Chưa có ghi chú lưu trú."
-                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] text-slate-500 resize-none min-h-[140px] cursor-not-allowed"
-                  ></textarea>
-                </div>
-
-                <p className="text-[11px] text-slate-400 mt-2">
-                  Ghi chú này thuộc lịch sử cư trú. Nếu cần sửa, nên xử lý trong
-                  chức năng chi tiết cư trú sau.
-                </p>
-              </div>
+              {/* Nút Cập nhật */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none px-8 py-3 sm:py-2.5 bg-brand text-white rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] font-bold sm:font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand/30 sm:shadow-none disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    Đang lưu...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-check text-[14px]"></i>
+                    Lưu thay đổi
+                  </>
+                )}
+              </button>
             </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-slate-100 px-6 py-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 shrink-0 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[13px] font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-60"
-          >
-            <i className="fa-solid fa-xmark text-[14px]"></i> Hủy
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="px-6 py-2.5 bg-brand text-white rounded-lg text-[13px] font-semibold hover:bg-green-700 disabled:opacity-60 flex items-center justify-center gap-2 w-full sm:w-auto"
-          >
-            {isSubmitting && (
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            )}
-            Lưu thay đổi
-          </button>
+          </form>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -6,6 +6,7 @@ import AddLeaseModal from "@/components/leases/AddLeaseModal";
 import leasesService from "@/services/leasesService";
 import propertyService from "@/services/propertyService";
 import ContractTemplateModal from "@/components/leases/ContractTemplateModal";
+import DeleteLeaseModal from "@/components/leases/DeleteLeaseModal";
 const isExpiringSoon = (lease) => {
   if (!lease.end_date || lease.status !== "active") return false;
 
@@ -57,6 +58,10 @@ export default function LeasesPage() {
   const [isCreatingLease, setIsCreatingLease] = useState(false);
 
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingLease, setDeletingLease] = useState(null);
+  const [isDeletingLease, setIsDeletingLease] = useState(false);
 
   const fetchProperties = useCallback(async () => {
     try {
@@ -142,6 +147,33 @@ export default function LeasesPage() {
     }
   };
 
+  // ---  HÀM XỬ LÝ XÓA ---
+  const handleOpenDeleteModal = (lease) => {
+    setDeletingLease(lease);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async (leaseId) => {
+    try {
+      setIsDeletingLease(true);
+      await leasesService.delete(leaseId); // Cần chắc chắn leasesService có hàm delete
+
+      toast.success("Xóa hợp đồng thành công!", { autoClose: 1500 });
+
+      setIsDeleteModalOpen(false);
+      setDeletingLease(null);
+
+      await fetchLeases();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        "Không thể xóa hợp đồng lúc này. Vui lòng thử lại."
+      );
+    } finally {
+      setIsDeletingLease(false);
+    }
+  };
+
 
 
   const handleOpenViewModal = (lease) => {
@@ -177,6 +209,7 @@ export default function LeasesPage() {
           onEndLease={handleEndLease}
           onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
           onCopyPhone={handleCopyPhone}
+          onOpenDeleteModal={handleOpenDeleteModal}
         />
       </div>
 
@@ -194,6 +227,16 @@ export default function LeasesPage() {
       <ContractTemplateModal
         open={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
+      />
+      <DeleteLeaseModal
+        open={isDeleteModalOpen}
+        lease={deletingLease}
+        isDeleting={isDeletingLease}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingLease(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

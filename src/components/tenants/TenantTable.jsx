@@ -46,6 +46,8 @@ export default function TenantTable({
   onOpenAddModal,
   onOpenEditModal,
   onOpenScanModal,
+  onOpenViewModal,
+  onOpenDeleteModal,
 }) {
   return (
     <>
@@ -237,7 +239,11 @@ export default function TenantTable({
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-center gap-1.5">
-                          <button className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-brand hover:border-brand hover:bg-green-50 flex items-center justify-center bg-white transition-colors" title="Xem chi tiết">
+                          <button
+                            type="button"
+                            onClick={() => onOpenViewModal?.(tenant)}
+                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-brand hover:border-brand hover:bg-green-50 flex items-center justify-center bg-white transition-colors"
+                            title="Xem chi tiết">
                             <i className="fa-regular fa-eye"></i>
                           </button>
                           <button
@@ -248,8 +254,14 @@ export default function TenantTable({
                           >
                             <i className="fa-solid fa-pen-to-square text-[12px]"></i>
                           </button>
-                          <button className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center justify-center bg-white transition-colors" title="Thêm thao tác">
-                            <i className="fa-solid fa-ellipsis-vertical"></i>
+                          {/* nút xóa */}
+                          <button
+                            type="button"
+                            onClick={() => onOpenDeleteModal?.(tenant)}
+                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-600 hover:bg-red-50 flex items-center justify-center bg-white transition-colors"
+                            title="Xóa khách thuê"
+                          >
+                            <i className="fa-regular fa-trash-can text-[13px]"></i>
                           </button>
                         </div>
                       </td>

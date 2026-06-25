@@ -6,6 +6,8 @@ import AddTenantModal from "@/components/tenants/AddTenantModal";
 import tenantService from "@/services/tenantService";
 import propertyService from "@/services/propertyService";
 import EditTenantModal from "@/components/tenants/EditTenantModal";
+import ViewTenantModal from "@/components/tenants/ViewTenantModal";
+import DeleteTenantModal from "@/components/tenants/DeleteTenantModal";
 export default function TenantsPage() {
   const [tenants, setTenants] = useState([]);
   const [stats, setStats] = useState(null);
@@ -25,6 +27,13 @@ export default function TenantsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState(null);
   const [isUpdatingTenant, setIsUpdatingTenant] = useState(false);
+
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingTenant, setViewingTenant] = useState(null);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingTenant, setDeletingTenant] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Hàm tải danh sách khu nhà để hiển thị trong filter
   const fetchProperties = useCallback(async () => {
@@ -100,6 +109,21 @@ export default function TenantsPage() {
     }
   };
 
+  // ---  HÀM MỞ VIEW MODAL ---
+  const handleOpenViewModal = async (tenant) => {
+    try {
+      // Gọi API lấy chi tiết để có được lịch sử (residence_history)
+      const response = await tenantService.getById(tenant.id);
+      setViewingTenant(response.data.data || response.data);
+      setIsViewModalOpen(true);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        "Không thể tải thông tin chi tiết khách thuê."
+      );
+    }
+  };
+
   const handleOpenEditModal = async (tenant) => {
     try {
       setEditingTenant(tenant);
@@ -141,6 +165,35 @@ export default function TenantsPage() {
       );
     } finally {
       setIsUpdatingTenant(false);
+    }
+  };
+
+
+  // ---  HÀM XỬ LÝ XÓA ---
+  const handleOpenDeleteModal = (tenant) => {
+    setDeletingTenant(tenant);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async (tenantId) => {
+    try {
+      setIsDeleting(true);
+      await tenantService.delete(tenantId);
+
+      toast.success("Xóa khách thuê thành công!", { autoClose: 1500 });
+
+      setIsDeleteModalOpen(false);
+      setDeletingTenant(null);
+
+      // Load lại danh sách
+      await fetchTenants();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        "Không thể xóa khách thuê lúc này. Vui lòng thử lại."
+      );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -198,6 +251,8 @@ export default function TenantsPage() {
           onOpenAddModal={handleOpenAddModal}
           onOpenEditModal={handleOpenEditModal}
           onOpenScanModal={handleOpenScanModal}
+          onOpenViewModal={handleOpenViewModal}
+          onOpenDeleteModal={handleOpenDeleteModal}
         />
       </div>
 
@@ -221,6 +276,24 @@ export default function TenantsPage() {
         }}
         onSubmit={handleUpdateTenant}
         isSubmitting={isUpdatingTenant}
+      />
+      <ViewTenantModal
+        open={isViewModalOpen}
+        tenant={viewingTenant}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setViewingTenant(null);
+        }}
+      />
+      <DeleteTenantModal
+        open={isDeleteModalOpen}
+        tenant={deletingTenant}
+        isDeleting={isDeleting}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingTenant(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

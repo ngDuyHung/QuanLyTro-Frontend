@@ -57,27 +57,60 @@ export default function LeasesTable({
   onEndLease,
   onOpenTemplateModal,
   onCopyPhone,
+  onOpenDeleteModal,
 }) {
 
-  // ---  HÀM XUẤT PDF VÀO ĐÂY ---
+  // --- HÀM XUẤT VÀ CHIA SẺ PDF ---
   const handleExportPdf = async (leaseId) => {
     try {
+      // 1. Gọi API lấy dữ liệu PDF
       const response = await settingService.exportLeasePdf(leaseId);
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // 2. Tạo đối tượng Blob và File từ dữ liệu
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const fileName = `Hop_dong_thue_${leaseId}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+
+      // 3. Kiểm tra xem thiết bị có hỗ trợ Web Share API với File không (Thường là Mobile)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: `Hợp đồng thuê #${leaseId}`,
+            text: `Gửi bạn bản sao hợp đồng thuê phòng #${leaseId}.`,
+            files: [file],
+          });
+          toast.success("Đã chia sẻ hợp đồng thành công!");
+          return; // Kết thúc hàm nếu chia sẻ thành công
+        } catch (shareError) {
+          // Bỏ qua lỗi nếu người dùng chủ động tắt bảng chia sẻ (AbortError)
+          if (shareError.name !== 'AbortError') {
+            console.error("Lỗi khi chia sẻ:", shareError);
+            // Có lỗi xảy ra, rơi xuống phần tải file dự phòng bên dưới
+          } else {
+            return;
+          }
+        }
+      }
+
+      // 4. FALLBACK: Dành cho PC hoặc trình duyệt không hỗ trợ Share API
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `Hop_dong_thue_${leaseId}.pdf`);
+      link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
 
+      // Dọn dẹp
       link.remove();
       window.URL.revokeObjectURL(url);
+
+      toast.success("Đã tải xuống hợp đồng!");
+
     } catch (error) {
       console.error("Lỗi xuất PDF:", error);
+      toast.error("Không thể xuất hợp đồng lúc này.");
     }
   };
-  // ---------------------------------
 
   return (
     <>
@@ -278,6 +311,15 @@ export default function LeasesTable({
                             title="Kết thúc hợp đồng"
                           >
                             <i className="fa-solid fa-right-from-bracket text-[12px]"></i>
+                          </button>
+                          {/* NÚT XÓA HỢP ĐỒNG */}
+                          <button
+                            type="button"
+                            onClick={() => onOpenDeleteModal?.(lease)}
+                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-600 hover:bg-red-50 flex items-center justify-center bg-white transition-colors"
+                            title="Xóa hợp đồng"
+                          >
+                            <i className="fa-regular fa-trash-can text-[13px]"></i>
                           </button>
                         </div>
                       </td>
