@@ -127,13 +127,13 @@ export default function LandlordLayout() {
           </NavLink>
 
           <NavLink
-            to="/landlord/payments"
+            to="/landlord/financials"
             className={navLinkClasses}
             onClick={closeSidebar}
           >
             <div className="flex items-center gap-3 flex-1">
               <i className="fa-solid fa-money-bill-transfer w-5 text-center"></i>
-              <span>Thanh toán</span>
+              <span>Thu chi</span>
             </div>
             <span className="bg-[#ef4444] text-white text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full shrink-0">
               5

@@ -9,6 +9,7 @@ import PropertiesPage from "@/pages/landlord/PropertiesPage";
 import RoomsPage from "@/pages/landlord/RoomsPage";
 import TenantsPage from "@/pages/landlord/TenantsPage";
 import LeasesPage from "@/pages/landlord/LeasesPage";
+import InvoicesPage from "@/pages/landlord/InvoicesPage";
 import UtilitiesPage from "@/pages/landlord/UtilitiesPage";
 // Component bảo vệ Route: Chỉ cho vào nếu có Token và đúng Role
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -52,6 +53,7 @@ export default function AppRouter() {
         <Route path="tenants" element={<TenantsPage />} />
         <Route path="leases" element={<LeasesPage />} />
         <Route path="utilities" element={<UtilitiesPage/>} />
+        <Route path="invoices" element={<InvoicesPage />} />
       </Route>
 
       {/* Tuyến đường của Admin */}
