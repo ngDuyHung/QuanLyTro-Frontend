@@ -5,6 +5,7 @@ import propertyService from "@/services/propertyService";
 import roomService from "@/services/roomService";
 import InvoicesTable from "@/components/invoices/InvoicesTable";
 import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
+import PaymentInvoiceModal from "@/components/invoices/PaymentInvoiceModal";
 export default function InvoicesPage() {
     // --- Quản lý dữ liệu hệ thống ---
     const [invoices, setInvoices] = useState([]);
@@ -185,6 +186,15 @@ export default function InvoicesPage() {
                 onClose={() => setIsCreateModalOpen(false)}
                 properties={properties}
                 onSuccess={() => fetchInvoices()} // Tải lại bảng sau khi tạo thành công
+            />
+            <PaymentInvoiceModal
+                open={isPaymentModalOpen}
+                invoice={selectedInvoice}
+                onClose={() => {
+                    setIsPaymentModalOpen(false);
+                    setSelectedInvoice(null);
+                }}
+                onSuccess={() => fetchInvoices()}
             />
         </div>
     );

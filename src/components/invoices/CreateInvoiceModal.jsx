@@ -449,33 +449,28 @@ export default function CreateInvoiceModal({
 
                     </div>
 
-                    {/* Footer với 2 Nút Bấm */}
-                    <div className="border-t border-slate-200 px-5 py-3.5 bg-white shrink-0 sticky bottom-0 z-20 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                        <button type="button" onClick={onClose} disabled={!!submitAction} className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-lg text-[13px] font-semibold hover:bg-slate-200 w-full sm:w-auto text-center disabled:opacity-70">
+                    {/* Footer với các Nút Bấm đã tối ưu UX Mobile & Desktop */}
+                    <div className="border-t border-slate-200 px-4 py-3.5 sm:px-5 bg-white shrink-0 sticky bottom-0 z-20 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                        
+                        {/* 1. NÚT HỦY (Chỉ hiển thị riêng ở Desktop - nằm bên trái) */}
+                        <button 
+                            type="button" 
+                            onClick={onClose} 
+                            disabled={!!submitAction} 
+                            className="hidden sm:block px-5 py-2.5 bg-slate-100 text-slate-600 rounded-lg text-[13px] font-semibold hover:bg-slate-200 w-auto text-center disabled:opacity-70 transition-colors"
+                        >
                             Hủy
                         </button>
                         
-                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                            {/* NÚT LƯU NHÁP */}
-                            <button 
-                                type="button" 
-                                onClick={() => handleSubmit('draft')} 
-                                disabled={!!submitAction || isPreparing} 
-                                className="px-6 py-2.5 bg-slate-700 text-white rounded-lg text-[13px] font-semibold hover:bg-slate-800 flex items-center justify-center gap-2 disabled:opacity-70 transition-colors w-full sm:w-auto"
-                            >
-                                {submitAction === 'draft' ? (
-                                    <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Đang lưu...</>
-                                ) : (
-                                    <><i className="fa-solid fa-file-pen"></i> Lưu nháp</>
-                                )}
-                            </button>
-
-                            {/* NÚT LƯU & PHÁT HÀNH */}
+                        {/* 2. NHÓM NÚT HÀNH ĐỘNG CHÍNH */}
+                        <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
+                            
+                            {/* NÚT LƯU & PHÁT HÀNH (Mobile: Đẩy lên hàng 1 bằng order-1 | Desktop: Đẩy ra sau bằng sm:order-2) */}
                             <button 
                                 type="button" 
                                 onClick={() => handleSubmit('issue')} 
                                 disabled={!!submitAction || isPreparing} 
-                                className="px-6 py-2.5 bg-brand text-white rounded-lg text-[13px] font-semibold hover:bg-green-700 flex items-center justify-center gap-2 disabled:opacity-70 shadow-sm shadow-brand/30 transition-colors w-full sm:w-auto"
+                                className="order-1 sm:order-2 px-6 py-2.5 bg-brand text-white rounded-lg text-[13px] font-semibold hover:bg-green-700 flex items-center justify-center gap-2 disabled:opacity-70 shadow-sm shadow-brand/30 transition-colors w-full sm:w-auto"
                             >
                                 {submitAction === 'issue' ? (
                                     <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Đang phát hành...</>
@@ -483,6 +478,34 @@ export default function CreateInvoiceModal({
                                     <><i className="fa-regular fa-paper-plane"></i> Lưu & Phát hành</>
                                 )}
                             </button>
+
+                            {/* Hàng 2 trên Mobile: Chứa nút [Hủy (nhỏ)] + [Lưu nháp (to hơn)] */}
+                            <div className="order-2 sm:order-1 flex gap-2.5 w-full sm:w-auto">
+                                
+                                {/* NÚT HỦY (Chỉ hiển thị ở Mobile - chiếm 1 phần không gian) */}
+                                <button 
+                                    type="button" 
+                                    onClick={onClose} 
+                                    disabled={!!submitAction} 
+                                    className="sm:hidden flex-[1] px-2 py-2.5 bg-slate-100 text-slate-600 rounded-lg text-[13px] font-semibold hover:bg-slate-200 text-center disabled:opacity-70 transition-colors"
+                                >
+                                    Hủy
+                                </button>
+
+                                {/* NÚT LƯU NHÁP (Mobile: chiếm 2 phần không gian | Desktop: Tự động vừa vặn chữ) */}
+                                <button 
+                                    type="button" 
+                                    onClick={() => handleSubmit('draft')} 
+                                    disabled={!!submitAction || isPreparing} 
+                                    className="flex-[2] sm:flex-none px-6 py-2.5 bg-slate-700 text-white rounded-lg text-[13px] font-semibold hover:bg-slate-800 flex items-center justify-center gap-2 disabled:opacity-70 transition-colors w-full sm:w-auto"
+                                >
+                                    {submitAction === 'draft' ? (
+                                        <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Đang lưu...</>
+                                    ) : (
+                                        <><i className="fa-solid fa-file-pen"></i> Lưu nháp</>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
