@@ -146,6 +146,23 @@ export default function AddLeaseModal({
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
+  const handleRoomChange = (event) => {
+  if (!event || !event.target) return;
+
+  const selectedRoomId = event.target.value;
+
+  // Tìm thông tin phòng để lấy giá và ngày thu tiền
+  const selectedRoom = rooms.find((r) => String(r.id) === String(selectedRoomId));
+
+  setForm((prev) => ({
+    ...prev,
+    room_id: selectedRoomId,
+    // Nếu tìm thấy phòng thì điền giá trị, nếu không thì giữ mặc định
+    billing_day: selectedRoom ? (selectedRoom.billing_day || "1") : prev.billing_day,
+    deposit: selectedRoom ? (selectedRoom.current_price || "0") : prev.deposit,
+  }));
+};
+
   const resetForm = () => {
     setForm(initialForm);
     setFrontImage(null);
@@ -298,7 +315,7 @@ export default function AddLeaseModal({
                     </label>
                     <select
                       value={form.room_id}
-                      onChange={handleChange("room_id")}
+                      onChange={handleRoomChange}
                       disabled={!form.property_id || isLoadingRooms}
                       className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] outline-none focus:border-brand disabled:bg-slate-50 disabled:text-slate-400"
                     >

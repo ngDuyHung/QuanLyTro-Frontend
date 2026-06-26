@@ -24,17 +24,18 @@ export default function CreateInvoiceModal({
     const [leases, setLeases] = useState([]);
     const [isLoadingLeases, setIsLoadingLeases] = useState(false);
     const [isPreparing, setIsPreparing] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // Đổi state isSubmitting thành lưu tên action đang chạy ('draft' hoặc 'issue') để hiển thị loading đúng nút
+    const [submitAction, setSubmitAction] = useState(null); 
     const [clientError, setClientError] = useState("");
 
-    // --- State các khoản phí (Đã bỏ Nợ cũ) ---
     const [rent, setRent] = useState({ price: 0 });
-
-    const [electricity, setElectricity] = useState({
-        prev: "", current: "", price: 3500, image: null, preview: "", is_chot_roi: false
+    
+    const [electricity, setElectricity] = useState({ 
+        prev: "", current: "", price: 3500, image: null, preview: "", is_chot_roi: false 
     });
-    const [water, setWater] = useState({
-        prev: "", current: "", price: 20000, image: null, preview: "", is_chot_roi: false
+    const [water, setWater] = useState({ 
+        prev: "", current: "", price: 20000, image: null, preview: "", is_chot_roi: false 
     });
 
     const [dynamicItems, setDynamicItems] = useState([]);
@@ -61,10 +62,10 @@ export default function CreateInvoiceModal({
             setWater({ prev: "", current: "", price: 20000, image: null, preview: "", is_chot_roi: false });
             setDynamicItems([]);
             setClientError("");
+            setSubmitAction(null);
         }
     }, [open]);
 
-    // Lấy Hợp đồng theo Khu nhà
     useEffect(() => {
         if (!open || !form.property_id) {
             setLeases([]);
@@ -88,7 +89,6 @@ export default function CreateInvoiceModal({
         fetchLeases();
     }, [open, form.property_id]);
 
-    // Lấy Dữ liệu Prepare
     useEffect(() => {
         if (!open || !form.lease_id || !form.period_to) return;
 
@@ -99,7 +99,7 @@ export default function CreateInvoiceModal({
                     lease_id: form.lease_id,
                     period_to: form.period_to,
                 });
-
+                
                 const data = res.data.data;
 
                 let tempRent = 0;
@@ -109,7 +109,7 @@ export default function CreateInvoiceModal({
                 data.suggested_items.forEach(item => {
                     if (item.charge_type === 'rent') {
                         tempRent = item.unit_price_snapshot;
-                    }
+                    } 
                     else if (item.charge_type === 'electricity' || item.charge_type === 'water') {
                         const match = item.description.match(/Số cũ: (\d+) - Số mới: (\d+)/);
                         const stateObj = {
@@ -140,7 +140,6 @@ export default function CreateInvoiceModal({
         return () => clearTimeout(timeout);
     }, [open, form.lease_id, form.period_to]);
 
-    // --- Handlers ---
     const handleChange = (field) => (e) => {
         setForm(prev => ({ ...prev, [field]: e.target.value, ...(field === "property_id" ? { lease_id: "" } : {}) }));
     };
@@ -154,17 +153,17 @@ export default function CreateInvoiceModal({
         const file = event.target.files?.[0];
         if (!file) return;
         const setter = type === 'electricity' ? setElectricity : setWater;
-
+        
         setter(prev => {
             if (prev.preview) URL.revokeObjectURL(prev.preview);
             return { ...prev, image: file, preview: URL.createObjectURL(file) };
         });
-        event.target.value = "";
+        event.target.value = ""; 
     };
 
     const handleAddDynamicItem = () => {
         setDynamicItems(prev => [
-            ...prev,
+            ...prev, 
             { id: Date.now(), charge_type: "other", description: "", quantity: 1, unit_price_snapshot: 0 }
         ]);
     };
@@ -177,10 +176,10 @@ export default function CreateInvoiceModal({
         setDynamicItems(prev => prev.filter(item => item.id !== id));
     };
 
-    // --- Tính toán TỔNG TIỀN ---
+    // Tính tổng tiền an toàn với Number()
     const elecUsage = Math.max(0, (Number(electricity.current) || 0) - (Number(electricity.prev) || 0));
     const elecAmount = elecUsage * (Number(electricity.price) || 0);
-
+    
     const waterUsage = Math.max(0, (Number(water.current) || 0) - (Number(water.prev) || 0));
     const waterAmount = waterUsage * (Number(water.price) || 0);
 
@@ -189,21 +188,19 @@ export default function CreateInvoiceModal({
         return item.charge_type === 'discount' ? sum - amount : sum + amount;
     }, 0);
 
-    // Đã bỏ previousDebt khỏi tổng
     const totalAmount = (Number(rent.price) || 0) + elecAmount + waterAmount + dynamicAmount;
 
-    // --- SUBMIT ---
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    // --- SUBMIT VỚI 2 ACTION KHÁC NHAU ---
+    const handleSubmit = async (actionType) => {
         setClientError("");
 
         if (!form.lease_id) return setClientError("Vui lòng chọn Phòng (Hợp đồng).");
         if (new Date(form.period_to) <= new Date(form.period_from)) return setClientError("Ngày kết thúc kỳ phải sau ngày bắt đầu.");
 
         try {
-            setIsSubmitting(true);
+            setSubmitAction(actionType); // Bật loading theo action (draft hoặc issue)
 
-            // BƯỚC 1: Chốt điện nước ngầm
+            // Bước 1: Chốt điện nước ngầm
             const processUtility = async (utilityState, typeStr) => {
                 if (!utilityState.is_chot_roi && utilityState.current !== "") {
                     const fd = new FormData();
@@ -221,10 +218,10 @@ export default function CreateInvoiceModal({
                 processUtility(water, 'water')
             ]);
 
-            // BƯỚC 2: Ráp mảng Items & Gọi API Invoice
+            // Bước 2: Tạo hóa đơn
             const items = [];
             items.push({ charge_type: "room", description: "Tiền phòng", unit: "Tháng", quantity: 1, unit_price_snapshot: rent.price });
-
+            
             if (elecUsage > 0) items.push({ charge_type: "electricity", description: "Tiền điện", unit: "kWh", quantity: elecUsage, unit_price_snapshot: electricity.price });
             if (waterUsage > 0) items.push({ charge_type: "water", description: "Tiền nước", unit: "m³", quantity: waterUsage, unit_price_snapshot: water.price });
 
@@ -251,16 +248,24 @@ export default function CreateInvoiceModal({
                 items: items
             };
 
-            await invoiceService.create(payload);
+            const response = await invoiceService.create(payload);
+            const newInvoiceId = response.data.data.id;
 
-            toast.success("Đã tạo hóa đơn thành công!");
+            // Bước 3: Nếu là nút "Lưu & Phát hành", gọi API Phát hành ngay
+            if (actionType === 'issue') {
+                await invoiceService.issue(newInvoiceId);
+                toast.success("Đã tạo và phát hành hóa đơn thành công!");
+            } else {
+                toast.success("Đã lưu nháp hóa đơn thành công!");
+            }
+            
             onSuccess?.();
             onClose();
 
         } catch (error) {
             setClientError(error.response?.data?.message || "Có lỗi xảy ra khi tạo hóa đơn.");
         } finally {
-            setIsSubmitting(false);
+            setSubmitAction(null);
         }
     };
 
@@ -269,7 +274,7 @@ export default function CreateInvoiceModal({
     return (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
             <div className="bg-slate-50 w-full h-[95vh] sm:h-auto sm:max-h-[90vh] sm:max-w-[900px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out] relative">
-
+                
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white shrink-0 sticky top-0 z-20">
                     <div className="flex items-center gap-3">
@@ -281,14 +286,15 @@ export default function CreateInvoiceModal({
                             <p className="text-[12px] text-slate-500 mt-0.5 hidden sm:block">Hệ thống sẽ tự động tổng hợp phí dịch vụ phát sinh trong kỳ.</p>
                         </div>
                     </div>
-                    <button type="button" onClick={onClose} disabled={isSubmitting} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
+                    <button type="button" onClick={onClose} disabled={!!submitAction} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
                         <i className="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+                {/* Sửa form thành không onSubmit để xử lý click 2 nút riêng biệt */}
+                <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
                     <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-1 pb-6 bg-slate-50">
-
+                        
                         {clientError && (
                             <div className="mx-5 mt-4 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-[13px] flex items-center gap-2">
                                 <i className="fa-solid fa-circle-exclamation"></i> {clientError}
@@ -331,18 +337,16 @@ export default function CreateInvoiceModal({
                         {/* SECTION 2: Các khoản phí cố định */}
                         <div className="bg-white px-5 py-5 border-b border-slate-200 mt-2 relative">
                             {isPreparing && <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-10 flex items-center justify-center"><span className="animate-pulse text-brand font-semibold text-[13px]">Đang đồng bộ dữ liệu...</span></div>}
-
+                            
                             <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2"><i className="fa-solid fa-money-bill text-[13px]"></i> 2. Phí cố định (Phòng, Điện, Nước)</h3>
-
+                            
                             {/* Tiền phòng */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
                                 <div className="w-[120px] font-semibold text-[13px] text-slate-700"><i className="fa-solid fa-house fa-fw text-brand mr-1"></i> Tiền phòng</div>
                                 <div className="flex-1 flex items-center gap-3 w-full">
                                     <div className="flex-1 relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-slate-400">Giá</span>
-                                        <input type="number" value={rent.price}
-                                            onChange={(e) => setRent({ price: Number(e.target.value) || 0 })}
-                                            className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded text-[13px] font-semibold focus:border-brand outline-none" />
+                                        <input type="number" value={rent.price} onChange={(e) => setRent({ price: Number(e.target.value) || 0 })} className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded text-[13px] font-semibold focus:border-brand outline-none" />
                                     </div>
                                     <div className="text-[14px] font-bold text-slate-800 min-w-[100px] text-right">{Number(rent.price).toLocaleString()} đ</div>
                                 </div>
@@ -354,7 +358,7 @@ export default function CreateInvoiceModal({
                                 { type: 'water', label: 'Tiền nước', icon: 'fa-droplet', unit: 'm³', state: water }
                             ].map((item) => (
                                 <div key={item.type} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
-                                    <div className="w-[120px] font-semibold text-[13px] text-slate-700"><i className={`fa-solid ${item.icon} fa-fw text-${item.type === 'electricity' ? 'amber' : 'blue'}-500 mr-1`}></i> {item.label}</div>
+                                    <div className="w-[120px] font-semibold text-[13px] text-slate-700"><i className={`fa-solid ${item.icon} fa-fw text-${item.type==='electricity'?'amber':'blue'}-500 mr-1`}></i> {item.label}</div>
                                     <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
                                         <div className="relative">
                                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Số cũ</span>
@@ -368,7 +372,7 @@ export default function CreateInvoiceModal({
                                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Đơn giá</span>
                                             <input type="number" value={item.state.price} onChange={(e) => handleUtilityChange(item.type, 'price', e.target.value)} className="w-full pl-[55px] pr-2 py-1.5 border border-slate-200 rounded text-[13px] focus:border-brand outline-none" />
                                         </div>
-
+                                        
                                         <div className="flex items-center gap-2 justify-end">
                                             {!item.state.is_chot_roi && (
                                                 <label className="w-8 h-8 rounded border border-slate-200 bg-white flex items-center justify-center text-slate-500 cursor-pointer hover:bg-brand/10 hover:text-brand hover:border-brand transition-colors relative" title="Tải ảnh đồng hồ">
@@ -378,7 +382,7 @@ export default function CreateInvoiceModal({
                                                 </label>
                                             )}
                                             <div className="text-[13px] font-bold text-slate-800 min-w-[80px] text-right">
-                                                {((Math.max(0, (Number(item.state.current) || 0) - (Number(item.state.prev) || 0))) * (Number(item.state.price) || 0)).toLocaleString()} đ
+                                                {((Math.max(0, (Number(item.state.current)||0) - (Number(item.state.prev)||0))) * (Number(item.state.price)||0)).toLocaleString()} đ
                                             </div>
                                         </div>
                                     </div>
@@ -410,9 +414,9 @@ export default function CreateInvoiceModal({
                                             <input type="text" placeholder="Tên hiển thị" value={item.description} onChange={(e) => handleUpdateDynamicItem(item.id, 'description', e.target.value)} className="flex-1 min-w-[150px] p-2 border border-slate-200 rounded text-[12px] outline-none" />
                                             <input type="number" placeholder="Số lượng" value={item.quantity} onChange={(e) => handleUpdateDynamicItem(item.id, 'quantity', e.target.value)} className="w-[80px] p-2 border border-slate-200 rounded text-[12px] outline-none" />
                                             <input type="number" placeholder="Đơn giá" value={item.unit_price_snapshot} onChange={(e) => handleUpdateDynamicItem(item.id, 'unit_price_snapshot', e.target.value)} className="w-[100px] p-2 border border-slate-200 rounded text-[12px] outline-none" />
-
+                                            
                                             <div className="w-[90px] text-right font-bold text-[13px] text-slate-700">
-                                                {item.charge_type === 'discount' ? '-' : ''}{((Number(item.quantity) || 0) * (Number(item.unit_price_snapshot) || 0)).toLocaleString()} đ
+                                                {item.charge_type === 'discount' ? '-' : ''}{((Number(item.quantity)||0) * (Number(item.unit_price_snapshot)||0)).toLocaleString()} đ
                                             </div>
                                             <button type="button" onClick={() => handleRemoveDynamicItem(item.id)} className="w-8 h-8 rounded text-red-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center shrink-0"><i className="fa-solid fa-trash-can"></i></button>
                                         </div>
@@ -430,7 +434,7 @@ export default function CreateInvoiceModal({
                             <div className="w-full sm:w-1/2 bg-brand/5 border border-brand/20 p-4 rounded-xl">
                                 <div className="flex justify-between items-center mb-2 text-[13px] text-slate-600">
                                     <span>Tổng các khoản phí cố định:</span>
-                                    <span className="font-semibold">{(rent.price + elecAmount + waterAmount).toLocaleString()} đ</span>
+                                    <span className="font-semibold">{((Number(rent.price) || 0) + elecAmount + waterAmount).toLocaleString()} đ</span>
                                 </div>
                                 <div className="flex justify-between items-center mb-2 text-[13px] text-slate-600">
                                     <span>Phát sinh / Giảm trừ:</span>
@@ -445,20 +449,43 @@ export default function CreateInvoiceModal({
 
                     </div>
 
-                    {/* Footer */}
-                    <div className="border-t border-slate-200 px-5 py-3.5 bg-white shrink-0 sticky bottom-0 z-20 flex items-center justify-between gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                        <button type="button" onClick={onClose} disabled={isSubmitting} className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-lg text-[13px] font-semibold hover:bg-slate-200 w-[100px] sm:w-auto text-center disabled:opacity-70">
+                    {/* Footer với 2 Nút Bấm */}
+                    <div className="border-t border-slate-200 px-5 py-3.5 bg-white shrink-0 sticky bottom-0 z-20 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                        <button type="button" onClick={onClose} disabled={!!submitAction} className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-lg text-[13px] font-semibold hover:bg-slate-200 w-full sm:w-auto text-center disabled:opacity-70">
                             Hủy
                         </button>
-                        <button type="submit" disabled={isSubmitting || isPreparing} className="flex-1 sm:flex-none px-8 py-2.5 bg-brand text-white rounded-lg text-[13px] font-semibold hover:bg-green-700 flex items-center justify-center gap-2 disabled:opacity-70">
-                            {isSubmitting ? (
-                                <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Đang tạo...</>
-                            ) : (
-                                <><i className="fa-solid fa-file-invoice"></i> Tạo hóa đơn</>
-                            )}
-                        </button>
+                        
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            {/* NÚT LƯU NHÁP */}
+                            <button 
+                                type="button" 
+                                onClick={() => handleSubmit('draft')} 
+                                disabled={!!submitAction || isPreparing} 
+                                className="px-6 py-2.5 bg-slate-700 text-white rounded-lg text-[13px] font-semibold hover:bg-slate-800 flex items-center justify-center gap-2 disabled:opacity-70 transition-colors w-full sm:w-auto"
+                            >
+                                {submitAction === 'draft' ? (
+                                    <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Đang lưu...</>
+                                ) : (
+                                    <><i className="fa-solid fa-file-pen"></i> Lưu nháp</>
+                                )}
+                            </button>
+
+                            {/* NÚT LƯU & PHÁT HÀNH */}
+                            <button 
+                                type="button" 
+                                onClick={() => handleSubmit('issue')} 
+                                disabled={!!submitAction || isPreparing} 
+                                className="px-6 py-2.5 bg-brand text-white rounded-lg text-[13px] font-semibold hover:bg-green-700 flex items-center justify-center gap-2 disabled:opacity-70 shadow-sm shadow-brand/30 transition-colors w-full sm:w-auto"
+                            >
+                                {submitAction === 'issue' ? (
+                                    <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Đang phát hành...</>
+                                ) : (
+                                    <><i className="fa-regular fa-paper-plane"></i> Lưu & Phát hành</>
+                                )}
+                            </button>
+                        </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );
