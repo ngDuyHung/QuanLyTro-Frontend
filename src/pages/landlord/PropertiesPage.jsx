@@ -331,6 +331,7 @@ export default function PropertiesPage() {
         onClose={handleCloseEditRoom}
         onSubmit={handleUpdateRoom}
         isSubmitting={isUpdatingRoom}
+        properties={properties}
       />
     </div>
   );

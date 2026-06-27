@@ -12,6 +12,7 @@ const initialForm = {
   allow_shared: true,
   is_public: true,
   description: "",
+
 };
 
 const MAX_IMAGES = 5;
@@ -61,6 +62,7 @@ export default function EditRoomModal({
   onSubmit,
   isSubmitting = false,
   room,
+  properties = [],
 }) {
   const [form, setForm] = useState(initialForm);
   const [existingImages, setExistingImages] = useState([]);
@@ -74,16 +76,27 @@ export default function EditRoomModal({
   const [clientError, setClientError] = useState("");
 
   const floorOptions = useMemo(() => {
-    return [
+    // 1. Tìm khu nhà hiện tại trong mảng properties
+    const selectedProperty = properties.find(
+      (p) => String(p.id) === String(room?.property_id)
+    );
+
+    // 2. Lấy số tầng của khu nhà đó (nếu không tìm thấy thì tạm để 5)
+    const floorsCount = Number(selectedProperty?.floors_count || 5);
+
+    // 3. Khởi tạo mảng options mặc định
+    const options = [
       { value: "", label: "Không xác định" },
       { value: "0", label: "Trệt" },
-      { value: "1", label: "Tầng 1" },
-      { value: "2", label: "Tầng 2" },
-      { value: "3", label: "Tầng 3" },
-      { value: "4", label: "Tầng 4" },
-      { value: "5", label: "Tầng 5" },
     ];
-  }, []);
+
+    // 4. Dùng vòng lặp để sinh ra đúng số tầng
+    for (let i = 1; i <= floorsCount; i++) {
+      options.push({ value: String(i), label: `Tầng ${i}` });
+    }
+
+    return options;
+  }, [room?.property_id, properties]);
 
   const clearImages = () => {
     setNewImages((currentImages) => {
@@ -576,32 +589,6 @@ export default function EditRoomModal({
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
-                <div className="sm:col-span-2">
-                  <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                    Dịch vụ mặc định áp dụng
-                  </label>
-
-                  <div className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg flex items-center flex-wrap gap-1.5 min-h-[44px]">
-                    <div className="bg-white border border-slate-200 shadow-sm text-slate-700 text-[12px] font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5">
-                      <i className="fa-solid fa-bolt text-yellow-500 text-[10px]"></i>
-                      Điện
-                    </div>
-
-                    <div className="bg-white border border-slate-200 shadow-sm text-slate-700 text-[12px] font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5">
-                      <i className="fa-solid fa-droplet text-blue-500 text-[10px]"></i>
-                      Nước
-                    </div>
-
-                    <div className="bg-white border border-slate-200 shadow-sm text-slate-700 text-[12px] font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5">
-                      <i className="fa-solid fa-trash-can text-slate-500 text-[10px]"></i>
-                      Rác
-                    </div>
-
-                    <span className="text-[11px] text-slate-400 ml-1">
-                      Kế thừa từ khu nhà
-                    </span>
-                  </div>
-                </div>
 
                 <div className="sm:col-span-1">
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">

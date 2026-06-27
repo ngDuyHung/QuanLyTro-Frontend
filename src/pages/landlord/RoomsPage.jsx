@@ -299,6 +299,7 @@ export default function RoomsPage() {
         onSubmit={handleUpdateRoom}
         isSubmitting={isUpdatingRoom}
         room={editingRoom}
+        properties={properties}
       />
     </div>
   );

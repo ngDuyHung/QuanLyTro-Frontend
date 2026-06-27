@@ -1,3 +1,4 @@
+import servicePriceService from "@/services/servicePriceService";
 import { useEffect, useMemo, useState } from "react";
 
 const initialForm = {
@@ -43,6 +44,10 @@ export default function AddRoomModal({
   const [images, setImages] = useState([]);
   const [coverImageIndex, setCoverImageIndex] = useState(0);
   const [clientError, setClientError] = useState("");
+
+  const [propertyServices, setPropertyServices] = useState([]);
+  const [isLoadingServices, setIsLoadingServices] = useState(false);
+
 
   const selectedProperty = useMemo(() => {
     if (property?.id) return property;
@@ -99,6 +104,37 @@ export default function AddRoomModal({
 
     resetForm();
     onClose();
+  };
+
+  // Lấy danh sách dịch vụ của khu nhà đang được chọn
+  useEffect(() => {
+    const targetPropertyId = property?.id || form.property_id;
+
+    if (targetPropertyId) {
+      setIsLoadingServices(true);
+      servicePriceService.getByProperty(targetPropertyId, { per_page: 100 })
+        .then(res => {
+          setPropertyServices(res.data.data || []);
+        })
+        .catch(() => {
+          setPropertyServices([]);
+        })
+        .finally(() => {
+          setIsLoadingServices(false);
+        });
+    } else {
+      setPropertyServices([]);
+    }
+  }, [property?.id, form.property_id]);
+
+  const getServiceIcon = (type) => {
+    switch (type) {
+      case "electricity": return { icon: "fa-bolt", color: "text-amber-500" };
+      case "water": return { icon: "fa-droplet", color: "text-blue-500" };
+      case "internet": return { icon: "fa-wifi", color: "text-indigo-500" };
+      case "garbage": return { icon: "fa-trash-can", color: "text-slate-500" };
+      default: return { icon: "fa-gears", color: "text-brand" };
+    }
   };
 
   useEffect(() => {
@@ -302,11 +338,10 @@ export default function AddRoomModal({
                       value={property?.id || form.property_id}
                       disabled={Boolean(property?.id)}
                       onChange={handleChange("property_id")}
-                      className={`w-full pl-3.5 pr-10 py-2.5 sm:py-2 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand appearance-none ${
-                        property?.id
-                          ? "bg-slate-50 cursor-not-allowed"
-                          : "bg-white cursor-pointer"
-                      }`}
+                      className={`w-full pl-3.5 pr-10 py-2.5 sm:py-2 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand appearance-none ${property?.id
+                        ? "bg-slate-50 cursor-not-allowed"
+                        : "bg-white cursor-pointer"
+                        }`}
                     >
                       {property?.id ? (
                         <option value={property.id}>{property.name}</option>
@@ -472,25 +507,34 @@ export default function AddRoomModal({
                     Dịch vụ mặc định áp dụng
                   </label>
 
-                  <div className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg flex items-center flex-wrap gap-1.5 min-h-[44px]">
-                    <div className="bg-white border border-slate-200 shadow-sm text-slate-700 text-[12px] font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5">
-                      <i className="fa-solid fa-bolt text-yellow-500 text-[10px]"></i>
-                      Điện
-                    </div>
-
-                    <div className="bg-white border border-slate-200 shadow-sm text-slate-700 text-[12px] font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5">
-                      <i className="fa-solid fa-droplet text-blue-500 text-[10px]"></i>
-                      Nước
-                    </div>
-
-                    <div className="bg-white border border-slate-200 shadow-sm text-slate-700 text-[12px] font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5">
-                      <i className="fa-solid fa-trash-can text-slate-500 text-[10px]"></i>
-                      Rác
-                    </div>
-
-                    <span className="text-[11px] text-slate-400 ml-1">
-                      Kế thừa từ khu nhà
-                    </span>
+                  <div className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg flex items-center flex-wrap gap-2 min-h-[46px]">
+                    {isLoadingServices ? (
+                      <span className="text-[12px] text-slate-400">
+                        <i className="fa-solid fa-circle-notch fa-spin mr-1.5"></i> Đang tải dịch vụ...
+                      </span>
+                    ) : propertyServices.length > 0 ? (
+                      <>
+                        {propertyServices.map((srv) => {
+                          const iconConfig = getServiceIcon(srv.service_type);
+                          return (
+                            <div
+                              key={srv.service_type}
+                              className="bg-white border border-slate-200 shadow-sm text-slate-700 text-[12px] font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5"
+                            >
+                              <i className={`fa-solid ${iconConfig.icon} ${iconConfig.color} text-[11px]`}></i>
+                              {srv.service_type_label}
+                            </div>
+                          );
+                        })}
+                        <span className="text-[11px] text-slate-400 ml-1 mt-0.5 w-full block sm:inline sm:w-auto italic">
+                          (Được kế thừa từ khu nhà. Bạn có thể thay đổi khi làm Hợp đồng thuê)
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[12px] text-slate-400 italic">
+                        Khu nhà này chưa có dịch vụ nào.
+                      </span>
+                    )}
                   </div>
                 </div>
 

@@ -248,6 +248,56 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         <span>Còn nợ:</span><span>{Number(invoice.remaining_amount).toLocaleString()}đ</span>
                                     </div>
                                 </div>
+
+                                {/* --- KHỐI LỊCH SỬ ĐÓNG TIỀN: ĐẶT DƯỚI CỤM TÓM TẮT DÒNG TIỀN --- */}
+                                {invoice?.allocations && invoice.allocations.length > 0 && (
+                                    <div className="hidden md:block bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col shrink-0 animate-[fadeIn_0.2s_ease-out]">
+                                        {/* Tiêu đề khối */}
+                                        <h4 className="text-[12px] font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                                            <div className="flex items-center gap-1.5">
+                                                <i className="fa-solid fa-clock-rotate-left text-slate-400 text-[13px]"></i>
+                                                Lịch sử đóng tiền
+                                            </div>
+                                            <span className="bg-slate-100 text-slate-500 font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                                {invoice.allocations.length} lần
+                                            </span>
+                                        </h4>
+
+                                        {/* Danh sách cuộn nội bộ - Khống chế chiều cao hiển thị vừa khít 2 giao dịch */}
+                                        <div className="space-y-2 overflow-y-auto max-h-[240px] pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded">
+                                            {invoice.allocations.map((alloc, idx) => {
+                                                const tx = alloc.financial_transaction;
+
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-[12px] hover:bg-slate-100/70 transition-colors"
+                                                    >
+                                                        <div className="flex flex-col min-w-0">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="font-bold text-slate-700 font-mono truncate max-w-[100px]">
+                                                                    {tx?.transaction_code || `Phiếu #${alloc.financial_transaction_id}`}
+                                                                </span>
+                                                                <span className="text-[9px] bg-slate-200/80 text-slate-500 px-1 rounded font-semibold whitespace-nowrap">
+                                                                    {tx?.method_label || "Tiền mặt"}
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-[10px] text-slate-400 mt-0.5 whitespace-nowrap">
+                                                                {alloc.allocated_at ? new Date(alloc.allocated_at).toLocaleDateString('vi-VN') : "—"}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="text-right flex flex-col justify-center shrink-0 pl-2">
+                                                            <span className="font-extrabold text-green-600 text-[13px]">
+                                                                +{Number(alloc.allocated_amount).toLocaleString('vi-VN')}đ
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -294,6 +344,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                 />
                             )}
                         </div>
+
                     </div>
                 </div>
             </div>

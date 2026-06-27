@@ -3,7 +3,9 @@ import { toast } from "react-toastify";
 import financialTransactionService from "@/services/financialTransactionService";
 import propertyService from "@/services/propertyService";
 import FinancialTransactionsTable from "@/components/financial/FinancialTransactionsTable";
-import AddTransactionModal from "@/components/financial/AddFinancialTransactionModal";
+import AddFinancialTransactionModal from "@/components/financial/AddFinancialTransactionModal";
+import CancelFinancialTransactionModal from "@/components/financial/CancelFinancialTransactionModal";
+import ViewFinancialTransactionModal from "@/components/financial/ViewFinancialTransactionModal";
 // Các Modal sẽ import ở bước sau
 
 export default function FinancialTransactionsPage() {
@@ -101,12 +103,28 @@ export default function FinancialTransactionsPage() {
             </div>
 
             {/* --- CÁC MODAL SẼ ĐƯỢC CHÈN Ở ĐÂY --- */}
-            <AddTransactionModal
+            <AddFinancialTransactionModal
                 open={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
-                onSuccess={() => {
-                    fetchTransactions();
-                    setIsAddModalOpen(false);
+                properties={properties}
+                onSuccess={fetchTransactions}
+            />
+
+            <CancelFinancialTransactionModal
+                open={isCancelModalOpen}
+                transaction={selectedTransaction}
+                onClose={() => {
+                    setIsCancelModalOpen(false);
+                    setSelectedTransaction(null);
+                }}
+                onSuccess={fetchTransactions}
+            />
+            <ViewFinancialTransactionModal
+                open={isViewModalOpen}
+                transaction={selectedTransaction}
+                onClose={() => {
+                    setIsViewModalOpen(false);
+                    setSelectedTransaction(null);
                 }}
             />
         </div>

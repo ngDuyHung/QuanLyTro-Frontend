@@ -141,7 +141,7 @@ export default function LandlordLayout() {
           </NavLink>
 
           <NavLink
-            to="/landlord/services"
+            to="/landlord/service-prices"
             className={navLinkClasses}
             onClick={closeSidebar}
           >
