@@ -72,6 +72,7 @@ export default function InvoicesTable({
   onOpenIssueConfirm,
   onOpenCancelModal,
   onOpenDeleteModal,
+  onOpenTemplateModal,
 }) {
   return (
     <>
@@ -141,6 +142,15 @@ export default function InvoicesTable({
         </div>
 
         <div className="flex items-center gap-3 w-full xl:w-auto shrink-0">
+          {/* ---  NÚT MẪU HỢP ĐỒNG --- */}
+          <button
+            type="button"
+            onClick={onOpenTemplateModal}
+            className="flex-1 lg:flex-none bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 shadow-sm"
+          >
+            <i className="fa-solid fa-file-signature text-[13px] text-blue-600"></i> Cấu hình mẫu
+          </button>
+          {/* ----------------------------- */}
           <button
             onClick={onOpenCreateModal}
             className="flex-1 xl:flex-none bg-brand text-white px-5 py-2 rounded-lg text-[13px] font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-sm shadow-green-600/20"

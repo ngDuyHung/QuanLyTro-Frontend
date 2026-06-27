@@ -21,14 +21,19 @@ const invoiceService = {
   issue: (id) => api.post(`/invoices/${id}/issue`),
 
   // Hủy hóa đơn đã phát hành (Yêu cầu truyền body: { cancel_reason })
-  cancel: (id, data) => api.post(`/api/v1/invoices/${id}/cancel`, data),
+  cancel: (id, data) => api.post(`/invoices/${id}/cancel`, data),
 
   // Xóa cứng hóa đơn (Chỉ áp dụng cho hóa đơn nháp draft)
   delete: (id) => api.delete(`/invoices/${id}`),
 
   // Thu tiền hóa đơn thủ công (Tiền mặt / Chuyển khoản thủ công)
   // data gồm: { amount, method, transaction_date, note }
-  receivePayment: (id, data) => api.post(`/invoices/${id}/receive-payment`, data),
+  receivePayment: (id, data) =>
+    api.post(`/invoices/${id}/receive-payment`, data),
+
+  // Xuất file PDF Hóa đơn (Lưu ý config responseType là blob để nhận file tải về)
+  exportPdf: (id) =>
+    api.get(`/invoices/${id}/export-pdf`, { responseType: "blob" }),
 };
 
 export default invoiceService;

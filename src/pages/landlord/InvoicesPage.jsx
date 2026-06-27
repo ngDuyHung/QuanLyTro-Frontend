@@ -6,6 +6,10 @@ import roomService from "@/services/roomService";
 import InvoicesTable from "@/components/invoices/InvoicesTable";
 import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
 import PaymentInvoiceModal from "@/components/invoices/PaymentInvoiceModal";
+import CancelInvoiceModal from "@/components/invoices/CancelInvoiceModal";
+import DeleteInvoiceModal from "@/components/invoices/DeleteInvoiceModal";
+import ViewInvoiceModal from "@/components/invoices/ViewInvoiceModal";
+import InvoiceTemplateModal from "@/components/invoices/InvoiceTemplateModal";
 export default function InvoicesPage() {
     // --- Quản lý dữ liệu hệ thống ---
     const [invoices, setInvoices] = useState([]);
@@ -33,6 +37,8 @@ export default function InvoicesPage() {
     // Lưu thông tin hóa đơn đang được chọn để Thao tác (Xem/Xóa/Hủy/Thu tiền)
     const [selectedInvoice, setSelectedInvoice] = useState(null);
 
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    
     // 1. Tải danh sách Khu nhà phục vụ bộ lọc đầu tiên
     const fetchProperties = useCallback(async () => {
         try {
@@ -120,9 +126,16 @@ export default function InvoicesPage() {
         setIsPaymentModalOpen(true);
     };
 
-    const handleOpenIssueConfirm = (invoice) => {
-        setSelectedInvoice(invoice);
-        setIsIssueConfirmOpen(true);
+    // Xử lý phát hành hóa đơn
+    const handleOpenIssueConfirm = async (invoice) => {
+        await invoiceService.issue(invoice.id)
+            .then(() => {
+                toast.success("Hóa đơn đã được phát hành thành công.");
+                fetchInvoices(); // Tải lại danh sách hóa đơn sau khi phát hành
+            })
+            .catch((error) => {
+                toast.error(error.response?.data?.message || "Không thể phát hành hóa đơn.");
+            });
     };
 
     const handleOpenCancelModal = (invoice) => {
@@ -134,6 +147,10 @@ export default function InvoicesPage() {
         setSelectedInvoice(invoice);
         setIsDeleteModalOpen(true);
     };
+
+    const handleOpenTemplateModal = () => {
+        setIsTemplateModalOpen(true);
+    }
 
     return (
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 md:p-6 lg:p-6 pt-6 flex flex-col h-full bg-slate-50">
@@ -177,6 +194,7 @@ export default function InvoicesPage() {
                     onOpenIssueConfirm={handleOpenIssueConfirm}
                     onOpenCancelModal={handleOpenCancelModal}
                     onOpenDeleteModal={handleOpenDeleteModal}
+                    onOpenTemplateModal={handleOpenTemplateModal}
                 />
             </div>
 
@@ -195,6 +213,37 @@ export default function InvoicesPage() {
                     setSelectedInvoice(null);
                 }}
                 onSuccess={() => fetchInvoices()}
+            />
+            <CancelInvoiceModal
+                open={isCancelModalOpen}
+                invoice={selectedInvoice}
+                onClose={() => {
+                    setIsCancelModalOpen(false);
+                    setSelectedInvoice(null);
+                }}
+                onSuccess={() => fetchInvoices()}
+            />
+            <DeleteInvoiceModal
+                open={isDeleteModalOpen}
+                invoice={selectedInvoice}
+                onClose={() => {
+                    setIsDeleteModalOpen(false);
+                    setSelectedInvoice(null);
+                }}
+                onSuccess={() => fetchInvoices()}
+            />
+            <ViewInvoiceModal
+                open={isViewModalOpen}
+                invoice={selectedInvoice}
+                onClose={() => {
+                    setIsViewModalOpen(false);
+                    setSelectedInvoice(null);
+                }}
+            />
+
+            <InvoiceTemplateModal
+                open={isTemplateModalOpen}
+                onClose={() => setIsTemplateModalOpen(false)}
             />
         </div>
     );

@@ -231,13 +231,14 @@ export default function SepayTransactionsTab() {
                                             <div className="flex items-center justify-center gap-1.5">
                                                 {['unmatched', 'need_review', 'partially_matched'].includes(txn.match_status) ? (
                                                     <>
-                                                        <button
+                                                    {/* Tạm thời bỏ chức năng ghép tay */}
+                                                        {/* <button
                                                             onClick={() => handleOpenMatch(txn)}
                                                             className="px-2.5 py-1.5 bg-brand text-white hover:bg-green-700 rounded text-[11px] font-semibold shadow-sm transition-colors"
                                                             title="Ghép tay vào hóa đơn"
                                                         >
                                                             <i className="fa-solid fa-link mr-1"></i>Ghép
-                                                        </button>
+                                                        </button> */}
                                                         <button
                                                             onClick={() => handleRetry(txn.id)}
                                                             className="px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200 rounded text-[11px] font-semibold transition-colors"

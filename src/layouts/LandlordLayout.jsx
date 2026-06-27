@@ -196,8 +196,8 @@ export default function LandlordLayout() {
               </div>
               <div>
                 <p className="text-[12px] text-slate-500">Hỗ trợ</p>
-                <p className="text-[14px] font-semibold text-slate-800">
-                  1900 1234
+                <p className="text-[13px] font-semibold text-slate-800">
+                  0987 667 849
                 </p>
               </div>
             </div>

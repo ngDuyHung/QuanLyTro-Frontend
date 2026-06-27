@@ -12,6 +12,12 @@ const settingService = {
     api.get(`/leases/${leaseId}/export-pdf`, {
       responseType: "blob",
     }),
+
+  // Lấy mẫu Hóa đơn
+  getInvoiceTemplate: () => api.get("/settings/invoice-template"),
+
+  // Lưu mẫu Hóa đơn
+  saveInvoiceTemplate: (data) => api.post("/settings/invoice-template", data),
 };
 
 export default settingService;
