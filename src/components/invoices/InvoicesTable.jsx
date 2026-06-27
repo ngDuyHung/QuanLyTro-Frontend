@@ -52,7 +52,7 @@ export default function InvoicesTable({
   page,
   onPageChange,
   isLoading = false,
-  
+
   // Filters
   propertyId = "",
   onPropertyIdChange,
@@ -79,7 +79,7 @@ export default function InvoicesTable({
       {/* THANH CÔNG CỤ (FILTERS & ACTIONS) */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
         <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-          
+
           {/* Lọc Khu nhà */}
           <div className="relative w-full sm:w-auto min-w-[150px]">
             <select
@@ -161,8 +161,133 @@ export default function InvoicesTable({
       </div>
 
       {/* BẢNG DỮ LIỆU */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
-        <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="bg-transparent lg:bg-white border-none lg:border lg:border-slate-200 lg:rounded-xl shadow-none lg:shadow-sm lg:overflow-hidden flex flex-col flex-1">
+        {/* --- GIAO DIỆN MOBILE (Dạng Card ẩn trên PC) --- */}
+        <div className="lg:hidden flex flex-col gap-3 pb-4">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-44 bg-white border border-slate-200 rounded-xl animate-pulse"></div>
+            ))
+          ) : invoices.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 bg-white rounded-xl border border-slate-200 text-[13px]">
+              <i className="fa-solid fa-receipt text-3xl text-slate-200 mb-3 block"></i>
+              Chưa có hóa đơn nào.
+            </div>
+          ) : (
+            invoices.map((invoice) => {
+              const statusConf = getStatusConfig(invoice.status);
+
+              return (
+                <div key={invoice.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+
+                  {/* Header: Tên phòng + Trạng thái */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-800 text-[14px] leading-none">{invoice.room?.name || "—"}</span>
+                      <span className="text-[11px] text-slate-500 mt-1">{invoice.property?.name || "—"}</span>
+                    </div>
+                    <span className={`px-2.5 py-1 border text-[10px] font-semibold rounded-md flex items-center gap-1.5 w-fit ${statusConf.className}`}>
+                      <i className={`fa-solid ${statusConf.icon} text-[10px]`}></i> {statusConf.label}
+                    </span>
+                  </div>
+
+                  {/* Body: Chi tiết Hóa đơn */}
+                  <div className="p-4 flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-800 text-[13px] flex items-center gap-1.5">
+                          <i className="fa-regular fa-file-lines text-slate-400 text-[12px]"></i>
+                          {invoice.invoice_code}
+                        </span>
+                        <span className="text-[11px] text-slate-500 mt-0.5">Kỳ: {formatDate(invoice.period_to)}</span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-[11px] text-slate-500 mb-0.5">Tổng tiền</span>
+                        <span className="font-bold text-slate-800 text-[14px]">{formatCurrency(invoice.total_amount)} đ</span>
+                        {Number(invoice.discount_amount) > 0 && (
+                          <span className="text-[10px] text-red-500 font-medium">- {formatCurrency(invoice.discount_amount)}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Hộp tóm tắt công nợ */}
+                    <div className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-100 mt-1">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-slate-500 mb-0.5">Đã thu</span>
+                        <span className="font-medium text-slate-600 text-[13px]">{formatCurrency(invoice.paid_amount)}</span>
+                      </div>
+                      <div className="h-6 w-px bg-slate-200 mx-2"></div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] text-slate-500 mb-0.5">Còn nợ</span>
+                        <span className={`font-bold text-[13px] ${Number(invoice.remaining_amount) > 0 ? 'text-red-500' : 'text-slate-400'}`}>
+                          {formatCurrency(invoice.remaining_amount)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer: Thao tác (Tương thích logic như PC) */}
+                  <div className="px-3 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2">
+                    {/* Nút Xem (Lúc nào cũng hiện) */}
+                    <button
+                      type="button"
+                      onClick={() => onOpenViewModal?.(invoice)}
+                      className="flex-1 py-2 border border-slate-200 rounded-lg bg-white text-[12px] font-medium text-slate-600 active:bg-slate-100 flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <i className="fa-solid fa-print"></i> Xem / In
+                    </button>
+
+                    {/* HIỂN THỊ DÀNH RIÊNG CHO HÓA ĐƠN NHÁP */}
+                    {invoice.status === 'draft' && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onOpenIssueConfirm?.(invoice)}
+                          className="flex-1 py-2 border border-blue-200 rounded-lg bg-blue-50 text-[12px] font-medium text-blue-600 active:bg-blue-100 flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <i className="fa-regular fa-paper-plane"></i> Phát hành
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onOpenDeleteModal?.(invoice)}
+                          className="w-10 flex shrink-0 items-center justify-center border border-red-100 rounded-lg bg-white text-[12px] text-red-500 active:bg-red-50 shadow-sm"
+                        >
+                          <i className="fa-regular fa-trash-can"></i>
+                        </button>
+                      </>
+                    )}
+
+                    {/* HIỂN THỊ DÀNH CHO HÓA ĐƠN ĐÃ PHÁT HÀNH/CÒN NỢ */}
+                    {['issued', 'partially_paid', 'overdue'].includes(invoice.status) && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onOpenPaymentModal?.(invoice)}
+                          className="flex-1 py-2 border border-green-200 rounded-lg bg-green-50 text-[12px] font-medium text-green-700 active:bg-green-100 flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <i className="fa-solid fa-sack-dollar"></i> Thu tiền
+                        </button>
+
+                        {Number(invoice.paid_amount) === 0 && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenCancelModal?.(invoice)}
+                            className="w-10 flex shrink-0 items-center justify-center border border-slate-200 rounded-lg bg-white text-[12px] text-slate-400 active:bg-slate-50 shadow-sm"
+                          >
+                            <i className="fa-solid fa-ban"></i>
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                </div>
+              );
+            })
+          )}
+        </div>
+        {/* --- KẾT THÚC GIAO DIỆN MOBILE --- */}
+        <div className="hidden xl:block overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <table className="w-full text-left border-collapse whitespace-nowrap min-w-[1100px]">
             <thead className="bg-slate-50/80 border-b border-slate-200">
               <tr>
@@ -195,7 +320,7 @@ export default function InvoicesTable({
               ) : (
                 invoices.map((invoice) => {
                   const statusConf = getStatusConfig(invoice.status);
-                  
+
                   return (
                     <tr key={invoice.id} className="hover:bg-slate-50 border-b border-slate-100 transition-colors group">
                       {/* Mã HĐ & Kỳ */}
@@ -210,7 +335,7 @@ export default function InvoicesTable({
                           </span>
                         </div>
                       </td>
-                      
+
                       {/* Phòng & Khu */}
                       <td className="py-3 px-4">
                         <div className="flex flex-col">
@@ -258,7 +383,7 @@ export default function InvoicesTable({
                       {/* Thao tác (Tự động thích ứng trạng thái) */}
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-center gap-1.5">
-                          
+
                           {/* Nút Xem (Lúc nào cũng hiện) */}
                           <button
                             type="button"
@@ -280,7 +405,7 @@ export default function InvoicesTable({
                               >
                                 <i className="fa-regular fa-paper-plane text-[12px]"></i>
                               </button>
-                              
+
                               <button
                                 type="button"
                                 onClick={() => onOpenDeleteModal?.(invoice)}
@@ -303,7 +428,7 @@ export default function InvoicesTable({
                               >
                                 <i className="fa-solid fa-sack-dollar mr-1"></i> Thu tiền
                               </button>
-                              
+
                               {/* Chỉ cho Hủy khi chưa thu đồng nào (paid_amount == 0) */}
                               {Number(invoice.paid_amount) === 0 && (
                                 <button
@@ -317,7 +442,7 @@ export default function InvoicesTable({
                               )}
                             </>
                           )}
-                          
+
                         </div>
                       </td>
                     </tr>

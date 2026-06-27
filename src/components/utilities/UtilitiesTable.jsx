@@ -93,8 +93,106 @@ export default function UtilitiesTable({
       </div>
 
       {/* BẢNG DỮ LIỆU */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-        <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="bg-transparent lg:bg-white border-none lg:border lg:border-slate-200 lg:rounded-xl shadow-none lg:shadow-sm lg:overflow-hidden flex flex-col">
+        {/* --- GIAO DIỆN MOBILE (Dạng Card ẩn trên PC) --- */}
+        <div className="lg:hidden flex flex-col gap-3 pb-4">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-40 bg-white border border-slate-200 rounded-xl animate-pulse"></div>
+            ))
+          ) : readings.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 bg-white rounded-xl border border-slate-200 text-[13px]">
+              <i className="fa-solid fa-clipboard-list text-3xl text-slate-200 mb-3 block"></i>
+              Chưa có dữ liệu chỉ số trong kỳ này.
+            </div>
+          ) : (
+            readings.map((reading) => {
+              const typeConfig = getTypeConfig(reading.type);
+              const isLocked = reading.is_invoiced;
+
+              return (
+                <div key={reading.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                  {/* Header: Tên phòng + Loại dịch vụ */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-800 text-[14px] leading-none">{reading.room_name}</span>
+                      <span className="text-[11px] text-slate-500 mt-1">{reading.property_name}</span>
+                    </div>
+                    <span className={`px-2.5 py-1 border text-[10px] font-semibold rounded-md flex items-center gap-1.5 w-fit ${typeConfig.className}`}>
+                      <i className={`fa-solid ${typeConfig.icon}`}></i> {typeConfig.label}
+                    </span>
+                  </div>
+
+                  {/* Body: Chỉ số & Tiêu thụ */}
+                  <div className="p-4 flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] text-slate-500">Ngày chốt:</span>
+                      <span className="text-[12px] font-medium text-slate-700">{formatDate(reading.reading_date)}</span>
+                    </div>
+                    
+                    {/* Bảng chỉ số tóm tắt */}
+                    <div className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                       <div className="text-center flex-1">
+                         <span className="block text-[10px] text-slate-500 mb-0.5">Số cũ</span>
+                         <span className="font-medium text-slate-600 text-[13px]">{reading.previous_reading.toLocaleString('vi-VN')}</span>
+                       </div>
+                       <i className="fa-solid fa-arrow-right text-slate-300 text-[10px] px-1"></i>
+                       <div className="text-center flex-1">
+                         <span className="block text-[10px] text-slate-500 mb-0.5">Số mới</span>
+                         <span className="font-bold text-slate-800 text-[13px]">{reading.current_reading.toLocaleString('vi-VN')}</span>
+                       </div>
+                       <div className="h-6 w-px bg-slate-200 mx-2"></div>
+                       <div className="text-center flex-1">
+                         <span className="block text-[10px] text-slate-500 mb-0.5">Tiêu thụ</span>
+                         <span className="font-bold text-brand text-[13px]">{reading.usage.toLocaleString('vi-VN')} <span className="text-[10px] font-normal">{typeConfig.unit}</span></span>
+                       </div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                       <span className="text-[11px] text-slate-500">Tình trạng:</span>
+                       {isLocked ? (
+                          <span className="px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-500 rounded text-[10px] font-semibold">Đã lập HĐ</span>
+                        ) : (
+                          <span className="px-2 py-0.5 bg-green-50 border border-green-200 text-green-600 rounded text-[10px] font-semibold">Sẵn sàng</span>
+                        )}
+                    </div>
+                  </div>
+
+                  {/* Footer: Nút thao tác */}
+                  <div className="px-3 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onOpenViewModal?.(reading)}
+                      className="flex-1 py-2 border border-slate-200 rounded-lg bg-white text-[12px] font-medium text-slate-600 active:bg-slate-100 flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <i className="fa-regular fa-eye"></i> Xem
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onOpenEditModal?.(reading)}
+                      disabled={isLocked}
+                      className="flex-1 py-2 border border-blue-100 rounded-lg bg-white text-[12px] font-medium text-blue-600 active:bg-blue-50 flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-40 disabled:active:bg-white"
+                    >
+                      <i className="fa-solid fa-pen-to-square"></i> Sửa
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onOpenDeleteModal?.(reading)}
+                      disabled={isLocked}
+                      className="w-10 flex shrink-0 items-center justify-center border border-red-100 rounded-lg bg-white text-[12px] text-red-500 active:bg-red-50 shadow-sm disabled:opacity-40 disabled:active:bg-white"
+                    >
+                      <i className="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+        {/* --- KẾT THÚC GIAO DIỆN MOBILE --- */}
+        <div className="hidden lg:block overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <table className="w-full text-left border-collapse whitespace-nowrap min-w-[1000px]">
             <thead className="bg-slate-50/80 border-b border-slate-200">
               <tr>
