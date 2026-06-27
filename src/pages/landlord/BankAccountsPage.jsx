@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import BankAccountsTab from '@/components/banks/BankAccountsTab';
+import BankAccountsTab from "@/components/banks/BankAccountsTab";
 import SepayConfigTab from "@/components/banks/SepayConfigTab";
 import SepayTransactionsTab from "@/components/banks/SepayTransactionsTab";
 // --- CÁC COMPONENT CON TẠM THỜI (SKELETONS) ---
