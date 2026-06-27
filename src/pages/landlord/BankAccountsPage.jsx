@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import BankAccountsTab from "@/components/banks/BankAccountsTab";
-import SepayConfigTab from "@/components/banks/SepayConfigTab";
+import SepayConfigTab from "@/components/banks/SePayConfigTab";
 import SepayTransactionsTab from "@/components/banks/SepayTransactionsTab";
 // --- CÁC COMPONENT CON TẠM THỜI (SKELETONS) ---
 // Chúng ta sẽ tách các component này ra file riêng ở các bước tiếp theo
