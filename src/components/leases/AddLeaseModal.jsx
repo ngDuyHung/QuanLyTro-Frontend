@@ -1,6 +1,21 @@
 import React, { useEffect, useState } from "react";
 import roomService from "@/services/roomService";
 import ocrService from "@/services/ocrService";
+import servicePriceService from "@/services/servicePriceService";
+
+
+// Thêm 2 hàm này phía trên initialForm
+const parseMoney = (value) => {
+  if (!value) return 0;
+  return Number(String(value).replace(/[^\d]/g, ""));
+};
+
+const formatMoneyInput = (value) => {
+  const number = parseMoney(value);
+  if (!number) return "";
+  return new Intl.NumberFormat("vi-VN").format(number);
+};
+
 const initialForm = {
   property_id: "",
   room_id: "",
@@ -13,6 +28,7 @@ const initialForm = {
   phone: "",
   email: "",
   id_card_number: "",
+  services: [],
 };
 
 const isAvailableRoom = (room) => {
@@ -29,6 +45,14 @@ export default function AddLeaseModal({
   const [form, setForm] = useState(initialForm);
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
+
+  // THÊM ĐOẠN NÀY: State cho ảnh chỉ số
+  const [electricityImage, setElectricityImage] = useState(null);
+  const [waterImage, setWaterImage] = useState(null);
+  const electricityImagePreview = electricityImage ? URL.createObjectURL(electricityImage) : null;
+  const waterImagePreview = waterImage ? URL.createObjectURL(waterImage) : null;
+
+
   const [clientError, setClientError] = useState("");
   const [rooms, setRooms] = useState([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
@@ -42,12 +66,18 @@ export default function AddLeaseModal({
   const frontImagePreview = frontImage ? URL.createObjectURL(frontImage) : null;
   const backImagePreview = backImage ? URL.createObjectURL(backImage) : null;
 
+  const [availableServices, setAvailableServices] = useState([]);
+  const [isLoadingServices, setIsLoadingServices] = useState(false);
+
   useEffect(() => {
     return () => {
       if (frontImagePreview) URL.revokeObjectURL(frontImagePreview);
       if (backImagePreview) URL.revokeObjectURL(backImagePreview);
+      if (electricityImagePreview) URL.revokeObjectURL(electricityImagePreview);
+      if (waterImagePreview) URL.revokeObjectURL(waterImagePreview);
     };
-  }, [frontImagePreview, backImagePreview]);
+  }, [frontImagePreview, backImagePreview, electricityImagePreview, waterImagePreview]);
+
 
   useEffect(() => {
     if (open) {
@@ -61,12 +91,47 @@ export default function AddLeaseModal({
     };
   }, [open]);
 
+
   useEffect(() => {
     if (!open || !form.property_id) {
       setRooms([]);
       setRoomNotice("");
       return;
     }
+
+    const fetchServices = async () => {
+      try {
+        setIsLoadingServices(true);
+        const response = await servicePriceService.getByProperty(form.property_id);
+
+        console.log("Dữ liệu dịch vụ từ API:", response.data);
+        const fetchedServices = response.data.data || response.data || [];
+        setAvailableServices(fetchedServices);
+
+        // Tự động map tất cả dịch vụ có sẵn vào form, gán số lượng = 1 và lấy giá mặc định
+        const autoFilledServices = fetchedServices.map((srv) => ({
+          service_type: srv.service_type,
+          quantity: 1,
+          // Sử dụng unit_price hoặc price tùy theo cấu trúc object API trả về
+          custom_price: srv.unit_price !== undefined ? srv.unit_price : (srv.price || ""),
+        }));
+
+        setForm((prev) => ({
+          ...prev,
+          services: autoFilledServices,
+        }));
+
+      } catch (error) {
+        console.error("Lỗi tải danh sách dịch vụ", error);
+        setAvailableServices([]);
+        // Reset services trong form nếu không tải được
+        setForm((prev) => ({ ...prev, services: [] }));
+      } finally {
+        setIsLoadingServices(false);
+      }
+    };
+
+    fetchServices();
 
     const fetchRooms = async () => {
       try {
@@ -100,6 +165,26 @@ export default function AddLeaseModal({
 
     fetchRooms();
   }, [open, form.property_id]);
+
+  const resetForm = () => {
+    setForm(initialForm);
+    setFrontImage(null);
+    setBackImage(null);
+    setClientError("");
+    setRooms([]);
+    setRoomNotice("");
+    setScanMessage({ type: "", text: "" });
+    setAvailableServices([]);
+    setElectricityImage(null);
+    setWaterImage(null);
+  };
+
+  // 2. THÊM useEffect này để tự động dọn dẹp data mỗi khi modal đóng
+  useEffect(() => {
+    if (!open) {
+      resetForm();
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -147,31 +232,23 @@ export default function AddLeaseModal({
   };
 
   const handleRoomChange = (event) => {
-  if (!event || !event.target) return;
+    if (!event || !event.target) return;
 
-  const selectedRoomId = event.target.value;
+    const selectedRoomId = event.target.value;
 
-  // Tìm thông tin phòng để lấy giá và ngày thu tiền
-  const selectedRoom = rooms.find((r) => String(r.id) === String(selectedRoomId));
+    // Tìm thông tin phòng để lấy giá và ngày thu tiền
+    const selectedRoom = rooms.find((r) => String(r.id) === String(selectedRoomId));
 
-  setForm((prev) => ({
-    ...prev,
-    room_id: selectedRoomId,
-    // Nếu tìm thấy phòng thì điền giá trị, nếu không thì giữ mặc định
-    billing_day: selectedRoom ? (selectedRoom.billing_day || "1") : prev.billing_day,
-    deposit: selectedRoom ? (selectedRoom.current_price || "0") : prev.deposit,
-  }));
-};
-
-  const resetForm = () => {
-    setForm(initialForm);
-    setFrontImage(null);
-    setBackImage(null);
-    setClientError("");
-    setRooms([]);
-    setRoomNotice("");
-    setScanMessage({ type: "", text: "" });
+    setForm((prev) => ({
+      ...prev,
+      room_id: selectedRoomId,
+      room_price: selectedRoom ? formatMoneyInput(selectedRoom.current_price) : "", // Thêm dòng này
+      billing_day: selectedRoom ? (selectedRoom.billing_day || "1") : prev.billing_day,
+      deposit: selectedRoom ? formatMoneyInput(selectedRoom.current_price) : prev.deposit, // Format cọc
+    }));
   };
+
+
 
   const handleClose = () => {
     if (isSubmitting) return;
@@ -180,6 +257,29 @@ export default function AddLeaseModal({
   };
 
   const onlyDigits = (value) => String(value || "").replace(/\D/g, "");
+
+  const handleAddService = () => {
+    setForm((prev) => ({
+      ...prev,
+      services: [...prev.services, { service_type: "", quantity: 1, custom_price: "" }],
+    }));
+  };
+
+  const handleRemoveService = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      services: prev.services.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleChangeService = (index, field, value) => {
+    setForm((prev) => {
+      const newServices = [...prev.services];
+      // Tự động format nếu là trường custom_price
+      newServices[index][field] = field === "custom_price" ? formatMoneyInput(value) : value;
+      return { ...prev, services: newServices };
+    });
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -214,12 +314,20 @@ export default function AddLeaseModal({
       return;
     }
 
+    // Validate sơ bộ cho services
+    const hasInvalidService = form.services.some(s => !s.service_type || s.quantity < 1);
+    if (hasInvalidService) {
+      setClientError("Vui lòng chọn loại dịch vụ và đảm bảo số lượng >= 1.");
+      return;
+    }
+
     const payload = new FormData();
 
     payload.append("room_id", form.room_id);
     payload.append("start_date", form.start_date);
     payload.append("billing_day", form.billing_day || "1");
     payload.append("deposit", onlyDigits(form.deposit) || "0");
+    payload.append("room_price", onlyDigits(form.room_price) || "0");
     payload.append("electricity_reading", onlyDigits(form.electricity_reading) || "0");
     payload.append("water_reading", onlyDigits(form.water_reading) || "0");
 
@@ -239,13 +347,41 @@ export default function AddLeaseModal({
       payload.append("tenant[id_card_back_image]", backImage);
     }
 
+    if (electricityImage) {
+      payload.append("electricity_image", electricityImage);
+    }
+    if (waterImage) {
+      payload.append("water_image", waterImage);
+    }
+
+    // ĐOẠN NÀY ĐỂ APPEND SERVICES VÀO FORMDATA
+    form.services.forEach((service, index) => {
+      payload.append(`services[${index}][service_type]`, service.service_type);
+      payload.append(`services[${index}][quantity]`, service.quantity);
+      if (service.custom_price !== "") {
+        payload.append(`services[${index}][custom_price]`, onlyDigits(service.custom_price));
+      }
+    });
+
     onSubmit?.(payload);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-4 sm:p-6 overflow-hidden">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[1040px] flex flex-col h-[95vh] sm:h-auto sm:max-h-[95vh] overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0 bg-white">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
+      <style>
+        {`
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  `}
+      </style>
+      <div className="bg-white w-full h-[95vh] sm:h-auto sm:max-h-[95vh] max-w-[1040px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0 bg-white sticky top-0 z-20">
           <div>
             <h2 className="text-[18px] font-bold text-slate-800">
               Thêm hợp đồng mới
@@ -266,7 +402,7 @@ export default function AddLeaseModal({
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="px-4 py-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8">
             <div className="lg:col-span-7 flex flex-col gap-8">
               <div>
                 <div className="flex items-center gap-2.5 mb-4">
@@ -370,12 +506,26 @@ export default function AddLeaseModal({
 
                   <div>
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                      Giá tiền phòng
+                    </label>
+                    <input
+                      type="text"
+                      value={form.room_price}
+                      // readOnly
+                      onChange={(e) => setForm(prev => ({ ...prev, room_price: formatMoneyInput(e.target.value) }))}
+                      placeholder="VD: 1.000.000"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                       Tiền cọc
                     </label>
                     <input
                       type="text"
                       value={form.deposit}
-                      onChange={handleChange("deposit")}
+                      onChange={(e) => setForm(prev => ({ ...prev, deposit: formatMoneyInput(e.target.value) }))}
                       placeholder="VD: 1000000"
                       className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                     />
@@ -562,30 +712,95 @@ export default function AddLeaseModal({
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Chỉ số điện ban đầu <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={form.electricity_reading}
-                      onChange={handleChange("electricity_reading")}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-                    />
-                  </div>
 
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Chỉ số nước ban đầu <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={form.water_reading}
-                      onChange={handleChange("water_reading")}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-                    />
+                  <div className="grid grid-cols-1 gap-5">
+                    {/* Điện */}
+                    <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm">
+                      <label className="flex items-center gap-2 text-[14px] font-bold text-slate-700 mb-3">
+                        <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
+                          <i className="fa-solid fa-bolt"></i>
+                        </div>
+                        Chỉ số điện ban đầu <span className="text-red-500">*</span>
+                      </label>
+
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                          <input
+                            type="text" // Dùng text kết hợp onlyDigits để loại bỏ 2 nút mũi tên tăng giảm vướng víu
+                            value={form.electricity_reading}
+                            onChange={(e) => setForm(prev => ({ ...prev, electricity_reading: onlyDigits(e.target.value) }))}
+                            placeholder="Nhập số điện..."
+                            className="w-full pl-3.5 pr-14 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[16px] font-bold text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand focus:bg-white transition-colors"
+                          />
+                          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-[13px] pointer-events-none">
+                            kWh
+                          </span>
+                        </div>
+
+                        <label className="sm:w-[130px] h-[48px] border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-brand hover:bg-brand/5 transition-all group relative overflow-hidden shrink-0 bg-slate-50">
+                          {electricityImagePreview ? (
+                            <>
+                              <img src={electricityImagePreview} alt="Điện" className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="text-white text-[12px] font-semibold flex items-center gap-1.5">
+                                  <i className="fa-solid fa-camera"></i> Đổi ảnh
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex items-center gap-2 text-slate-500 group-hover:text-brand">
+                              <i className="fa-solid fa-camera text-[16px]"></i>
+                              <span className="text-[13px] font-semibold">Chụp ảnh</span>
+                            </div>
+                          )}
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => setElectricityImage(e.target.files?.[0] || null)} />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Nước */}
+                    <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm">
+                      <label className="flex items-center gap-2 text-[14px] font-bold text-slate-700 mb-3">
+                        <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                          <i className="fa-solid fa-droplet"></i>
+                        </div>
+                        Chỉ số nước ban đầu <span className="text-red-500">*</span>
+                      </label>
+
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={form.water_reading}
+                            onChange={(e) => setForm(prev => ({ ...prev, water_reading: onlyDigits(e.target.value) }))}
+                            placeholder="Nhập số nước..."
+                            className="w-full pl-3.5 pr-14 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[16px] font-bold text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand focus:bg-white transition-colors"
+                          />
+                          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-[13px] pointer-events-none">
+                            Khối
+                          </span>
+                        </div>
+
+                        <label className="sm:w-[130px] h-[48px] border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-brand hover:bg-brand/5 transition-all group relative overflow-hidden shrink-0 bg-slate-50">
+                          {waterImagePreview ? (
+                            <>
+                              <img src={waterImagePreview} alt="Nước" className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="text-white text-[12px] font-semibold flex items-center gap-1.5">
+                                  <i className="fa-solid fa-camera"></i> Đổi ảnh
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex items-center gap-2 text-slate-500 group-hover:text-brand">
+                              <i className="fa-solid fa-camera text-[16px]"></i>
+                              <span className="text-[13px] font-semibold">Chụp ảnh</span>
+                            </div>
+                          )}
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => setWaterImage(e.target.files?.[0] || null)} />
+                        </label>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="bg-orange-50 border border-orange-100 p-3.5 rounded-xl text-[13px] text-orange-800 flex items-start gap-3">
@@ -596,6 +811,75 @@ export default function AddLeaseModal({
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-100 rounded-xl p-5 shadow-sm mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">4</div>
+                    <h3 className="text-[15px] font-bold text-slate-800">Dịch vụ đi kèm</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddService}
+                    className="text-[12px] font-semibold text-brand bg-green-50 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-1.5"
+                  >
+                    <i className="fa-solid fa-plus"></i> Thêm DV
+                  </button>
+                </div>
+
+                {form.services.length === 0 ? (
+                  <p className="text-[13px] text-slate-500 text-center py-2 italic">Chưa có dịch vụ nào. Nhấn "Thêm DV" để chọn.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {form.services.map((service, index) => (
+                      <div key={index} className="grid grid-cols-12 sm:flex sm:items-center gap-2 bg-white p-2.5 sm:p-2 border border-slate-200 rounded-lg relative group">
+                        <div className="col-span-12 sm:flex-1">
+                          <select
+                            value={service.service_type}
+                            onChange={(e) => handleChangeService(index, "service_type", e.target.value)}
+                            className="w-full min-w-[130px] px-2 py-1.5 bg-slate-50 border border-slate-200 rounded text-[13px] outline-none focus:border-brand"
+                          >
+                            <option value="">Chọn dịch vụ...</option>
+                            {availableServices.map((srv) => (
+                              <option key={srv.id} value={srv.service_type}>
+                                {srv.service_type_label || srv.service_type}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-span-5 sm:w-[80px]">
+                          <input
+                            type="number"
+                            min="1"
+                            value={service.quantity}
+                            onChange={(e) => handleChangeService(index, "quantity", e.target.value)}
+                            placeholder="SL"
+                            className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded text-[13px] outline-none focus:border-brand"
+                          />
+                        </div>
+                        <div className="col-span-5 sm:w-[130px]">
+                          <input
+                            type="text"
+                            value={service.custom_price}
+                            onChange={(e) => handleChangeService(index, "custom_price", e.target.value)}
+                            placeholder="Giá riêng..."
+                            className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded text-[13px] outline-none focus:border-brand"
+                          />
+                        </div>
+                        <div className="col-span-2 sm:w-[40px] flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveService(index)}
+                            className="text-slate-400 hover:text-red-500 transition-colors"
+                          >
+                            <i className="fa-regular fa-trash-can"></i>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="bg-white border border-green-100 rounded-xl p-5 shadow-sm">
@@ -613,26 +897,33 @@ export default function AddLeaseModal({
           </div>
         </div>
 
-        <div className="border-t border-slate-100 px-6 py-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 shrink-0 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+        <div className="border-t border-slate-200 px-5 py-3.5 bg-white shrink-0 sticky bottom-0 z-20 flex items-center justify-between gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
           <button
             type="button"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[13px] font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-60"
+            className="px-5 py-3 sm:py-2.5 bg-slate-100 text-slate-600 rounded-xl text-[14px] font-semibold hover:bg-slate-200 transition-colors w-[100px] sm:w-auto text-center disabled:opacity-60"
           >
-            <i className="fa-solid fa-xmark text-[14px]"></i> Hủy
+            Hủy
           </button>
 
           <button
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="px-6 py-2.5 bg-brand text-white rounded-lg text-[13px] font-semibold hover:bg-green-700 disabled:opacity-60 flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="flex-1 sm:flex-none px-8 py-3 sm:py-2.5 bg-brand text-white rounded-xl text-[14px] font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand/30 disabled:opacity-70"
           >
-            {isSubmitting && (
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            {isSubmitting ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                Đang lưu...
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-check text-[14px]"></i>
+                Lưu hợp đồng
+              </>
             )}
-            Lưu hợp đồng
           </button>
         </div>
       </div>
