@@ -22,6 +22,8 @@ const initialForm = {
   start_date: new Date().toISOString().slice(0, 10),
   billing_day: "1",
   deposit: "0",
+  room_price: "0",
+  occupants_count: "1",
   electricity_reading: "0",
   water_reading: "0",
   full_name: "",
@@ -299,6 +301,11 @@ export default function AddLeaseModal({
       return;
     }
 
+    if (!form.occupants_count || Number(form.occupants_count) < 1) {
+      setClientError("Vui lòng nhập số lượng người ở hợp lệ (tối thiểu 1).");
+      return;
+    }
+
     if (!form.full_name.trim()) {
       setClientError("Vui lòng nhập họ và tên khách đại diện.");
       return;
@@ -328,6 +335,7 @@ export default function AddLeaseModal({
     payload.append("billing_day", form.billing_day || "1");
     payload.append("deposit", onlyDigits(form.deposit) || "0");
     payload.append("room_price", onlyDigits(form.room_price) || "0");
+    payload.append("occupants_count", form.occupants_count || "1");
     payload.append("electricity_reading", onlyDigits(form.electricity_reading) || "0");
     payload.append("water_reading", onlyDigits(form.water_reading) || "0");
 
@@ -498,6 +506,8 @@ export default function AddLeaseModal({
                       type="number"
                       min="1"
                       max="28"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={form.billing_day}
                       onChange={handleChange("billing_day")}
                       className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
@@ -527,6 +537,22 @@ export default function AddLeaseModal({
                       value={form.deposit}
                       onChange={(e) => setForm(prev => ({ ...prev, deposit: formatMoneyInput(e.target.value) }))}
                       placeholder="VD: 1000000"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                      Số lượng người ở <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={form.occupants_count}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      onChange={handleChange("occupants_count")}
+                      placeholder="Nhập số người ở dự kiến"
                       className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>

@@ -18,10 +18,9 @@ export default function LandlordLayout() {
   };
 
   const navLinkClasses = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-colors ${
-      isActive
-        ? "bg-brand text-white shadow-sm shadow-green-600/20"
-        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+    `flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-colors ${isActive
+      ? "bg-brand text-white shadow-sm shadow-green-600/20"
+      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
     }`;
 
   // Hàm check active thủ công cho menu "Khu nhà & Phòng"
@@ -33,7 +32,7 @@ export default function LandlordLayout() {
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className="bg-[#f8fafc] text-slate-800 h-screen overflow-hidden flex font-sans">
+    <div className="bg-[#f8fafc] text-slate-800 h-dvh overflow-hidden flex font-sans">
       {/* 2. LỚP PHỦ OVERLAY (Chỉ hiện trên Mobile khi isSidebarOpen == true) */}
       {isSidebarOpen && (
         <div
@@ -45,9 +44,8 @@ export default function LandlordLayout() {
       {/* ================= SIDEBAR ================= */}
       {/* 3. ĐIỀU CHỈNH CLASS TRANSLATE DỰA VÀO STATE */}
       <aside
-        className={`fixed lg:relative w-[260px] bg-white border-r border-slate-200 flex flex-col h-full z-30 shrink-0 transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
+        className={`fixed lg:relative w-[260px] bg-white border-r border-slate-200 flex flex-col h-full z-30 shrink-0 transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          }`}
       >
         {/* LOGO & TITLE */}
         <div className="h-[80px] flex items-center px-6 shrink-0 border-b border-slate-100">
@@ -74,11 +72,10 @@ export default function LandlordLayout() {
           {/* SỬ DỤNG CLASS ĐƯỢC CUSTOM RIÊNG CHO MENU NÀY */}
           <NavLink
             to="/landlord/properties"
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-colors ${
-              isPropertiesGroupActive
-                ? "bg-brand text-white shadow-sm shadow-green-600/20"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-            }`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-colors ${isPropertiesGroupActive
+              ? "bg-brand text-white shadow-sm shadow-green-600/20"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
             onClick={closeSidebar}
           >
             <i className="fa-solid fa-building w-5 text-center"></i>
@@ -216,9 +213,9 @@ export default function LandlordLayout() {
       </aside>
 
       {/* ================= MAIN CONTENT AREA ================= */}
-      <main className="flex-1 flex flex-col h-screen min-w-0 bg-slate-50">
+      <main className="flex-1 flex flex-col h-dvh min-w-0 bg-slate-50">
         {/* HEADER */}
-        <header className="h-[80px] bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 shrink-0">
+        <header className="h-[70px] bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 shrink-0">
           <div className="flex items-center gap-3">
             {/* 4. NÚT MỞ SIDEBAR TRÊN MOBILE */}
             <button
@@ -266,17 +263,86 @@ export default function LandlordLayout() {
         </header>
 
         {/* VÙNG NỘI DUNG CUỘN */}
-        <div className="flex-1 overflow-y-auto">
-          <Outlet />
-
-          {/* FOOTER ĐƠN GIẢN NHẤT */}
-          <footer className="py-2 text-center border-t border-slate-200/60 mx-8">
+        <div className="flex-1 overflow-y-auto flex flex-col pb-[65px] lg:pb-0">
+          <div className="flex-1 flex flex-col">
+            <Outlet />
+          </div>
+          <footer className="hidden lg:block py-4 text-center border-t border-slate-200/60 mx-8 shrink-0 relative z-10 bg-slate-50">
             <p className="text-[12px] text-slate-400">
-              Phiên bản v1.0 — Được làm bởi{" "}
-              <span className="font-medium text-slate-500">Duy Hùng</span>
+              Phiên bản v1.0 — Được làm bởi <span className="font-medium text-slate-500">Duy Hùng</span>
             </p>
           </footer>
         </div>
+
+        {/* ================= BOTTOM NAVIGATION (CHỈ HIỂN THỊ TRÊN MOBILE) ================= */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex items-center px-1 z-50 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)] h-[calc(68px+env(safe-area-inset-bottom))]">
+
+          {/* 1. Trang chủ */}
+          <NavLink to="/landlord/dashboard" className="flex-1 flex justify-center h-full">
+            {({ isActive }) => (
+              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
+                  <i className="fa-solid fa-chart-pie text-[20px]"></i>
+                </div>
+                <span className={`text-[10px] transition-all duration-300 ${isActive ? "font-bold" : "font-medium"}`}>Trang chủ</span>
+              </div>
+            )}
+          </NavLink>
+
+          {/* 2. Khu nhà */}
+          <NavLink to="/landlord/properties" className="flex-1 flex justify-center h-full">
+            {({ isActive }) => {
+              const active = isActive || isPropertiesGroupActive;
+              return (
+                <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${active ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                  <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${active ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
+                    <i className="fa-solid fa-building text-[20px]"></i>
+                  </div>
+                  <span className={`text-[10px] transition-all duration-300 ${active ? "font-bold" : "font-medium"}`}>Khu nhà</span>
+                </div>
+              );
+            }}
+          </NavLink>
+
+          {/* 3. Hóa đơn (Kèm chấm đỏ Badge) */}
+          <NavLink to="/landlord/invoices" className="flex-1 flex justify-center h-full">
+            {({ isActive }) => (
+              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                <div className={`relative flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
+                  <i className="fa-solid fa-file-invoice-dollar text-[20px]"></i>
+                  {/* Chấm đỏ báo có hóa đơn mới */}
+                  <span className="absolute top-1 right-2.5 w-2 h-2 bg-red-500 border border-white rounded-full"></span>
+                </div>
+                <span className={`text-[10px] transition-all duration-300 ${isActive ? "font-bold" : "font-medium"}`}>Hóa đơn</span>
+              </div>
+            )}
+          </NavLink>
+
+          {/* 4. Khách thuê */}
+          <NavLink to="/landlord/tenants" className="flex-1 flex justify-center h-full">
+            {({ isActive }) => (
+              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
+                  <i className="fa-solid fa-users text-[20px]"></i>
+                </div>
+                <span className={`text-[10px] transition-all duration-300 ${isActive ? "font-bold" : "font-medium"}`}>Khách thuê</span>
+              </div>
+            )}
+          </NavLink>
+
+          {/* 5. Nút Thêm (Mở Sidebar) */}
+          <button onClick={() => setIsSidebarOpen(true)} className="flex-1 flex justify-center h-full">
+            <div className="w-full flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 transition-all duration-300">
+              <div className="flex items-center justify-center w-12 h-8 rounded-full bg-transparent scale-100">
+                {/* Đổi icon bars mặc định thành bars-staggered cho hiện đại hơn */}
+                <i className="fa-solid fa-bars-staggered text-[20px]"></i>
+              </div>
+              <span className="text-[10px] font-medium">Thêm</span>
+            </div>
+          </button>
+
+        </nav>
+
       </main>
     </div>
   );
