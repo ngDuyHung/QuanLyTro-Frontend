@@ -29,10 +29,10 @@ export default function CreateInvoiceModal({
     const [clientError, setClientError] = useState("");
     const [rent, setRent] = useState({ price: 0 });
     const [electricity, setElectricity] = useState({
-        prev: "", current: "", price: 3500, image: null, preview: "", is_chot_roi: false
+        prev: "", current: "", price: 3500, free: 0, image: null, preview: "", is_chot_roi: false
     });
     const [water, setWater] = useState({
-        prev: "", current: "", price: 20000, image: null, preview: "", is_chot_roi: false
+        prev: "", current: "", price: 20000, free: 0, image: null, preview: "", is_chot_roi: false
     });
     const [dynamicItems, setDynamicItems] = useState([]);
 
@@ -54,8 +54,8 @@ export default function CreateInvoiceModal({
             setForm(initialForm);
             setLeases([]);
             setRent({ price: 0 });
-            setElectricity({ prev: "", current: "", price: 3500, image: null, preview: "", is_chot_roi: false });
-            setWater({ prev: "", current: "", price: 20000, image: null, preview: "", is_chot_roi: false });
+            setElectricity({ prev: "", current: "", price: 3500, free: 0, image: null, preview: "", is_chot_roi: false });
+            setWater({ prev: "", current: "", price: 20000, free: 0, image: null, preview: "", is_chot_roi: false });
             setDynamicItems([]);
             setClientError("");
             setSubmitAction(null);
@@ -100,8 +100,8 @@ export default function CreateInvoiceModal({
                 const data = res.data.data;
                 console.log("Prepare Data:", data);
                 let tempRent = 0;
-                let tempElec = { prev: "", current: "", price: 3500, image: null, preview: "", is_chot_roi: false };
-                let tempWater = { prev: "", current: "", price: 20000, image: null, preview: "", is_chot_roi: false };
+                let tempElec = { prev: "", current: "", price: 3500, free: 0, image: null, preview: "", is_chot_roi: false };
+                let tempWater = { prev: "", current: "", price: 20000, free: 0, image: null, preview: "", is_chot_roi: false };
                 let tempDynamics = [];
 
                 data.suggested_items.forEach((item, index) => {
@@ -114,6 +114,7 @@ export default function CreateInvoiceModal({
                         tempElec.prev = item.previous_reading ?? "";
                         tempElec.current = item.current_reading ?? "";
                         tempElec.price = item.unit_price_snapshot;
+                        tempElec.free = item.free_quantity_snapshot || 0;
                         tempElec.is_chot_roi = item.is_chot_roi;
                     }
                     // 3. Xử lý logic Nước
@@ -121,6 +122,7 @@ export default function CreateInvoiceModal({
                         tempWater.prev = item.previous_reading ?? "";
                         tempWater.current = item.current_reading ?? "";
                         tempWater.price = item.unit_price_snapshot;
+                        tempWater.free = item.free_quantity_snapshot || 0;
                         tempWater.is_chot_roi = item.is_chot_roi;
                     }
                     // 4. Các dịch vụ phụ trợ còn lại (rác, wifi...)
@@ -208,10 +210,12 @@ export default function CreateInvoiceModal({
 
     // Tính tổng tiền an toàn với Number()
     const elecUsage = Math.max(0, (Number(electricity.current) || 0) - (Number(electricity.prev) || 0));
-    const elecAmount = elecUsage * (Number(electricity.price) || 0);
+    const elecBillable = Math.max(0, elecUsage - (Number(electricity.free) || 0));
+    const elecAmount = elecBillable * (Number(electricity.price) || 0);
 
     const waterUsage = Math.max(0, (Number(water.current) || 0) - (Number(water.prev) || 0));
-    const waterAmount = waterUsage * (Number(water.price) || 0);
+    const waterBillable = Math.max(0, waterUsage - (Number(water.free) || 0));
+    const waterAmount = waterBillable * (Number(water.price) || 0);
 
     const dynamicAmount = dynamicItems.reduce((sum, item) => {
         const amount = (Number(item.quantity) || 0) * (Number(item.unit_price_snapshot) || 0);
@@ -252,9 +256,9 @@ export default function CreateInvoiceModal({
             const items = [];
             items.push({ charge_type: "room", description: "Tiền phòng", unit: "Tháng", quantity: 1, unit_price_snapshot: rent.price });
 
-            if (elecUsage > 0) items.push({ charge_type: "electricity", description: "Tiền điện", unit: "kWh", quantity: elecUsage, unit_price_snapshot: electricity.price });
-            if (waterUsage > 0) items.push({ charge_type: "water", description: "Tiền nước", unit: "m³", quantity: waterUsage, unit_price_snapshot: water.price });
-
+            // THÊM TRƯỜNG free_quantity_snapshot Ở ĐÂY
+            if (elecUsage > 0) items.push({ charge_type: "electricity", description: "Tiền điện", unit: "kWh", quantity: elecUsage, unit_price_snapshot: electricity.price, free_quantity_snapshot: electricity.free });
+            if (waterUsage > 0) items.push({ charge_type: "water", description: "Tiền nước", unit: "m³", quantity: waterUsage, unit_price_snapshot: water.price, free_quantity_snapshot: water.free });
             dynamicItems.forEach(item => {
                 if (item.description && item.unit_price_snapshot > 0) {
                     items.push({
@@ -400,20 +404,27 @@ export default function CreateInvoiceModal({
                                 { type: 'electricity', label: 'Tiền điện', icon: 'fa-bolt', unit: 'kWh', state: electricity },
                                 { type: 'water', label: 'Tiền nước', icon: 'fa-droplet', unit: 'm³', state: water }
                             ].map((item) => (
-                                <div key={item.type} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
-                                    <div className="w-[120px] font-semibold text-[13px] text-slate-700"><i className={`fa-solid ${item.icon} fa-fw text-${item.type === 'electricity' ? 'amber' : 'blue'}-500 mr-1`}></i> {item.label}</div>
-                                    <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
+                                <div key={item.type} className="flex flex-col lg:flex-row items-start lg:items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
+                                    <div className="w-[120px] font-semibold text-[13px] text-slate-700">
+                                        <i className={`fa-solid ${item.icon} fa-fw text-${item.type === 'electricity' ? 'amber' : 'blue'}-500 mr-1`}></i> {item.label}
+                                    </div>
+                                    <div className="flex-1 grid grid-cols-2 lg:grid-cols-5 gap-2 w-full">
+
+                                        {/* Ô Số cũ */}
                                         <div className="relative">
                                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Số cũ</span>
                                             <input type="number" disabled={item.state.is_chot_roi} value={item.state.prev} onChange={(e) => handleUtilityChange(item.type, 'prev', e.target.value)} className="w-full pl-[45px] pr-2 py-1.5 border border-slate-200 rounded text-[13px] focus:border-brand outline-none disabled:bg-slate-100" />
                                         </div>
+
+                                        {/* Ô Số mới */}
                                         <div className="relative">
                                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Số mới</span>
                                             <input type="number" disabled={item.state.is_chot_roi} value={item.state.current} onChange={(e) => handleUtilityChange(item.type, 'current', e.target.value)} className="w-full pl-[50px] pr-2 py-1.5 border border-slate-200 rounded text-[13px] focus:border-brand outline-none disabled:bg-slate-100" />
                                         </div>
+
+                                        {/* Ô Đơn giá */}
                                         <div className="relative">
                                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Đơn giá</span>
-
                                             <input
                                                 type="text"
                                                 inputMode="numeric"
@@ -425,21 +436,34 @@ export default function CreateInvoiceModal({
                                                 }}
                                                 className="w-full pl-[55px] pr-2 py-1.5 border border-slate-200 rounded text-[13px] focus:border-brand outline-none"
                                             />
-
                                         </div>
 
-                                        <div className="flex items-center gap-2 justify-end">
+                                        {/* Ô Miễn phí (MỚI THÊM) */}
+                                        <div className="relative" title="Số lượng được miễn phí (trừ ra trước khi tính tiền)">
+                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-emerald-600 font-semibold">Miễn phí</span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={item.state.free}
+                                                onChange={(e) => handleUtilityChange(item.type, 'free', e.target.value)}
+                                                className="w-full pl-[65px] pr-2 py-1.5 border border-emerald-200 bg-emerald-50 rounded text-[13px] text-emerald-700 font-semibold focus:border-emerald-500 outline-none"
+                                            />
+                                        </div>
+
+                                        {/* Action và Tổng tiền */}
+                                        <div className="flex items-center gap-2 justify-end lg:col-span-1 col-span-2">
                                             {!item.state.is_chot_roi && (
-                                                <label className="w-8 h-8 rounded border border-slate-200 bg-white flex items-center justify-center text-slate-500 cursor-pointer hover:bg-brand/10 hover:text-brand hover:border-brand transition-colors relative" title="Tải ảnh đồng hồ">
+                                                <label className="w-8 h-8 rounded border border-slate-200 bg-white flex items-center justify-center text-slate-500 cursor-pointer hover:bg-brand/10 hover:text-brand hover:border-brand transition-colors relative shrink-0" title="Tải ảnh đồng hồ">
                                                     <i className="fa-solid fa-camera text-[12px]"></i>
                                                     <input type="file" accept="image/*" className="hidden" onChange={handleImageChange(item.type)} />
                                                     {item.state.preview && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border border-white"></span>}
                                                 </label>
                                             )}
-                                            <div className="text-[13px] font-bold text-slate-800 min-w-[80px] text-right">
-                                                {((Math.max(0, (Number(item.state.current) || 0) - (Number(item.state.prev) || 0))) * (Number(item.state.price) || 0)).toLocaleString()} đ
+                                            <div className="text-[13px] font-bold text-slate-800 min-w-[80px] text-right truncate">
+                                                {((Math.max(0, Math.max(0, (Number(item.state.current) || 0) - (Number(item.state.prev) || 0)) - (Number(item.state.free) || 0))) * (Number(item.state.price) || 0)).toLocaleString()} đ
                                             </div>
                                         </div>
+
                                     </div>
                                 </div>
                             ))}
