@@ -231,7 +231,7 @@ export default function PropertiesPage() {
     properties.find((property) => property.id === selectedPropertyId) || null;
 
   return (
-    <div className="flex-1 overflow-y-auto no-scrollbar p-4 pt-0 md:p-6 lg:p-6 lg:pt-4 flex flex-col h-full bg-slate-50">
+    <div className="flex-1 p-4 pt-0 md:p-6 lg:p-6 lg:pt-4 flex flex-col bg-slate-50 lg:h-full lg:overflow-hidden">
       <div className="mb-4 lg:mb-5 flex flex-col lg:flex-row lg:items-center lg:justify-between lg:border-b lg:border-slate-200">
         <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 lg:border-none">
           <NavLink to="/landlord/properties" end className={tabClasses}>
