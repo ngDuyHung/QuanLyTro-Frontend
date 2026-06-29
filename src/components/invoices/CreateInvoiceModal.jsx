@@ -29,10 +29,10 @@ export default function CreateInvoiceModal({
     const [clientError, setClientError] = useState("");
     const [rent, setRent] = useState({ price: 0 });
     const [electricity, setElectricity] = useState({
-        prev: "", current: "", price: 3500, free: 0, image: null, preview: "", is_chot_roi: false
+        prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false
     });
     const [water, setWater] = useState({
-        prev: "", current: "", price: 20000, free: 0, image: null, preview: "", is_chot_roi: false
+        prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false
     });
     const [dynamicItems, setDynamicItems] = useState([]);
 
@@ -54,8 +54,8 @@ export default function CreateInvoiceModal({
             setForm(initialForm);
             setLeases([]);
             setRent({ price: 0 });
-            setElectricity({ prev: "", current: "", price: 3500, free: 0, image: null, preview: "", is_chot_roi: false });
-            setWater({ prev: "", current: "", price: 20000, free: 0, image: null, preview: "", is_chot_roi: false });
+            setElectricity({ prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false });
+            setWater({ prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false });
             setDynamicItems([]);
             setClientError("");
             setSubmitAction(null);
@@ -100,8 +100,8 @@ export default function CreateInvoiceModal({
                 const data = res.data.data;
                 console.log("Prepare Data:", data);
                 let tempRent = 0;
-                let tempElec = { prev: "", current: "", price: 3500, free: 0, image: null, preview: "", is_chot_roi: false };
-                let tempWater = { prev: "", current: "", price: 20000, free: 0, image: null, preview: "", is_chot_roi: false };
+                let tempElec = { prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false };
+                let tempWater = { prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false };
                 let tempDynamics = [];
 
                 data.suggested_items.forEach((item, index) => {
@@ -175,7 +175,13 @@ export default function CreateInvoiceModal({
         });
         event.target.value = "";
     };
-
+const handleRemoveImage = (type) => {
+        const setter = type === 'electricity' ? setElectricity : setWater;
+        setter(prev => {
+            if (prev.preview) URL.revokeObjectURL(prev.preview);
+            return { ...prev, image: null, preview: "" };
+        });
+    };
     const handleAddDynamicItem = () => {
         setDynamicItems(prev => [
             ...prev,
@@ -369,33 +375,42 @@ export default function CreateInvoiceModal({
                         </div>
 
                         {/* SECTION 2: Các khoản phí cố định */}
-                        <div className="bg-white px-5 py-5 border-b border-slate-200 mt-2 relative">
+                        <div className="bg-white px-4 sm:px-5 py-5 border-b border-slate-200 mt-2 relative">
                             {isPreparing && <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-10 flex items-center justify-center"><span className="animate-pulse text-brand font-semibold text-[13px]">Đang đồng bộ dữ liệu...</span></div>}
 
                             <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2"><i className="fa-solid fa-money-bill text-[13px]"></i> 2. Phí cố định (Phòng, Điện, Nước)</h3>
 
                             {/* Tiền phòng */}
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
-                                <div className="w-[120px] font-semibold text-[13px] text-slate-700"><i className="fa-solid fa-house fa-fw text-brand mr-1"></i> Tiền phòng</div>
-                                <div className="flex-1 flex items-center gap-3 w-full">
-                                    <div className="flex-1 relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-slate-400">Giá</span>
-
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            value={rent.price === 0 ? "" : Number(rent.price).toLocaleString("vi-VN")}
-                                            placeholder="0"
-                                            onChange={(e) => {
-                                                // Loại bỏ toàn bộ ký tự không phải là số trước khi lưu vào State
-                                                const rawValue = e.target.value.replace(/[^\d]/g, "");
-                                                setRent({ price: rawValue ? Number(rawValue) : 0 });
-                                            }}
-                                            className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded text-[13px] font-semibold focus:border-brand outline-none"
-                                        />
-
+                            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-4 bg-white lg:bg-slate-50 p-4 lg:p-3 rounded-xl border border-slate-200 shadow-sm lg:shadow-none mb-4 lg:mb-3">
+                                <div className="flex justify-between items-center lg:w-[120px] shrink-0 border-b border-slate-100 lg:border-0 pb-2 lg:pb-0 mb-1 lg:mb-0">
+                                    <div className="font-bold text-[14px] lg:text-[13px] text-slate-700 flex items-center">
+                                        <i className="fa-solid fa-house fa-fw text-brand mr-2 lg:mr-1 text-[16px] lg:text-[14px]"></i> Tiền phòng
                                     </div>
-                                    <div className="text-[14px] font-bold text-slate-800 min-w-[100px] text-right">{Number(rent.price).toLocaleString()} đ</div>
+                                    <div className="lg:hidden text-[15px] font-black text-brand">
+                                        {Number(rent.price).toLocaleString()} đ
+                                    </div>
+                                </div>
+                                <div className="flex-1 flex items-center gap-3 w-full">
+                                    <div className="flex-1 flex flex-col gap-1">
+                                        <span className="text-[11px] font-semibold text-slate-500 lg:hidden">Đơn giá / tháng</span>
+                                        <div className="relative">
+                                            <span className="hidden lg:block absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-slate-400">Giá</span>
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={rent.price === 0 ? "" : Number(rent.price).toLocaleString("vi-VN")}
+                                                placeholder="0"
+                                                onChange={(e) => {
+                                                    const rawValue = e.target.value.replace(/[^\d]/g, "");
+                                                    setRent({ price: rawValue ? Number(rawValue) : 0 });
+                                                }}
+                                                className="w-full lg:pl-10 px-3 py-2.5 lg:py-1.5 border border-slate-200 rounded-lg text-[14px] lg:text-[13px] font-semibold focus:border-brand outline-none transition-colors"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="hidden lg:block text-[14px] font-bold text-slate-800 min-w-[80px] text-right">
+                                        {Number(rent.price).toLocaleString()} đ
+                                    </div>
                                 </div>
                             </div>
 
@@ -403,70 +418,122 @@ export default function CreateInvoiceModal({
                             {[
                                 { type: 'electricity', label: 'Tiền điện', icon: 'fa-bolt', unit: 'kWh', state: electricity },
                                 { type: 'water', label: 'Tiền nước', icon: 'fa-droplet', unit: 'm³', state: water }
-                            ].map((item) => (
-                                <div key={item.type} className="flex flex-col lg:flex-row items-start lg:items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
-                                    <div className="w-[120px] font-semibold text-[13px] text-slate-700">
-                                        <i className={`fa-solid ${item.icon} fa-fw text-${item.type === 'electricity' ? 'amber' : 'blue'}-500 mr-1`}></i> {item.label}
-                                    </div>
-                                    <div className="flex-1 grid grid-cols-2 lg:grid-cols-5 gap-2 w-full">
+                            ].map((item) => {
+                                // Tính tiền ngay trong render để hiển thị tức thời
+                                const usage = Math.max(0, (Number(item.state.current) || 0) - (Number(item.state.prev) || 0));
+                                const billable = Math.max(0, usage - (Number(item.state.free) || 0));
+                                const amount = billable * (Number(item.state.price) || 0);
 
-                                        {/* Ô Số cũ */}
-                                        <div className="relative">
-                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Số cũ</span>
-                                            <input type="number" disabled={item.state.is_chot_roi} value={item.state.prev} onChange={(e) => handleUtilityChange(item.type, 'prev', e.target.value)} className="w-full pl-[45px] pr-2 py-1.5 border border-slate-200 rounded text-[13px] focus:border-brand outline-none disabled:bg-slate-100" />
-                                        </div>
-
-                                        {/* Ô Số mới */}
-                                        <div className="relative">
-                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Số mới</span>
-                                            <input type="number" disabled={item.state.is_chot_roi} value={item.state.current} onChange={(e) => handleUtilityChange(item.type, 'current', e.target.value)} className="w-full pl-[50px] pr-2 py-1.5 border border-slate-200 rounded text-[13px] focus:border-brand outline-none disabled:bg-slate-100" />
-                                        </div>
-
-                                        {/* Ô Đơn giá */}
-                                        <div className="relative">
-                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Đơn giá</span>
-                                            <input
-                                                type="text"
-                                                inputMode="numeric"
-                                                value={item.state.price === 0 ? "" : Number(item.state.price).toLocaleString("vi-VN")}
-                                                placeholder="0"
-                                                onChange={(e) => {
-                                                    const rawValue = e.target.value.replace(/[^\d]/g, "");
-                                                    handleUtilityChange(item.type, 'price', rawValue ? Number(rawValue) : 0);
-                                                }}
-                                                className="w-full pl-[55px] pr-2 py-1.5 border border-slate-200 rounded text-[13px] focus:border-brand outline-none"
-                                            />
-                                        </div>
-
-                                        {/* Ô Miễn phí (MỚI THÊM) */}
-                                        <div className="relative" title="Số lượng được miễn phí (trừ ra trước khi tính tiền)">
-                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-emerald-600 font-semibold">Miễn phí</span>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                value={item.state.free}
-                                                onChange={(e) => handleUtilityChange(item.type, 'free', e.target.value)}
-                                                className="w-full pl-[65px] pr-2 py-1.5 border border-emerald-200 bg-emerald-50 rounded text-[13px] text-emerald-700 font-semibold focus:border-emerald-500 outline-none"
-                                            />
-                                        </div>
-
-                                        {/* Action và Tổng tiền */}
-                                        <div className="flex items-center gap-2 justify-end lg:col-span-1 col-span-2">
-                                            {!item.state.is_chot_roi && (
-                                                <label className="w-8 h-8 rounded border border-slate-200 bg-white flex items-center justify-center text-slate-500 cursor-pointer hover:bg-brand/10 hover:text-brand hover:border-brand transition-colors relative shrink-0" title="Tải ảnh đồng hồ">
-                                                    <i className="fa-solid fa-camera text-[12px]"></i>
-                                                    <input type="file" accept="image/*" className="hidden" onChange={handleImageChange(item.type)} />
-                                                    {item.state.preview && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border border-white"></span>}
-                                                </label>
-                                            )}
-                                            <div className="text-[13px] font-bold text-slate-800 min-w-[80px] text-right truncate">
-                                                {((Math.max(0, Math.max(0, (Number(item.state.current) || 0) - (Number(item.state.prev) || 0)) - (Number(item.state.free) || 0))) * (Number(item.state.price) || 0)).toLocaleString()} đ
+                                return (
+                                    <div key={item.type} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-4 bg-white lg:bg-slate-50 p-4 lg:p-3 rounded-xl border border-slate-200 shadow-sm lg:shadow-none mb-4 lg:mb-3">
+                                        
+                                        {/* Header Mobile: Icon + Tên + Tổng tiền */}
+                                        <div className="flex justify-between items-center lg:w-[120px] shrink-0 border-b border-slate-100 lg:border-0 pb-2 lg:pb-0 mb-1 lg:mb-0">
+                                            <div className="font-bold text-[14px] lg:text-[13px] text-slate-700 flex items-center">
+                                                <i className={`fa-solid ${item.icon} fa-fw text-${item.type === 'electricity' ? 'amber' : 'blue'}-500 mr-2 lg:mr-1 text-[16px] lg:text-[14px]`}></i>
+                                                {item.label}
+                                            </div>
+                                            <div className="lg:hidden text-[15px] font-black text-brand">
+                                                {amount.toLocaleString()} đ
                                             </div>
                                         </div>
 
+                                        <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-3 w-full">
+                                            
+                                            {/* Grid Inputs: 2 cột trên Mobile, 4 cột trải ngang trên Desktop */}
+                                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-2 flex-1">
+                                                {/* Ô Số cũ */}
+                                                <div className="flex flex-col gap-1.5 lg:gap-1 relative">
+                                                    <span className="text-[11px] font-semibold text-slate-500 lg:hidden">Số cũ</span>
+                                                    <div className="relative">
+                                                        <span className="hidden lg:block absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Số cũ</span>
+                                                        <input type="number" disabled={item.state.is_chot_roi} value={item.state.prev} onChange={(e) => handleUtilityChange(item.type, 'prev', e.target.value)} className="w-full lg:pl-[45px] px-3 py-2 lg:py-1.5 border border-slate-200 rounded-lg text-[14px] lg:text-[13px] font-semibold focus:border-brand outline-none disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                                                    </div>
+                                                </div>
+
+                                                {/* Ô Số mới */}
+                                                <div className="flex flex-col gap-1.5 lg:gap-1 relative">
+                                                    <span className="text-[11px] font-semibold text-slate-500 lg:hidden">Số mới</span>
+                                                    <div className="relative">
+                                                        <span className="hidden lg:block absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Số mới</span>
+                                                        <input type="number" disabled={item.state.is_chot_roi} value={item.state.current} onChange={(e) => handleUtilityChange(item.type, 'current', e.target.value)} className="w-full lg:pl-[50px] px-3 py-2 lg:py-1.5 border border-slate-200 rounded-lg text-[14px] lg:text-[13px] font-semibold focus:border-brand outline-none disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                                                    </div>
+                                                </div>
+
+                                                {/* Ô Đơn giá */}
+                                                <div className="flex flex-col gap-1.5 lg:gap-1 relative">
+                                                    <span className="text-[11px] font-semibold text-slate-500 lg:hidden">Đơn giá</span>
+                                                    <div className="relative">
+                                                        <span className="hidden lg:block absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">Đơn giá</span>
+                                                        <input
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            value={item.state.price === 0 ? "" : Number(item.state.price).toLocaleString("vi-VN")}
+                                                            placeholder="0"
+                                                            onChange={(e) => {
+                                                                const rawValue = e.target.value.replace(/[^\d]/g, "");
+                                                                handleUtilityChange(item.type, 'price', rawValue ? Number(rawValue) : 0);
+                                                            }}
+                                                            className="w-full lg:pl-[55px] px-3 py-2 lg:py-1.5 border border-slate-200 rounded-lg text-[14px] lg:text-[13px] font-semibold focus:border-brand outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Ô Miễn phí */}
+                                                <div className="flex flex-col gap-1.5 lg:gap-1 relative">
+                                                    <span className="text-[11px] font-semibold text-emerald-600 lg:hidden">Được Miễn phí</span>
+                                                    <div className="relative">
+                                                        <span className="hidden lg:block absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-emerald-600 font-semibold">Miễn phí</span>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={item.state.free}
+                                                            onChange={(e) => handleUtilityChange(item.type, 'free', e.target.value)}
+                                                            className="w-full lg:pl-[65px] px-3 py-2 lg:py-1.5 border border-emerald-200 bg-emerald-50 rounded-lg text-[14px] lg:text-[13px] text-emerald-700 font-bold focus:border-emerald-500 outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Phần Upload Ảnh và Tổng tiền (Desktop) */}
+                                            <div className="flex items-center justify-between lg:justify-end gap-3 lg:w-[130px] shrink-0 pt-3 lg:pt-0 border-t border-dashed border-slate-200 lg:border-0 mt-1 lg:mt-0">
+                                                
+                                                {!item.state.is_chot_roi ? (
+                                                    item.state.preview ? (
+                                                        <div className="relative w-[60px] h-[60px] lg:w-9 lg:h-9 rounded-lg border border-slate-200 overflow-visible shrink-0 group">
+                                                            <img src={item.state.preview} alt="preview" className="w-full h-full object-cover rounded-lg shadow-sm" />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveImage(item.type)}
+                                                                className="absolute -top-2 -right-2 lg:-top-1.5 lg:-right-1.5 w-5 h-5 lg:w-4 lg:h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-[10px] lg:text-[9px] shadow-md cursor-pointer z-10 transition-transform active:scale-90"
+                                                                title="Xóa ảnh"
+                                                            >
+                                                                <i className="fa-solid fa-xmark"></i>
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <label className="w-full lg:w-9 h-[42px] lg:h-9 rounded-lg border border-dashed border-slate-300 text-slate-500 hover:text-brand hover:border-brand hover:bg-brand/5 flex items-center justify-center gap-2 lg:gap-0 cursor-pointer transition-colors shrink-0 bg-slate-50 lg:bg-white" title="Chụp ảnh đồng hồ">
+                                                            <i className="fa-solid fa-camera text-[15px] lg:text-[13px]"></i>
+                                                            <span className="text-[12px] font-medium lg:hidden">Tải ảnh lên</span>
+                                                            <input type="file" accept="image/*" className="hidden" onChange={handleImageChange(item.type)} />
+                                                        </label>
+                                                    )
+                                                ) : (
+                                                    <div className="flex-1 lg:w-9 lg:h-9 flex items-center justify-center lg:justify-end gap-2 text-slate-400 bg-slate-50 lg:bg-transparent rounded-lg py-2 lg:py-0">
+                                                        <i className="fa-solid fa-lock text-[13px]"></i>
+                                                        <span className="text-[11px] italic lg:hidden">Đã chốt số kỳ này</span>
+                                                    </div>
+                                                )}
+
+                                                {/* Tổng tiền hiển thị trên Desktop */}
+                                                <div className="hidden lg:block text-[14px] font-bold text-slate-800 min-w-[80px] text-right truncate">
+                                                    {amount.toLocaleString()} đ
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         {/* SECTION 3: Dịch vụ khác & Giảm trừ */}
