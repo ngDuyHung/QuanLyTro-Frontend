@@ -266,11 +266,14 @@ export default function LandlordLayout() {
         </header>
 
         {/* VÙNG NỘI DUNG CUỘN */}
-        <div className="flex-1 overflow-y-auto">
-          <Outlet />
+        <div className="flex-1 overflow-y-auto flex flex-col">
+          
+          <div className="flex-1 flex flex-col min-h-0">
+             <Outlet />
+          </div>
 
           {/* FOOTER ĐƠN GIẢN NHẤT */}
-          <footer className="py-2 text-center border-t border-slate-200/60 mx-8">
+          <footer className="py-2 text-center border-t border-slate-200/60 mx-8 shrink-0">
             <p className="text-[12px] text-slate-400">
               Phiên bản v1.0 — Được làm bởi{" "}
               <span className="font-medium text-slate-500">Duy Hùng</span>
