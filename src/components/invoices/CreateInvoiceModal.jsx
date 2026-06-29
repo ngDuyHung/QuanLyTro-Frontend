@@ -75,6 +75,7 @@ export default function CreateInvoiceModal({
                     status: "active",
                     per_page: 100,
                 });
+                console.log("Leases fetched:", response.data.data);
                 setLeases(response.data.data || []);
             } catch (error) {
                 setClientError("Lỗi tải danh sách phòng.");
@@ -97,7 +98,7 @@ export default function CreateInvoiceModal({
                 });
 
                 const data = res.data.data;
-
+                console.log("Prepare Data:", data);
                 let tempRent = 0;
                 let tempElec = { prev: "", current: "", price: 3500, image: null, preview: "", is_chot_roi: false };
                 let tempWater = { prev: "", current: "", price: 20000, image: null, preview: "", is_chot_roi: false };
@@ -108,43 +109,19 @@ export default function CreateInvoiceModal({
                     if (item.charge_type === 'room') {
                         tempRent = item.unit_price_snapshot;
                     }
-                    // 2. Xử lý logic gộp Điện
+                    // 2. Xử lý logic Điện (Đọc trực tiếp từ cấu trúc Backend, không dùng Regex)
                     else if (item.charge_type === 'electricity') {
-                        const match = item.description.match(/Số cũ: (\d+) - Số mới: (\d+)/);
-                        if (match) {
-                            // A. Nếu là record chứa CHỈ SỐ (từ meter_readings)
-                            const oldVal = parseInt(match[1]);
-                            const newVal = parseInt(match[2]);
-                            const isInitial = (oldVal === newVal); // Nếu bằng nhau tức là số đầu vào
-
-                            tempElec.prev = isInitial ? newVal : oldVal;
-                            tempElec.current = isInitial ? "" : newVal;
-                            tempElec.is_chot_roi = !isInitial;
-                        } else {
-                            // B. Nếu là record chứa GIÁ TIỀN (từ service_items)
-                            if (item.unit_price_snapshot > 0) {
-                                tempElec.price = item.unit_price_snapshot;
-                            }
-                        }
+                        tempElec.prev = item.previous_reading ?? "";
+                        tempElec.current = item.current_reading ?? "";
+                        tempElec.price = item.unit_price_snapshot;
+                        tempElec.is_chot_roi = item.is_chot_roi;
                     }
-                    // 3. Xử lý logic gộp Nước
+                    // 3. Xử lý logic Nước
                     else if (item.charge_type === 'water') {
-                        const match = item.description.match(/Số cũ: (\d+) - Số mới: (\d+)/);
-                        if (match) {
-                            // A. Nếu là record chứa CHỈ SỐ (từ meter_readings)
-                            const oldVal = parseInt(match[1]);
-                            const newVal = parseInt(match[2]);
-                            const isInitial = (oldVal === newVal);
-
-                            tempWater.prev = isInitial ? newVal : oldVal;
-                            tempWater.current = isInitial ? "" : newVal;
-                            tempWater.is_chot_roi = !isInitial;
-                        } else {
-                            // B. Nếu là record chứa GIÁ TIỀN (từ service_items)
-                            if (item.unit_price_snapshot > 0) {
-                                tempWater.price = item.unit_price_snapshot;
-                            }
-                        }
+                        tempWater.prev = item.previous_reading ?? "";
+                        tempWater.current = item.current_reading ?? "";
+                        tempWater.price = item.unit_price_snapshot;
+                        tempWater.is_chot_roi = item.is_chot_roi;
                     }
                     // 4. Các dịch vụ phụ trợ còn lại (rác, wifi...)
                     else {

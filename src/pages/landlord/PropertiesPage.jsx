@@ -12,7 +12,7 @@ import propertyService from "@/services/propertyService";
 
 import EditRoomModal from "@/components/rooms/EditRoomModal";
 import roomService from "@/services/roomService";
-
+import ImportExcelModal from "@/components/properties/ImportExcelModal";
 export default function PropertiesPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -37,6 +37,8 @@ export default function PropertiesPage() {
   const [isEditRoomOpen, setIsEditRoomOpen] = useState(false);
   const [isUpdatingRoom, setIsUpdatingRoom] = useState(false);
   const [roomRefreshKey, setRoomRefreshKey] = useState(0);
+
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchText.trim());
@@ -205,7 +207,7 @@ export default function PropertiesPage() {
       toast.success("Cập nhật phòng thành công!", {
         autoClose: 1500,
       });
-      
+
       handleCloseEditRoom();
 
       //await fetchRooms();
@@ -255,6 +257,15 @@ export default function PropertiesPage() {
             <i className="fa-solid fa-angle-down text-[10px] ml-0.5 text-slate-400"></i>
           </button>
 
+          {/* ---  EXCEL MỚI THÊM VÀO ĐÂY --- */}
+          <button
+            type="button"
+            onClick={() => setIsImportModalOpen(true)}
+            className="bg-white border border-green-500 text-green-600 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium hover:bg-green-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ml-auto lg:ml-2"
+          >
+            <i className="fa-regular fa-file-excel text-[14px]"></i>
+            <span className="hidden sm:inline">Nhập Excel</span>
+          </button>
           <button
             type="button"
             onClick={handleOpenCreateProperty}
@@ -332,6 +343,14 @@ export default function PropertiesPage() {
         onSubmit={handleUpdateRoom}
         isSubmitting={isUpdatingRoom}
         properties={properties}
+      />
+
+      <ImportExcelModal
+        open={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => {
+          fetchProperties(); // Fetch lại danh sách sau khi import thành công
+        }}
       />
     </div>
   );

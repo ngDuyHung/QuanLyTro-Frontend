@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import leasesService from "@/services/leasesService";
-
+import utilityService from "@/services/utilityService";
 const initialForm = {
     property_id: "",
     lease_id: "",
@@ -26,6 +26,8 @@ export default function AddUtilityModal({
     const [leases, setLeases] = useState([]);
     const [isLoadingLeases, setIsLoadingLeases] = useState(false);
     const [leaseNotice, setLeaseNotice] = useState("");
+    const [previousReading, setPreviousReading] = useState(0);
+    const [isLoadingPrev, setIsLoadingPrev] = useState(false);
 
     // Dọn dẹp URL ảnh preview để tránh tràn bộ nhớ
     useEffect(() => {
@@ -82,6 +84,38 @@ export default function AddUtilityModal({
         fetchLeases();
     }, [open, form.property_id]);
 
+    // TỰ ĐỘNG FETCH CHỈ SỐ CŨ KHI CHỌN PHÒNG & LOẠI DỊCH VỤ
+    useEffect(() => {
+        if (!open || !form.lease_id || !form.type) {
+            setPreviousReading(0);
+            return;
+        }
+
+        const fetchPreviousReading = async () => {
+            try {
+                setIsLoadingPrev(true);
+                const res = await utilityService.getAll({
+                    lease_id: form.lease_id,
+                    type: form.type,
+                    per_page: 1 // Chỉ lấy 1 bản ghi mới nhất
+                });
+
+                const data = res.data.data;
+                if (data && data.length > 0) {
+                    setPreviousReading(data[0].current_reading);
+                } else {
+                    setPreviousReading(0); // Nếu phòng chưa chốt bao giờ
+                }
+            } catch (error) {
+                console.error("Lỗi lấy chỉ số cũ:", error);
+                setPreviousReading(0);
+            } finally {
+                setIsLoadingPrev(false);
+            }
+        };
+
+        fetchPreviousReading();
+    }, [open, form.lease_id, form.type]);
 
 
     const resetForm = () => {
@@ -91,6 +125,7 @@ export default function AddUtilityModal({
         setClientError("");
         setLeases([]);
         setLeaseNotice("");
+        setPreviousReading(0);
     };
 
     useEffect(() => {
@@ -98,7 +133,7 @@ export default function AddUtilityModal({
             resetForm();
         }
     }, [open]);
-    
+
     // Reset form khi đóng
     if (!open) return null;
 
@@ -137,6 +172,9 @@ export default function AddUtilityModal({
     const handleSubmit = (event) => {
         event.preventDefault();
 
+        if (Number(form.current_reading) < previousReading) {
+            return setClientError(`Chỉ số mới không được nhỏ hơn số cũ (${previousReading}).`);
+        }
         if (!form.property_id) return setClientError("Vui lòng chọn khu nhà.");
         if (!form.lease_id) return setClientError("Vui lòng chọn phòng (hợp đồng).");
         if (!form.current_reading) return setClientError("Vui lòng nhập chỉ số mới.");
@@ -300,14 +338,27 @@ export default function AddUtilityModal({
                                         />
                                     </div>
 
-                                    {/* Chỉ số mới */}
-                                    <div className="sm:col-span-2 relative">
+                                    {/* Chỉ số cũ (Kỳ trước) - READONLY */}
+                                    <div className="sm:col-span-1 relative">
                                         <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                                            Chỉ số trên đồng hồ mới nhất <span className="text-red-500">*</span>
+                                            Chỉ số cũ <span className="text-slate-400 font-normal">(Kỳ trước)</span>
+                                        </label>
+                                        <div className="w-full px-3.5 py-3 sm:py-3 bg-slate-100 border border-slate-200 rounded-xl text-[16px] font-bold text-slate-500 flex justify-between items-center shadow-inner">
+                                            <span>{isLoadingPrev ? "Đang tải..." : previousReading.toLocaleString("vi-VN")}</span>
+                                            <span className="text-[13px] font-bold text-slate-400">
+                                                {form.type === 'electricity' ? 'kWh' : 'm³'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Chỉ số mới (Cho phép nhập) */}
+                                    <div className="sm:col-span-1 relative">
+                                        <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                                            Chỉ số mới nhất <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="number"
-                                            min="0"
+                                            min={previousReading} // Ràng buộc Min luôn
                                             value={form.current_reading}
                                             onChange={handleChange("current_reading")}
                                             placeholder="VD: 1540"
