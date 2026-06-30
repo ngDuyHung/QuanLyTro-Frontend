@@ -15,6 +15,7 @@ const shortcodes = [
     { label: "Ngày bắt đầu ở", code: "{{START_DATE}}" }, 
     { label: "Giá thuê", code: "{{ROOM_PRICE}}" },
     { label: "Tiền cọc", code: "{{DEPOSIT}}" },
+    { label: "Danh sách dịch vụ & Giá", code: "{{SERVICES_LIST}}" },
     { label: "Ngày, tháng, năm", code: "{{CURRENT_DAY}}, {{CURRENT_MONTH}}, {{CURRENT_YEAR}}" },
 ];
 

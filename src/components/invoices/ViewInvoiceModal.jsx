@@ -28,107 +28,24 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
     const fetchInvoiceAndTemplate = async (id) => {
         setIsLoading(true);
         try {
-            // Gọi song song 2 API để tối ưu tốc độ phản hồi
-            const [invoiceRes, templateRes] = await Promise.all([
+            // Thay vì gọi getTemplate, gọi API preview HTML mới tạo
+            const [invoiceRes, previewRes] = await Promise.all([
                 invoiceService.getById(id),
-                settingService.getInvoiceTemplate()
+                invoiceService.getPreviewHtml(id) // <--- Thêm hàm gọi API này vào invoiceService
             ]);
 
-            const invoiceData = invoiceRes.data.data;
-            const templateRaw = templateRes.data?.data?.template || "";
-
-            setInvoice(invoiceData);
-
-            // Biên dịch (compile) shortcodes ngay tại Frontend để phục vụ live preview
-            if (templateRaw) {
-                const compiled = compileTemplate(templateRaw, invoiceData);
-                setPreviewHtml(compiled);
-            } else {
-                setPreviewHtml("<p class='text-center text-slate-400 py-10'>Chưa cấu hình mẫu hóa đơn.</p>");
-            }
-
+            setInvoice(invoiceRes.data.data);
+            setPreviewHtml(previewRes.data.html); // Gán thẳng cục HTML backend trả về
         } catch (error) {
             toast.error("Không thể tải thông tin chi tiết hóa đơn.");
+            console.error("Lỗi khi tải hóa đơn hoặc mẫu:", error);
             onClose();
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Hàm bóc tách dữ liệu và map vào các biến shortcode tương đương với Backend
-    const compileTemplate = (template, data) => {
-        // Định dạng ngày tháng an toàn
-        const formatD = (str) => {
-            if (!str) return "";
-            const parts = str.split(' ')[0].split('-');
-            return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : str;
-        };
 
-        const periodToParts = data.period_to ? data.period_to.split('-') : [];
-        const monthYear = periodToParts.length >= 2 ? `${periodToParts[1]}/${periodToParts[0]}` : "";
-
-        const statusLabel = {
-            draft: 'Bản nháp',
-            issued: 'Chờ thanh toán',
-            partially_paid: 'Thanh toán một phần',
-            paid: 'ĐÃ THANH TOÁN ĐỦ',
-            overdue: 'Quá hạn thanh toán',
-            cancelled: 'Hóa đơn đã hủy',
-        }[data.status] || data.status;
-
-        // Tự động sinh bảng chi tiết danh sách khoản thu
-        let itemsTableHtml = `
-            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; font-size: 13px;">
-                <thead>
-                    <tr style="background-color: #f8fafc;">
-                        <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-weight: bold;">Nội dung thu</th>
-                        <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-weight: bold;">Số lượng</th>
-                        <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: right; font-weight: bold;">Đơn giá</th>
-                        <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: right; font-weight: bold;">Thành tiền</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        data.items?.forEach(item => {
-            itemsTableHtml += `
-                <tr>
-                    <td style="border: 1px solid #e2e8f0; padding: 10px;">${item.description}</td>
-                    <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: center;">${parseFloat(item.quantity)} ${item.unit || ''}</td>
-                    <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">${Number(item.unit_price_snapshot).toLocaleString("vi-VN")}</td>
-                    <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right; font-weight: 500;">${Number(item.amount).toLocaleString("vi-VN")}</td>
-                </tr>
-            `;
-        });
-        itemsTableHtml += '</tbody></table>';
-
-        const replacePairs = {
-            "{{INVOICE_CODE}}": data.invoice_code || "",
-            "{{STATUS}}": statusLabel,
-            "{{MONTH_YEAR}}": monthYear,
-            "{{CREATED_DATE}}": formatD(data.created_at),
-            "{{DUE_DATE}}": data.due_date ? formatD(data.due_date) : "Không có",
-            "{{LANDLORD_NAME}}": data.room?.property?.user?.name || "",
-            "{{LANDLORD_PHONE}}": data.room?.property?.user?.phone || "",
-            "{{TENANT_NAME}}": data.lease?.tenant?.full_name || "",
-            "{{TENANT_PHONE}}": data.lease?.tenant?.phone || "",
-            "{{ROOM_NAME}}": data.room?.name || "",
-            "{{PROPERTY_NAME}}": data.property?.name || "",
-            "{{PROPERTY_ADDRESS}}": data.property?.address || "",
-            "{{SUBTOTAL}}": Number(data.subtotal_amount || 0).toLocaleString("vi-VN"),
-            "{{DISCOUNT}}": Number(data.discount_amount || 0).toLocaleString("vi-VN"),
-            "{{TOTAL_AMOUNT}}": Number(data.total_amount || 0).toLocaleString("vi-VN"),
-            "{{PAID_AMOUNT}}": Number(data.paid_amount || 0).toLocaleString("vi-VN"),
-            "{{REMAINING_AMOUNT}}": Number(data.remaining_amount || 0).toLocaleString("vi-VN"),
-            "{{INVOICE_ITEMS_TABLE}}": itemsTableHtml
-        };
-
-        let compiled = template;
-        Object.entries(replacePairs).forEach(([key, value]) => {
-            compiled = compiled.replaceAll(key, value);
-        });
-
-        return compiled;
-    };
 
     // 1. HÀM CHỈ TẢI XUỐNG PDF
     const handleDownloadPdf = async () => {
@@ -232,12 +149,32 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                 {/* Khối chi tiết thành tiền */}
                                 <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200 text-[13px]">
                                     <h4 className="font-bold text-slate-700 mb-2 uppercase text-[11px] tracking-wider text-slate-400">Dòng tiền chi tiết</h4>
-                                    {invoice.items?.map(item => (
-                                        <div key={item.id} className="flex justify-between items-center py-1 border-b border-slate-100 last:border-0">
-                                            <span className="text-slate-600 truncate max-w-[180px]" title={item.description}>{item.description}</span>
-                                            <span className="font-semibold text-slate-800">{Number(item.amount).toLocaleString()}đ</span>
-                                        </div>
-                                    ))}
+                                    {invoice.items?.map(item => {
+                                        const isUtility = ['electricity', 'water'].includes(item.charge_type);
+                                        const meter = invoice.meter_readings?.find(m => m.type === item.charge_type);
+                                        const free = parseFloat(item.free_quantity_snapshot) || 0;
+
+                                        return (
+                                            <div key={item.id} className="flex flex-col py-2 border-b border-slate-100 last:border-0">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="font-semibold text-slate-700 truncate max-w-[180px]" title={item.description}>{item.description}</span>
+                                                    <span className="font-bold text-slate-800">{Number(item.amount).toLocaleString()}đ</span>
+                                                </div>
+
+                                                {/* Dòng chú thích siêu gọn gàng */}
+                                                {isUtility && meter && (
+                                                    <div className="text-[10px] text-slate-500 font-mono bg-slate-100/80 w-fit px-1.5 py-0.5 mt-1 rounded border border-slate-200">
+                                                        Cũ: {meter.previous_reading} ➔ Mới: {meter.current_reading} {free > 0 && ` (-${free} free)`}
+                                                    </div>
+                                                )}
+                                                {!isUtility && free > 0 && (
+                                                    <div className="text-[10px] text-slate-500 bg-emerald-50 text-emerald-600 border border-emerald-100 w-fit px-1.5 py-0.5 mt-1 rounded">
+                                                        Miễn phí: {free} {item.unit}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                     <div className="pt-2 mt-2 border-t border-slate-200 flex justify-between font-black text-slate-800 text-[14px]">
                                         <span>Tổng hóa đơn:</span><span>{Number(invoice.total_amount).toLocaleString()}đ</span>
                                     </div>

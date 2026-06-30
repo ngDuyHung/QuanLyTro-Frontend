@@ -34,6 +34,10 @@ const invoiceService = {
   // Xuất file PDF Hóa đơn (Lưu ý config responseType là blob để nhận file tải về)
   exportPdf: (id) =>
     api.get(`/invoices/${id}/export-pdf`, { responseType: "blob" }),
+
+  // Xem trước hóa đơn (trước khi phát hành)
+  getPreviewHtml: (id) => api.get(`/invoices/${id}/preview`),
+
 };
 
 export default invoiceService;

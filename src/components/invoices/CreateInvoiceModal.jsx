@@ -405,8 +405,17 @@ export default function CreateInvoiceModal({
                         <div className="bg-white px-4 sm:px-5 py-5 border-b border-slate-200 mt-2 relative">
                             {isPreparing && <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-10 flex items-center justify-center"><span className="animate-pulse text-brand font-semibold text-[13px]">Đang đồng bộ dữ liệu...</span></div>}
 
-                            <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2"><i className="fa-solid fa-money-bill text-[13px]"></i> 2. Phí cố định (Phòng, Điện, Nước)</h3>
-
+                            {/* Tiêu đề phần 2 & Công thức tổng quát đặt gọn gàng ở đây */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                                <h3 className="text-[14px] font-bold text-brand flex items-center gap-2">
+                                    <i className="fa-solid fa-money-bill text-[13px]"></i> 2. Phí cố định (Phòng, Điện, Nước)
+                                </h3>
+                                {/* Dòng chú thích công thức tinh gọn, ẩn trên mobile nếu quá chật hoặc giữ chữ nhỏ */}
+                                <div className="text-[11px] text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg flex items-center gap-1.5 border border-slate-200 w-fit">
+                                    <i className="fa-solid fa-calculator text-slate-400"></i>
+                                    <span>Công thức: <span className="font-mono text-slate-700">(Số mới - Số cũ - Miễn phí) × Đơn giá</span></span>
+                                </div>
+                            </div>
                             {/* Tiền phòng */}
                             <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-4 bg-white lg:bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3">
                                 <div className="flex justify-between items-center lg:w-[120px] shrink-0 border-b border-slate-100 lg:border-0 pb-1.5 lg:pb-0">
