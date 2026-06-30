@@ -15,6 +15,10 @@ const leasesService = {
     api.patch(`/leases/${id}/representative`, data),
 
   delete: (id) => api.delete(`/leases/${id}`),
+
+  getPreviewHtml: (id) => api.get(`/leases/${id}/preview`),
+  exportPdf: (id) =>
+    api.get(`/leases/${id}/export-pdf`, { responseType: "blob" }),
 };
 
 export default leasesService;

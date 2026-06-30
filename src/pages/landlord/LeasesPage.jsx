@@ -7,6 +7,8 @@ import leasesService from "@/services/leasesService";
 import propertyService from "@/services/propertyService";
 import ContractTemplateModal from "@/components/leases/ContractTemplateModal";
 import DeleteLeaseModal from "@/components/leases/DeleteLeaseModal";
+import ViewLeaseModal from "@/components/leases/ViewLeaseModal";
+import EndLeaseModal from "@/components/leases/EndLeaseModal";
 const isExpiringSoon = (lease) => {
   if (!lease.end_date || lease.status !== "active") return false;
 
@@ -62,6 +64,12 @@ export default function LeasesPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingLease, setDeletingLease] = useState(null);
   const [isDeletingLease, setIsDeletingLease] = useState(false);
+
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingLease, setViewingLease] = useState(null);
+
+  const [isEndModalOpen, setIsEndModalOpen] = useState(false);
+  const [endingLease, setEndingLease] = useState(null);
 
   const fetchProperties = useCallback(async () => {
     try {
@@ -133,18 +141,9 @@ export default function LeasesPage() {
     }
   };
 
-  const handleEndLease = async (lease) => {
-    if (!window.confirm(`Kết thúc hợp đồng HĐ #${lease.id}?`)) return;
-
-    try {
-      await leasesService.end(lease.id);
-      toast.success("Đã kết thúc hợp đồng.", { autoClose: 1500 });
-      await fetchLeases();
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Không thể kết thúc hợp đồng."
-      );
-    }
+  const handleOpenEndModal = (lease) => {
+    setEndingLease(lease);
+    setIsEndModalOpen(true);
   };
 
   // ---  HÀM XỬ LÝ XÓA ---
@@ -177,8 +176,8 @@ export default function LeasesPage() {
 
 
   const handleOpenViewModal = (lease) => {
-    toast.info("Chức năng xem chi tiết hợp đồng sẽ làm ở bước tiếp theo.");
-    console.log("View lease:", lease);
+    setViewingLease(lease);
+    setIsViewModalOpen(true);
   };
 
   const handleCopyPhone = (phone) => {
@@ -206,14 +205,14 @@ export default function LeasesPage() {
           onStatusChange={setStatus}
           onOpenAddModal={() => setIsAddModalOpen(true)}
           onOpenViewModal={handleOpenViewModal}
-          onEndLease={handleEndLease}
+          onEndLease={handleOpenEndModal}
           onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
           onCopyPhone={handleCopyPhone}
           onOpenDeleteModal={handleOpenDeleteModal}
         />
       </div>
 
-     
+
 
       <AddLeaseModal
         open={isAddModalOpen}
@@ -235,6 +234,23 @@ export default function LeasesPage() {
           setDeletingLease(null);
         }}
         onConfirm={handleConfirmDelete}
+      />
+      <ViewLeaseModal
+        open={isViewModalOpen}
+        lease={viewingLease}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setViewingLease(null);
+        }}
+      />
+      <EndLeaseModal
+        open={isEndModalOpen}
+        lease={endingLease}
+        onClose={() => {
+          setIsEndModalOpen(false);
+          setEndingLease(null);
+        }}
+        onSuccess={fetchLeases}
       />
     </div>
   );

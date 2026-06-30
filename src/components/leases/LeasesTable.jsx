@@ -60,57 +60,7 @@ export default function LeasesTable({
   onOpenDeleteModal,
 }) {
 
-  // --- HÀM XUẤT VÀ CHIA SẺ PDF ---
-  const handleExportPdf = async (leaseId) => {
-    try {
-      // 1. Gọi API lấy dữ liệu PDF
-      const response = await settingService.exportLeasePdf(leaseId);
 
-      // 2. Tạo đối tượng Blob và File từ dữ liệu
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const fileName = `Hop_dong_thue_${leaseId}.pdf`;
-      const file = new File([blob], fileName, { type: 'application/pdf' });
-
-      // 3. Kiểm tra xem thiết bị có hỗ trợ Web Share API với File không (Thường là Mobile)
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            title: `Hợp đồng thuê #${leaseId}`,
-            text: `Gửi bạn bản sao hợp đồng thuê phòng #${leaseId}.`,
-            files: [file],
-          });
-          toast.success("Đã chia sẻ hợp đồng thành công!");
-          return; // Kết thúc hàm nếu chia sẻ thành công
-        } catch (shareError) {
-          // Bỏ qua lỗi nếu người dùng chủ động tắt bảng chia sẻ (AbortError)
-          if (shareError.name !== 'AbortError') {
-            console.error("Lỗi khi chia sẻ:", shareError);
-            // Có lỗi xảy ra, rơi xuống phần tải file dự phòng bên dưới
-          } else {
-            return;
-          }
-        }
-      }
-
-      // 4. FALLBACK: Dành cho PC hoặc trình duyệt không hỗ trợ Share API
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-
-      // Dọn dẹp
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      toast.success("Đã tải xuống hợp đồng!");
-
-    } catch (error) {
-      console.error("Lỗi xuất PDF:", error);
-      toast.error("Không thể xuất hợp đồng lúc này.");
-    }
-  };
 
   return (
     <>
@@ -265,32 +215,25 @@ export default function LeasesTable({
                     <button
                       type="button"
                       onClick={() => onOpenViewModal?.(lease)}
-                      className="flex-1 py-2 border border-slate-200 rounded-lg bg-white text-[12px] font-medium text-slate-600 active:bg-slate-100 flex items-center justify-center gap-1.5 shadow-sm"
+                      className="flex-1 py-2 border border-slate-200 rounded-lg bg-white text-[12px] font-semibold text-slate-600 active:bg-slate-100 flex items-center justify-center gap-1.5 shadow-sm"
                     >
-                      <i className="fa-regular fa-eye"></i> Xem
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleExportPdf(lease.id)}
-                      className="flex-1 py-2 border border-slate-200 rounded-lg bg-white text-[12px] font-medium text-slate-600 active:bg-green-50 active:text-green-600 flex items-center justify-center gap-1.5 shadow-sm"
-                    >
-                      <i className="fa-solid fa-share-nodes"></i> Share
+                      <i className="fa-regular fa-file-pdf text-brand"></i> Xem & In
                     </button>
 
                     <button
                       type="button"
                       onClick={() => onEndLease?.(lease)}
                       disabled={lease.status !== "active"}
-                      className="w-10 flex shrink-0 items-center justify-center border border-slate-200 rounded-lg bg-white text-[12px] text-slate-500 active:bg-red-50 active:text-red-600 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                      className="flex-1 py-2 border border-amber-200 rounded-lg bg-amber-50 text-[12px] font-semibold text-amber-600 active:bg-amber-100 flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:bg-slate-50 disabled:border-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
                     >
-                      <i className="fa-solid fa-right-from-bracket"></i>
+                      <i className="fa-solid fa-door-open"></i> Kết thúc
                     </button>
 
                     <button
                       type="button"
                       onClick={() => onOpenDeleteModal?.(lease)}
-                      className="w-10 flex shrink-0 items-center justify-center border border-red-100 rounded-lg bg-white text-[12px] text-red-500 active:bg-red-50 shadow-sm"
+                      className="w-11 flex shrink-0 items-center justify-center border border-red-100 rounded-lg bg-white text-[13px] text-red-500 active:bg-red-50 shadow-sm"
+                      title="Xóa hợp đồng"
                     >
                       <i className="fa-regular fa-trash-can"></i>
                     </button>
@@ -407,40 +350,30 @@ export default function LeasesTable({
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {/* ---  NÚT IN PDF --- */}
-                          <button
-                            type="button"
-                            onClick={() => handleExportPdf(lease.id)}
-                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-green-600 hover:border-green-600 hover:bg-green-50 flex items-center justify-center bg-white transition-colors"
-                            title="In hợp đồng (PDF)"
-                          >
-                            <i className="fa-solid fa-print text-[12px]"></i>
-                          </button>
-                          {/* ----------------------- */}
+                        <div className="flex items-center justify-center gap-2">
                           <button
                             type="button"
                             onClick={() => onOpenViewModal?.(lease)}
-                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-brand hover:border-brand hover:bg-green-50 flex items-center justify-center bg-white transition-colors"
-                            title="Xem chi tiết"
+                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-brand hover:border-brand hover:bg-green-50 flex items-center justify-center bg-white transition-colors shadow-sm"
+                            title="Xem và In hợp đồng"
                           >
-                            <i className="fa-regular fa-eye"></i>
+                            <i className="fa-regular fa-file-pdf text-[13px]"></i>
                           </button>
 
                           <button
                             type="button"
                             onClick={() => onEndLease?.(lease)}
                             disabled={lease.status !== "active"}
-                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-600 hover:bg-red-50 flex items-center justify-center bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-600 hover:bg-amber-50 flex items-center justify-center bg-white transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                             title="Kết thúc hợp đồng"
                           >
-                            <i className="fa-solid fa-right-from-bracket text-[12px]"></i>
+                            <i className="fa-solid fa-door-open text-[12px]"></i>
                           </button>
-                          {/* NÚT XÓA HỢP ĐỒNG */}
+
                           <button
                             type="button"
                             onClick={() => onOpenDeleteModal?.(lease)}
-                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-600 hover:bg-red-50 flex items-center justify-center bg-white transition-colors"
+                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-600 hover:bg-red-50 flex items-center justify-center bg-white transition-colors shadow-sm"
                             title="Xóa hợp đồng"
                           >
                             <i className="fa-regular fa-trash-can text-[13px]"></i>
