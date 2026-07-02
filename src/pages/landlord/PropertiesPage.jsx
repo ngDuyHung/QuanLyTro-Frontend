@@ -328,7 +328,7 @@ export default function PropertiesPage() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-12 lg:gap-6">
+      <div className="flex-1 lg:min-h-0 flex flex-col lg:grid lg:grid-cols-12 lg:gap-6">
         <div className="lg:col-span-5 flex flex-col gap-4 lg:overflow-y-auto no-scrollbar lg:pr-1 mb-6 lg:mb-0">
           <div className="relative w-full shrink-0">
             <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -354,12 +354,12 @@ export default function PropertiesPage() {
           />
         </div>
 
-        <div className="lg:col-span-7 flex flex-col h-full gap-5">
+        <div className="lg:col-span-7 flex flex-col lg:h-full gap-5">
           <div className="shrink-0">
             <PropertyOverview property={selectedProperty} />
           </div>
 
-          <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 flex flex-col lg:min-h-0">
             <RoomList
               property={selectedProperty}
               onEditRoom={handleOpenEditRoom}

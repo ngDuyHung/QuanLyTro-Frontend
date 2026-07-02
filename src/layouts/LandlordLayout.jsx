@@ -32,7 +32,7 @@ export default function LandlordLayout() {
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className="bg-[#f8fafc] text-slate-800 h-dvh overflow-hidden flex font-sans">
+    <div className="fixed inset-0 bg-[#f8fafc] text-slate-800 overflow-hidden flex font-sans">
       {/* 2. LỚP PHỦ OVERLAY (Chỉ hiện trên Mobile khi isSidebarOpen == true) */}
       {isSidebarOpen && (
         <div
