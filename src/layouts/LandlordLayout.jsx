@@ -275,7 +275,7 @@ export default function LandlordLayout() {
         </div>
 
         {/* ================= BOTTOM NAVIGATION (CHỈ HIỂN THỊ TRÊN MOBILE) ================= */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex items-center px-1 z-50 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)] h-[calc(68px+env(safe-area-inset-bottom))]">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex items-center px-1 z-40 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)] h-[calc(68px+env(safe-area-inset-bottom))]">
 
           {/* 1. Trang chủ */}
           <NavLink to="/landlord/dashboard" className="flex-1 flex justify-center h-full">
