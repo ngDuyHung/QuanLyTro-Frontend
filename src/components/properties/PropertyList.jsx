@@ -47,11 +47,10 @@ function PropertyActionMenu({ property, onEdit, onDelete }) {
 
           onDelete?.(property);
         }}
-        className={`w-full px-3.5 py-2.5 text-left text-[13px] font-medium flex items-center gap-2.5 ${
-          hasRooms
+        className={`w-full px-3.5 py-2.5 text-left text-[13px] font-medium flex items-center gap-2.5 ${hasRooms
             ? "text-slate-400 bg-slate-50 cursor-not-allowed"
             : "text-red-600 hover:bg-red-50"
-        }`}
+          }`}
       >
         <i className="fa-regular fa-trash-can w-4 text-center text-[12px]"></i>
         <span>Xóa khu nhà</span>
@@ -120,18 +119,16 @@ function MobilePropertyActionSheet({
               onClose?.();
               onDelete?.(property);
             }}
-            className={`w-full mt-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold flex items-center gap-3 ${
-              hasRooms
+            className={`w-full mt-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold flex items-center gap-3 ${hasRooms
                 ? "text-slate-400 bg-slate-50 cursor-not-allowed"
                 : "text-red-600 hover:bg-red-50 active:bg-red-100"
-            }`}
+              }`}
           >
             <span
-              className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                hasRooms
+              className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${hasRooms
                   ? "bg-slate-100 text-slate-400"
                   : "bg-red-50 text-red-600"
-              }`}
+                }`}
             >
               <i className="fa-regular fa-trash-can text-[15px]"></i>
             </span>
@@ -186,11 +183,10 @@ function PropertyCard({
           onSelect?.(property.id);
         }
       }}
-      className={`relative text-left flex-shrink-0 w-[148px] lg:w-full bg-white rounded-xl p-2.5 lg:p-3.5 cursor-pointer shadow-sm flex flex-col lg:flex-row lg:gap-4 transition-all ${
-        isSelected
+      className={`relative text-left flex-shrink-0 w-[148px] lg:w-full bg-white rounded-xl p-2.5 lg:p-3.5 cursor-pointer shadow-sm flex flex-col lg:flex-row lg:gap-4 transition-all ${isSelected
           ? "border-2 border-brand"
           : "border border-slate-200 hover:border-brand"
-      } ${property.status === "inactive" ? "opacity-80 hover:opacity-100" : ""}`}
+        } ${property.status === "inactive" ? "opacity-80 hover:opacity-100" : ""}`}
     >
       {/* Ảnh Cover */}
       <div className="w-full h-[66px] lg:w-[130px] lg:h-[130px] rounded-lg overflow-hidden shrink-0 mb-2 lg:mb-0">
@@ -198,15 +194,13 @@ function PropertyCard({
           <img
             src={imageUrl}
             alt={property.name}
-            className={`w-full h-full object-cover ${
-              property.status === "inactive" ? "grayscale" : ""
-            }`}
+            className={`w-full h-full object-cover ${property.status === "inactive" ? "grayscale" : ""
+              }`}
           />
         ) : (
           <div
-            className={`w-full h-full flex flex-col items-center justify-center ${
-              property.status === "inactive" ? "grayscale opacity-70" : ""
-            }`}
+            className={`w-full h-full flex flex-col items-center justify-center ${property.status === "inactive" ? "grayscale opacity-70" : ""
+              }`}
           >
             <div className="w-8 h-8 lg:w-12 lg:h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center">
               <i className="fa-regular fa-building text-[15px] lg:text-[22px]"></i>
@@ -426,7 +420,39 @@ export default function PropertyList({
     <>
       <div className="flex items-center justify-between mb-2 lg:hidden">
         <p className="text-[13px] font-bold text-slate-700">Chọn khu nhà</p>
-        <span className="text-[12px] text-slate-400">{total} khu nhà</span>
+        {/* Nếu có từ 2 trang trở lên, hiển thị bộ chuyển trang mini */}
+        {lastPage > 1 ? (
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 pl-2.5 pr-1 py-0.5 rounded-full shadow-sm">
+            <span className="text-[11px] font-semibold text-slate-600">
+              {page}/{lastPage}
+            </span>
+
+            <div className="flex items-center border-l border-slate-200 ml-1 pl-1">
+              {/* Nút lùi trang mini */}
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => onPageChange(page - 1)}
+                className="w-5 h-5 flex items-center justify-center text-slate-500 disabled:opacity-30 active:bg-slate-200 rounded-full"
+              >
+                <i className="fa-solid fa-angle-left text-[10px]"></i>
+              </button>
+
+              {/* Nút tiến trang mini */}
+              <button
+                type="button"
+                disabled={page >= lastPage}
+                onClick={() => onPageChange(page + 1)}
+                className="w-5 h-5 flex items-center justify-center text-slate-500 disabled:opacity-30 active:bg-slate-200 rounded-full"
+              >
+                <i className="fa-solid fa-angle-right text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+        ) : (
+          // Nếu chỉ có 1 trang, giữ nguyên hiển thị tổng số khu nhà ban đầu
+          <span className="text-[12px] text-slate-400">{total} khu nhà</span>
+        )}
       </div>
 
       <div className="flex gap-3 pb-2 overflow-x-auto no-scrollbar lg:flex-col lg:overflow-y-visible lg:pb-0">
@@ -464,11 +490,10 @@ export default function PropertyList({
                 key={pageNumber}
                 type="button"
                 onClick={() => onPageChange(pageNumber)}
-                className={`flex h-8 w-8 items-center justify-center rounded-lg text-[13px] font-medium transition-colors ${
-                  pageNumber === page
+                className={`flex h-8 w-8 items-center justify-center rounded-lg text-[13px] font-medium transition-colors ${pageNumber === page
                     ? "bg-brand text-white shadow-sm shadow-green-600/20"
                     : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 {pageNumber}
               </button>

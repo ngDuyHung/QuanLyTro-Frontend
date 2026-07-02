@@ -62,7 +62,7 @@ const getTenantPhone = (room) =>
   room.tenant_phone ||
   "";
 
-function RoomActionsMenu({ room, onAction }) {
+function RoomActionsMenu({ room, onAction, isNearBottom }) {
   const status = room.status;
 
   const actions = [
@@ -87,7 +87,7 @@ function RoomActionsMenu({ room, onAction }) {
   ];
 
   return (
-    <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/70 z-30 overflow-hidden text-left">
+    <div className={`absolute right-0 ${isNearBottom ? 'bottom-full mb-1' : 'top-full mt-1'} w-56 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/70 z-30 overflow-hidden text-left`}>
       {actions.map((action) => (
         <button
           key={action.key}
@@ -101,6 +101,7 @@ function RoomActionsMenu({ room, onAction }) {
       ))}
     </div>
   );
+
 }
 
 function EmptyRoomState({ property }) {
@@ -292,6 +293,75 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
     pagination?.current_page < pagination?.last_page,
   );
 
+  function MobileRoomActionSheet({ room, open, onClose, onAction }) {
+    if (!open || !room) return null;
+
+    return (
+      <div
+        className="fixed inset-0 z-[60] lg:hidden bg-slate-900/50 backdrop-blur-[2px] flex items-end"
+        onClick={onClose}
+      >
+        <div
+          className="w-full bg-white rounded-t-2xl shadow-2xl animate-[slideUp_0.2s_ease-out] overflow-hidden"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="px-5 pt-3 pb-4 border-b border-slate-100">
+            <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-4"></div>
+            <p className="text-[13px] text-slate-500">Thao tác phòng</p>
+            <h3 className="text-[16px] font-bold text-slate-800 mt-0.5 line-clamp-1">
+              {room.name}
+            </h3>
+          </div>
+
+          <div className="p-3">
+            <button
+              type="button"
+              onClick={() => { onClose(); onAction("view", room); }}
+              className="w-full px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-3"
+            >
+              <span className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                <i className="fa-regular fa-eye text-[15px]"></i>
+              </span>
+              <span>Xem chi tiết</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { onClose(); onAction("edit", room); }}
+              className="w-full mt-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-3"
+            >
+              <span className="w-9 h-9 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                <i className="fa-regular fa-pen-to-square text-[15px]"></i>
+              </span>
+              <span>Chỉnh sửa phòng</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { onClose(); onAction("delete", room); }}
+              className="w-full mt-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-3"
+            >
+              <span className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                <i className="fa-regular fa-trash-can text-[15px]"></i>
+              </span>
+              <span>Xóa phòng</span>
+            </button>
+          </div>
+
+          <div className="px-3 pb-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-3 rounded-xl bg-slate-100 text-[14px] font-semibold text-slate-600"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col flex-1">
       {/* Header chung của danh sách phòng (Mobile & Desktop) */}
@@ -410,9 +480,7 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
                         <i className="fa-solid fa-ellipsis-vertical text-[12px]"></i>
                       </button>
 
-                      {activeActionRoomId === room.id && (
-                        <RoomActionsMenu room={room} onAction={handleAction} />
-                      )}
+
                     </div>
                   </div>
 
@@ -521,11 +589,13 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
                 </thead>
 
                 <tbody className="text-[13px]">
-                  {rooms.map((room) => {
+                  {rooms.map((room, index) => {
                     const statusConfig = getStatusConfig(room.status);
                     const tenantName = getTenantName(room);
                     const tenantPhone = getTenantPhone(room);
                     const coverImage = getRoomCoverImage(room);
+
+                    const isNearBottom = index >= rooms.length - 2 && rooms.length > 3;
 
                     return (
                       <tr
@@ -596,6 +666,7 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
                               <RoomActionsMenu
                                 room={room}
                                 onAction={handleAction}
+                                isNearBottom={isNearBottom}
                               />
                             )}
                           </div>
@@ -616,12 +687,10 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
           {pagination ? (
             <>
               <span className="lg:hidden">
-                Trang {pagination.current_page}/{pagination.last_page} ·{" "}
-                {pagination.total} phòng
+                Trang {pagination.current_page}/{pagination.last_page} · {pagination.total} phòng
               </span>
               <span className="hidden lg:inline">
-                Hiển thị {pagination.from || 0} - {pagination.to || 0} trong
-                tổng số {pagination.total || 0} phòng
+                Hiển thị {pagination.from || 0} - {pagination.to || 0} trong tổng số {pagination.total || 0} phòng
               </span>
             </>
           ) : (
@@ -632,34 +701,57 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
           )}
         </span>
 
-        <div className="flex gap-1">
-          <button
-            type="button"
-            disabled={!canGoPrev}
-            onClick={() =>
-              setPage((currentPage) => Math.max(1, currentPage - 1))
-            }
-            className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
-          </button>
+        {pagination?.last_page > 1 && (
+          <div className="flex items-center gap-1">
+            {/* Nút lùi trang */}
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
+            </button>
 
-          <button
-            type="button"
-            className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center bg-brand text-white font-medium text-[13px] lg:text-[12px]"
-          >
-            {pagination?.current_page || 1}
-          </button>
+            {/* MOBILE UI: Chỉ hiện một ô số trang hiện tại */}
+            <button
+              type="button"
+              className="flex lg:hidden w-8 h-8 rounded-lg items-center justify-center bg-brand text-white font-medium text-[13px]"
+            >
+              {page}
+            </button>
 
-          <button
-            type="button"
-            disabled={!canGoNext}
-            onClick={() => setPage((currentPage) => currentPage + 1)}
-            className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <i className="fa-solid fa-angle-right text-[12px] lg:text-[11px]"></i>
-          </button>
-        </div>
+            {/* DESKTOP UI: Hiện đầy đủ dãy số trang */}
+            <div className="hidden lg:flex gap-1">
+              {Array.from({ length: pagination.last_page }).map((_, index) => {
+                const pageNumber = index + 1;
+                return (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    onClick={() => setPage(pageNumber)}
+                    className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
+                        ? "bg-brand text-white shadow-sm"
+                        : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+                      }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Nút tiến trang */}
+            <button
+              type="button"
+              disabled={page >= pagination.last_page}
+              onClick={() => setPage((p) => p + 1)}
+              className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <i className="fa-solid fa-angle-right text-[12px] lg:text-[11px]"></i>
+            </button>
+          </div>
+        )}
       </div>
 
       <ViewRoomModal
@@ -675,6 +767,13 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
         onSubmit={handleCreateRoom}
         isSubmitting={isCreatingRoom}
         property={property}
+      />
+
+      <MobileRoomActionSheet
+        open={!!activeActionRoomId && window.innerWidth < 1024}
+        room={rooms.find(r => r.id === activeActionRoomId)}
+        onClose={() => setActiveActionRoomId(null)}
+        onAction={handleAction}
       />
     </div>
   );
