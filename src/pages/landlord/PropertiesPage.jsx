@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -13,6 +13,7 @@ import propertyService from "@/services/propertyService";
 import EditRoomModal from "@/components/rooms/EditRoomModal";
 import roomService from "@/services/roomService";
 import ImportExcelModal from "@/components/properties/ImportExcelModal";
+
 export default function PropertiesPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -32,28 +33,66 @@ export default function PropertiesPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
 
-
   const [editingRoom, setEditingRoom] = useState(null);
   const [isEditRoomOpen, setIsEditRoomOpen] = useState(false);
   const [isUpdatingRoom, setIsUpdatingRoom] = useState(false);
   const [roomRefreshKey, setRoomRefreshKey] = useState(0);
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+  // --- STATE CHO FILTER VÀ SORT ---
+  const [filterStatus, setFilterStatus] = useState("all"); // 'all', 'active', 'inactive'
+  const [sortBy, setSortBy] = useState("newest"); // 'newest', 'oldest', 'name_asc', 'name_desc'
+  
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+
+  // Cấu hình nhãn hiển thị cho Lọc và Sắp xếp
+  const filterOptions = [
+    { value: "all", label: "Tất cả trạng thái", icon: "fa-filter" },
+    { value: "active", label: "Đang hoạt động", icon: "fa-circle-check text-green-500" },
+    { value: "inactive", label: "Tạm ngưng", icon: "fa-circle-pause text-orange-500" },
+  ];
+
+  const sortOptions = [
+    { value: "newest", label: "Mới nhất", icon: "fa-arrow-down-short-wide" },
+    { value: "oldest", label: "Cũ nhất", icon: "fa-arrow-up-wide-short" },
+    { value: "name_asc", label: "Tên A-Z", icon: "fa-arrow-down-a-z" },
+    { value: "name_desc", label: "Tên Z-A", icon: "fa-arrow-up-z-a" },
+  ];
+
+  const activeFilterLabel = filterOptions.find(o => o.value === filterStatus)?.label;
+  const activeSortLabel = sortOptions.find(o => o.value === sortBy)?.label;
+
+  // Xử lý delay tìm kiếm
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchText.trim());
       setPage(1);
     }, 350);
-
     return () => clearTimeout(timer);
   }, [searchText]);
+
+  // Đóng menu khi click ra ngoài (Tạo overlay tàng hình)
+  useEffect(() => {
+    if (isFilterMenuOpen || isSortMenuOpen) {
+      document.body.style.overflow = "hidden"; // Ngăn cuộn trang khi mở menu (tuỳ chọn)
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isFilterMenuOpen, isSortMenuOpen]);
+
 
   const fetchProperties = useCallback(async () => {
     try {
       setIsLoadingProperties(true);
 
+      // CẬP NHẬT: Truyền thêm tham số status và sort vào API
       const response = await propertyService.getAll({
         search: search || undefined,
+        status: filterStatus !== "all" ? filterStatus : undefined,
+        sort: sortBy,
         page,
         per_page: 10,
       });
@@ -67,7 +106,6 @@ export default function PropertiesPage() {
         if (currentId && list.some((item) => item.id === currentId)) {
           return currentId;
         }
-
         return list[0]?.id || null;
       });
     } catch (error) {
@@ -77,15 +115,14 @@ export default function PropertiesPage() {
     } finally {
       setIsLoadingProperties(false);
     }
-  }, [search, page]);
+  }, [search, page, filterStatus, sortBy]); // Thêm filterStatus và sortBy vào dependencies
 
   useEffect(() => {
     fetchProperties();
   }, [fetchProperties]);
 
-  const handleOpenCreateProperty = () => {
-    setIsAddModalOpen(true);
-  };
+  // Các hàm xử lý CRUD Property
+  const handleOpenCreateProperty = () => setIsAddModalOpen(true);
 
   const handleOpenEditProperty = (property) => {
     setEditingProperty(property);
@@ -95,27 +132,14 @@ export default function PropertiesPage() {
   const handleCreateProperty = async (formData) => {
     try {
       setIsCreating(true);
-
       const response = await propertyService.create(formData);
-
-      toast.success("Tạo khu nhà thành công!", {
-        autoClose: 1500,
-      });
-
+      toast.success("Tạo khu nhà thành công!", { autoClose: 1500 });
       setIsAddModalOpen(false);
-
       await fetchProperties();
-
       const createdProperty = response.data.data || response.data;
-
-      if (createdProperty?.id) {
-        setSelectedPropertyId(createdProperty.id);
-      }
+      if (createdProperty?.id) setSelectedPropertyId(createdProperty.id);
     } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-        "Không thể tạo khu nhà. Vui lòng thử lại.",
-      );
+      toast.error(error.response?.data?.message || "Không thể tạo khu nhà. Vui lòng thử lại.");
     } finally {
       setIsCreating(false);
     }
@@ -123,29 +147,17 @@ export default function PropertiesPage() {
 
   const handleUpdateProperty = async (formData) => {
     if (!editingProperty?.id) return;
-
     try {
       setIsUpdating(true);
-
       await propertyService.update(editingProperty.id, formData);
-
-      toast.success("Cập nhật khu nhà thành công!", {
-        autoClose: 1500,
-      });
-
+      toast.success("Cập nhật khu nhà thành công!", { autoClose: 1500 });
       const updatedPropertyId = editingProperty.id;
-
       setIsEditModalOpen(false);
       setEditingProperty(null);
-
       await fetchProperties();
-
       setSelectedPropertyId(updatedPropertyId);
     } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-        "Không thể cập nhật khu nhà. Vui lòng thử lại.",
-      );
+      toast.error(error.response?.data?.message || "Không thể cập nhật khu nhà. Vui lòng thử lại.");
     } finally {
       setIsUpdating(false);
     }
@@ -153,35 +165,22 @@ export default function PropertiesPage() {
 
   const handleDeleteProperty = async (property) => {
     const totalRooms = property.total_rooms ?? property.rooms_count ?? 0;
-
     if (totalRooms > 0) {
       toast.warning("Không thể xóa khu nhà vì vẫn còn phòng bên trong.");
       return;
     }
-
-    const confirmed = window.confirm(
-      `Bạn có chắc muốn xóa khu nhà "${property.name}" không?`,
-    );
-
+    const confirmed = window.confirm(`Bạn có chắc muốn xóa khu nhà "${property.name}" không?`);
     if (!confirmed) return;
-
     try {
       await propertyService.delete(property.id);
-
-      toast.success("Xóa khu nhà thành công!", {
-        autoClose: 1500,
-      });
-
+      toast.success("Xóa khu nhà thành công!", { autoClose: 1500 });
       await fetchProperties();
     } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-        "Không thể xóa khu nhà. Vui lòng thử lại.",
-      );
+      toast.error(error.response?.data?.message || "Không thể xóa khu nhà. Vui lòng thử lại.");
     }
   };
 
-
+  // Các hàm xử lý CRUD Room
   const handleOpenEditRoom = (room) => {
     setEditingRoom(room);
     setIsEditRoomOpen(true);
@@ -197,25 +196,14 @@ export default function PropertiesPage() {
       toast.warning("Không tìm thấy phòng cần cập nhật.");
       return;
     }
-
     try {
       setIsUpdatingRoom(true);
-
       await roomService.update(room.id, formData);
-
       setRoomRefreshKey(prev => prev + 1);
-      toast.success("Cập nhật phòng thành công!", {
-        autoClose: 1500,
-      });
-
+      toast.success("Cập nhật phòng thành công!", { autoClose: 1500 });
       handleCloseEditRoom();
-
-      //await fetchRooms();
     } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-        "Không thể cập nhật phòng. Vui lòng thử lại.",
-      );
+      toast.error(error.response?.data?.message || "Không thể cập nhật phòng. Vui lòng thử lại.");
     } finally {
       setIsUpdatingRoom(false);
     }
@@ -227,11 +215,19 @@ export default function PropertiesPage() {
       : "font-medium text-slate-500 hover:text-slate-800 border-transparent"
     }`;
 
-  const selectedProperty =
-    properties.find((property) => property.id === selectedPropertyId) || null;
+  const selectedProperty = properties.find((property) => property.id === selectedPropertyId) || null;
 
   return (
-    <div className="flex-1 p-4 pt-0 md:p-6 lg:p-6 lg:pt-4 flex flex-col bg-slate-50 lg:h-full lg:overflow-hidden">
+    <div className="flex-1 p-4 pt-0 md:p-6 lg:p-6 lg:pt-4 flex flex-col bg-slate-50 lg:h-full lg:overflow-hidden relative">
+      
+      {/* OVERLAY tàng hình để đóng menu khi click ra ngoài */}
+      {(isFilterMenuOpen || isSortMenuOpen) && (
+        <div 
+          className="fixed inset-0 z-20" 
+          onClick={() => { setIsFilterMenuOpen(false); setIsSortMenuOpen(false); }}
+        ></div>
+      )}
+
       <div className="mb-4 lg:mb-5 flex flex-col lg:flex-row lg:items-center lg:justify-between lg:border-b lg:border-slate-200">
         <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 lg:border-none">
           <NavLink to="/landlord/properties" end className={tabClasses}>
@@ -242,22 +238,80 @@ export default function PropertiesPage() {
           </NavLink>
         </div>
 
-        <div className="flex items-center gap-2 mt-3 lg:mt-0 pb-1 lg:pb-1 overflow-x-auto no-scrollbar">
-          <button className="bg-white border border-slate-200 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0">
-            <i className="fa-solid fa-filter text-brand"></i>
-            <span className="hidden sm:inline">Tất cả trạng thái</span>
-            <span className="sm:hidden">Lọc</span>
-            <i className="fa-solid fa-angle-down text-[10px] ml-0.5 text-slate-400"></i>
-          </button>
+        {/* CẬP NHẬT: Sửa overflow-x-auto thành flex-wrap để dropdown không bị cắt mất */}
+        <div className="flex items-center gap-2 flex-wrap mt-3 lg:mt-0 pb-1 lg:pb-1 relative z-30">
+          
+          {/* NÚT LỌC */}
+          <div className="relative">
+            <button 
+              onClick={() => { setIsFilterMenuOpen(!isFilterMenuOpen); setIsSortMenuOpen(false); }}
+              className={`bg-white border px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors ${
+                isFilterMenuOpen ? 'border-brand text-brand' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <i className={`fa-solid fa-filter ${filterStatus !== 'all' ? 'text-brand' : 'text-slate-400'}`}></i>
+              <span className="hidden sm:inline">{activeFilterLabel}</span>
+              <span className="sm:hidden">Lọc</span>
+              <i className="fa-solid fa-angle-down text-[10px] ml-0.5 opacity-70"></i>
+            </button>
 
-          <button className="bg-white border border-slate-200 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0">
-            <i className="fa-solid fa-arrow-up-wide-short text-slate-400"></i>
-            <span className="hidden sm:inline">Sắp xếp: Mới nhất</span>
-            <span className="sm:hidden">Sắp xếp</span>
-            <i className="fa-solid fa-angle-down text-[10px] ml-0.5 text-slate-400"></i>
-          </button>
+            {/* Dropdown Lọc */}
+            {isFilterMenuOpen && (
+              <div className="absolute left-0 top-full mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 py-1.5 z-40 animate-[fadeIn_0.15s_ease-out]">
+                <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 border-b border-slate-50">Lọc theo trạng thái</div>
+                {filterOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => { setFilterStatus(option.value); setPage(1); setIsFilterMenuOpen(false); }}
+                    className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${
+                      filterStatus === option.value ? "text-brand bg-brand/5" : "text-slate-700"
+                    }`}
+                  >
+                    <i className={`fa-solid ${option.icon} w-4 text-center ${filterStatus === option.value ? 'text-brand' : 'text-slate-400'}`}></i>
+                    {option.label}
+                    {filterStatus === option.value && <i className="fa-solid fa-check ml-auto text-brand"></i>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {/* ---  EXCEL MỚI THÊM VÀO ĐÂY --- */}
+          {/* NÚT SẮP XẾP */}
+          <div className="relative">
+            <button 
+              onClick={() => { setIsSortMenuOpen(!isSortMenuOpen); setIsFilterMenuOpen(false); }}
+              className={`bg-white border px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors ${
+                isSortMenuOpen ? 'border-brand text-brand' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <i className="fa-solid fa-arrow-up-wide-short text-slate-400"></i>
+              <span className="hidden sm:inline">Sắp xếp: {activeSortLabel}</span>
+              <span className="sm:hidden">Sắp xếp</span>
+              <i className="fa-solid fa-angle-down text-[10px] ml-0.5 opacity-70"></i>
+            </button>
+
+            {/* Dropdown Sắp xếp */}
+            {isSortMenuOpen && (
+              <div className="absolute left-0 sm:right-0 sm:left-auto top-full mt-1.5 w-44 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 py-1.5 z-40 animate-[fadeIn_0.15s_ease-out]">
+                <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 border-b border-slate-50">Thứ tự ưu tiên</div>
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => { setSortBy(option.value); setPage(1); setIsSortMenuOpen(false); }}
+                    className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${
+                      sortBy === option.value ? "text-brand bg-brand/5" : "text-slate-700"
+                    }`}
+                  >
+                    <i className={`fa-solid ${option.icon} w-4 text-center ${sortBy === option.value ? 'text-brand' : 'text-slate-400'}`}></i>
+                    {option.label}
+                    {sortBy === option.value && <i className="fa-solid fa-check ml-auto text-brand"></i>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Các nút thêm mới */}
           <button
             type="button"
             onClick={() => setIsImportModalOpen(true)}
@@ -266,10 +320,11 @@ export default function PropertiesPage() {
             <i className="fa-regular fa-file-excel text-[14px]"></i>
             <span className="hidden sm:inline">Nhập Excel</span>
           </button>
+          
           <button
             type="button"
             onClick={handleOpenCreateProperty}
-            className="bg-brand text-white px-3 sm:px-4 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium hover:bg-brand-dark transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap shrink-0 ml-auto lg:ml-0"
+            className="bg-brand text-white px-3 sm:px-4 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium hover:bg-brand-dark transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap shrink-0 lg:ml-0"
           >
             <i className="fa-solid fa-plus"></i>
             <span className="hidden sm:inline">Thêm khu nhà</span>
@@ -348,9 +403,7 @@ export default function PropertiesPage() {
       <ImportExcelModal
         open={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
-        onSuccess={() => {
-          fetchProperties(); // Fetch lại danh sách sau khi import thành công
-        }}
+        onSuccess={() => fetchProperties()}
       />
     </div>
   );

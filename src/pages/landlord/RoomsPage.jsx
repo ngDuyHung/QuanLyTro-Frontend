@@ -6,6 +6,7 @@ import RoomStats from "@/components/rooms/RoomStats";
 import RoomTable from "@/components/rooms/RoomTable";
 import AddRoomModal from "@/components/rooms/AddRoomModal";
 import EditRoomModal from "@/components/rooms/EditRoomModal";
+import ViewRoomModal from "@/components/rooms/ViewRoomModal";
 
 import propertyService from "@/services/propertyService";
 import roomService from "@/services/roomService";
@@ -48,6 +49,10 @@ export default function RoomsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUpdatingRoom, setIsUpdatingRoom] = useState(false);
 
+  const [isViewRoomOpen, setIsViewRoomOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [isLoadingRoomDetail, setIsLoadingRoomDetail] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchText.trim());
@@ -62,7 +67,7 @@ export default function RoomsPage() {
       const response = await propertyService.getAll({
         per_page: 100,
       });
-     
+
       setProperties(response.data.data || []);
     } catch (error) {
       toast.error(
@@ -132,7 +137,7 @@ export default function RoomsPage() {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Không thể tạo phòng. Vui lòng thử lại.",
+        "Không thể tạo phòng. Vui lòng thử lại.",
       );
     } finally {
       setIsCreatingRoom(false);
@@ -170,11 +175,41 @@ export default function RoomsPage() {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Không thể cập nhật phòng. Vui lòng thử lại.",
+        "Không thể cập nhật phòng. Vui lòng thử lại.",
       );
     } finally {
       setIsUpdatingRoom(false);
     }
+  };
+
+  const handleOpenRoomDetail = async (room) => {
+    if (!room?.id) return;
+
+    try {
+      setIsLoadingRoomDetail(true);
+
+      const response = await roomService.getById(room.id);
+
+      const roomDetail = response.data.data || response.data;
+
+      setSelectedRoom(roomDetail);
+      setIsViewRoomOpen(true);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        "Không thể tải chi tiết phòng. Vui lòng thử lại.",
+      );
+
+      setSelectedRoom(null);
+      setIsViewRoomOpen(false);
+    } finally {
+      setIsLoadingRoomDetail(false);
+    }
+  };
+
+  const handleCloseRoomDetail = () => {
+    setIsViewRoomOpen(false);
+    setSelectedRoom(null);
   };
 
   const handleExportExcel = () => {
@@ -184,10 +219,9 @@ export default function RoomsPage() {
   };
 
   const tabClasses = ({ isActive }) =>
-    `px-4 sm:px-5 py-3 text-[13px] sm:text-[14px] transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${
-      isActive
-        ? "font-bold text-brand border-brand"
-        : "font-medium text-slate-500 hover:text-slate-800 border-transparent"
+    `px-4 sm:px-5 py-3 text-[13px] sm:text-[14px] transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${isActive
+      ? "font-bold text-brand border-brand"
+      : "font-medium text-slate-500 hover:text-slate-800 border-transparent"
     }`;
 
   return (
@@ -282,6 +316,7 @@ export default function RoomsPage() {
             setPage(1);
           }}
           onEditRoom={handleOpenEditRoom}
+          onViewRoom={handleOpenRoomDetail}
         />
       </div>
 
@@ -300,6 +335,12 @@ export default function RoomsPage() {
         isSubmitting={isUpdatingRoom}
         room={editingRoom}
         properties={properties}
+      />
+      <ViewRoomModal
+        open={isViewRoomOpen}
+        onClose={handleCloseRoomDetail}
+        room={selectedRoom}
+        isLoading={isLoadingRoomDetail}
       />
     </div>
   );
