@@ -43,7 +43,7 @@ export default function PropertiesPage() {
   // --- STATE CHO FILTER VÀ SORT ---
   const [filterStatus, setFilterStatus] = useState("all"); // 'all', 'active', 'inactive'
   const [sortBy, setSortBy] = useState("newest"); // 'newest', 'oldest', 'name_asc', 'name_desc'
-  
+
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
 
@@ -218,16 +218,14 @@ export default function PropertiesPage() {
   const selectedProperty = properties.find((property) => property.id === selectedPropertyId) || null;
 
   return (
-    <div className="flex-1 p-4 pt-0 md:p-6 lg:p-6 lg:pt-4 flex flex-col bg-slate-50 lg:h-full lg:overflow-hidden relative">
-      
+    <div className="flex-1 p-4 pt-0 md:p-6 lg:p-6 lg:pt-4 flex flex-col bg-slate-50 lg:h-full lg:overflow-hidden">
       {/* OVERLAY tàng hình để đóng menu khi click ra ngoài */}
       {(isFilterMenuOpen || isSortMenuOpen) && (
-        <div 
-          className="fixed inset-0 z-20" 
+        <div
+          className="fixed inset-0 z-20"
           onClick={() => { setIsFilterMenuOpen(false); setIsSortMenuOpen(false); }}
         ></div>
       )}
-
       <div className="mb-4 lg:mb-5 flex flex-col lg:flex-row lg:items-center lg:justify-between lg:border-b lg:border-slate-200">
         <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 lg:border-none">
           <NavLink to="/landlord/properties" end className={tabClasses}>
@@ -238,10 +236,8 @@ export default function PropertiesPage() {
           </NavLink>
         </div>
 
-        {/* CẬP NHẬT: Sửa overflow-x-auto thành flex-wrap để dropdown không bị cắt mất */}
-        <div className="flex items-center gap-2 flex-wrap mt-3 lg:mt-0 pb-1 lg:pb-1 relative z-30">
-          
-          {/* NÚT LỌC */}
+        <div className="flex items-center gap-2 flex-wrap mt-3 lg:mt-0 pb-1 lg:pb-1">
+         {/* NÚT LỌC */}
           <div className="relative">
             <button 
               onClick={() => { setIsFilterMenuOpen(!isFilterMenuOpen); setIsSortMenuOpen(false); }}
@@ -311,7 +307,7 @@ export default function PropertiesPage() {
             )}
           </div>
 
-          {/* Các nút thêm mới */}
+          {/* ---  EXCEL MỚI THÊM VÀO ĐÂY --- */}
           <button
             type="button"
             onClick={() => setIsImportModalOpen(true)}
@@ -320,11 +316,10 @@ export default function PropertiesPage() {
             <i className="fa-regular fa-file-excel text-[14px]"></i>
             <span className="hidden sm:inline">Nhập Excel</span>
           </button>
-          
           <button
             type="button"
             onClick={handleOpenCreateProperty}
-            className="bg-brand text-white px-3 sm:px-4 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium hover:bg-brand-dark transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap shrink-0 lg:ml-0"
+            className="bg-brand text-white px-3 sm:px-4 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium hover:bg-brand-dark transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap shrink-0 ml-auto lg:ml-0"
           >
             <i className="fa-solid fa-plus"></i>
             <span className="hidden sm:inline">Thêm khu nhà</span>
@@ -403,7 +398,9 @@ export default function PropertiesPage() {
       <ImportExcelModal
         open={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
-        onSuccess={() => fetchProperties()}
+        onSuccess={() => {
+          fetchProperties(); // Fetch lại danh sách sau khi import thành công
+        }}
       />
     </div>
   );
