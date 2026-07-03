@@ -10,7 +10,6 @@ import EditPropertyModal from "@/components/properties/EditPropertyModal";
 
 import propertyService from "@/services/propertyService";
 
-import EditRoomModal from "@/components/rooms/EditRoomModal";
 import roomService from "@/services/roomService";
 import ImportExcelModal from "@/components/properties/ImportExcelModal";
 
@@ -33,10 +32,6 @@ export default function PropertiesPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
 
-  const [editingRoom, setEditingRoom] = useState(null);
-  const [isEditRoomOpen, setIsEditRoomOpen] = useState(false);
-  const [isUpdatingRoom, setIsUpdatingRoom] = useState(false);
-  const [roomRefreshKey, setRoomRefreshKey] = useState(0);
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
@@ -180,34 +175,6 @@ export default function PropertiesPage() {
     }
   };
 
-  // Các hàm xử lý CRUD Room
-  const handleOpenEditRoom = (room) => {
-    setEditingRoom(room);
-    setIsEditRoomOpen(true);
-  };
-
-  const handleCloseEditRoom = () => {
-    setIsEditRoomOpen(false);
-    setEditingRoom(null);
-  };
-
-  const handleUpdateRoom = async (formData, room) => {
-    if (!room?.id) {
-      toast.warning("Không tìm thấy phòng cần cập nhật.");
-      return;
-    }
-    try {
-      setIsUpdatingRoom(true);
-      await roomService.update(room.id, formData);
-      setRoomRefreshKey(prev => prev + 1);
-      toast.success("Cập nhật phòng thành công!", { autoClose: 1500 });
-      handleCloseEditRoom();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Không thể cập nhật phòng. Vui lòng thử lại.");
-    } finally {
-      setIsUpdatingRoom(false);
-    }
-  };
 
   const tabClasses = ({ isActive }) =>
     `px-4 sm:px-5 py-3 text-[13px] sm:text-[14px] transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${isActive
@@ -237,13 +204,12 @@ export default function PropertiesPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap mt-3 lg:mt-0 pb-1 lg:pb-1">
-         {/* NÚT LỌC */}
+          {/* NÚT LỌC */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => { setIsFilterMenuOpen(!isFilterMenuOpen); setIsSortMenuOpen(false); }}
-              className={`bg-white border px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors ${
-                isFilterMenuOpen ? 'border-brand text-brand' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
+              className={`bg-white border px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors ${isFilterMenuOpen ? 'border-brand text-brand' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
             >
               <i className={`fa-solid fa-filter ${filterStatus !== 'all' ? 'text-brand' : 'text-slate-400'}`}></i>
               <span className="hidden sm:inline">{activeFilterLabel}</span>
@@ -259,9 +225,8 @@ export default function PropertiesPage() {
                   <button
                     key={option.value}
                     onClick={() => { setFilterStatus(option.value); setPage(1); setIsFilterMenuOpen(false); }}
-                    className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${
-                      filterStatus === option.value ? "text-brand bg-brand/5" : "text-slate-700"
-                    }`}
+                    className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${filterStatus === option.value ? "text-brand bg-brand/5" : "text-slate-700"
+                      }`}
                   >
                     <i className={`fa-solid ${option.icon} w-4 text-center ${filterStatus === option.value ? 'text-brand' : 'text-slate-400'}`}></i>
                     {option.label}
@@ -274,11 +239,10 @@ export default function PropertiesPage() {
 
           {/* NÚT SẮP XẾP */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => { setIsSortMenuOpen(!isSortMenuOpen); setIsFilterMenuOpen(false); }}
-              className={`bg-white border px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors ${
-                isSortMenuOpen ? 'border-brand text-brand' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
+              className={`bg-white border px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors ${isSortMenuOpen ? 'border-brand text-brand' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
             >
               <i className="fa-solid fa-arrow-up-wide-short text-slate-400"></i>
               <span className="hidden sm:inline">Sắp xếp: {activeSortLabel}</span>
@@ -294,9 +258,8 @@ export default function PropertiesPage() {
                   <button
                     key={option.value}
                     onClick={() => { setSortBy(option.value); setPage(1); setIsSortMenuOpen(false); }}
-                    className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${
-                      sortBy === option.value ? "text-brand bg-brand/5" : "text-slate-700"
-                    }`}
+                    className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${sortBy === option.value ? "text-brand bg-brand/5" : "text-slate-700"
+                      }`}
                   >
                     <i className={`fa-solid ${option.icon} w-4 text-center ${sortBy === option.value ? 'text-brand' : 'text-slate-400'}`}></i>
                     {option.label}
@@ -362,8 +325,8 @@ export default function PropertiesPage() {
           <div className="flex-1 flex flex-col lg:min-h-0">
             <RoomList
               property={selectedProperty}
-              onEditRoom={handleOpenEditRoom}
-              refreshKey={roomRefreshKey} />
+              properties={properties}
+              onRoomUpdated={fetchProperties} />
           </div>
         </div>
       </div>
@@ -386,14 +349,6 @@ export default function PropertiesPage() {
         isSubmitting={isUpdating}
       />
 
-      <EditRoomModal
-        open={isEditRoomOpen}
-        room={editingRoom}
-        onClose={handleCloseEditRoom}
-        onSubmit={handleUpdateRoom}
-        isSubmitting={isUpdatingRoom}
-        properties={properties}
-      />
 
       <ImportExcelModal
         open={isImportModalOpen}

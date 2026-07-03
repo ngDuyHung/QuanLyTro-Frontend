@@ -7,9 +7,10 @@ import RoomTable from "@/components/rooms/RoomTable";
 import AddRoomModal from "@/components/rooms/AddRoomModal";
 import EditRoomModal from "@/components/rooms/EditRoomModal";
 import ViewRoomModal from "@/components/rooms/ViewRoomModal";
-
+import DeleteRoomModal from "@/components/rooms/DeleteRoomModal";
 import propertyService from "@/services/propertyService";
 import roomService from "@/services/roomService";
+
 
 const PER_PAGE = 10;
 
@@ -52,6 +53,11 @@ export default function RoomsPage() {
   const [isViewRoomOpen, setIsViewRoomOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isLoadingRoomDetail, setIsLoadingRoomDetail] = useState(false);
+
+  //state for delete room modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingRoom, setDeletingRoom] = useState(null);
+  const [isDeletingRoom, setIsDeletingRoom] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -212,6 +218,32 @@ export default function RoomsPage() {
     setSelectedRoom(null);
   };
 
+  const handleOpenDeleteModal = (room) => {
+    setDeletingRoom(room);
+    setIsDeleteModalOpen(true);
+  }
+
+  const handleConfirmDelete = async (roomId) => {
+    try {
+      setIsDeletingRoom(true);
+      await roomService.delete(roomId);
+      toast.success("Xóa phòng thành công!", { autoClose: 1500 });
+      setIsDeleteModalOpen(false);
+      setDeletingRoom(null);
+
+      //cập nhật lại danh sách phòng sau khi xóa
+      await fetchRooms();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        "Không thể xóa phòng lúc này. Vui lòng thử lại."
+      );
+    } finally {
+      setIsDeletingRoom(false);
+    }
+  };
+
+
   const handleExportExcel = () => {
     toast.info("Chức năng xuất Excel sẽ làm ở bước sau.", {
       autoClose: 1200,
@@ -317,6 +349,7 @@ export default function RoomsPage() {
           }}
           onEditRoom={handleOpenEditRoom}
           onViewRoom={handleOpenRoomDetail}
+          onDeleteRoom={handleOpenDeleteModal}
         />
       </div>
 
@@ -342,6 +375,16 @@ export default function RoomsPage() {
         room={selectedRoom}
         isLoading={isLoadingRoomDetail}
       />
+      <DeleteRoomModal
+        open={isDeleteModalOpen}
+        room={deletingRoom}
+        isDeleting={isDeletingRoom}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingRoom(null);
+        }}
+        onConfirm={handleConfirmDelete}
+       />
     </div>
   );
 }

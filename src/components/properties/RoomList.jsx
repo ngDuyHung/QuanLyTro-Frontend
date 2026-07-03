@@ -3,6 +3,8 @@ import { toast } from "react-toastify";
 import AddRoomModal from "@/components/rooms/AddRoomModal";
 import roomService from "@/services/roomService";
 import ViewRoomModal from "@/components/rooms/ViewRoomModal";
+import DeleteRoomModal from "@/components/rooms/DeleteRoomModal";
+import EditRoomModal from "@/components/rooms/EditRoomModal";
 const PER_PAGE = 8;
 
 const formatCurrency = (value) => {
@@ -122,7 +124,7 @@ function EmptyRoomState({ property }) {
   );
 }
 
-export default function RoomList({ property, onEditRoom, refreshKey, }) {
+export default function RoomList({ property, properties, onRoomUpdated }) {
   const [rooms, setRooms] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [page, setPage] = useState(1);
@@ -135,6 +137,14 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
   const [isViewRoomOpen, setIsViewRoomOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isLoadingRoomDetail, setIsLoadingRoomDetail] = useState(false);
+
+  const [editingRoom, setEditingRoom] = useState(null);
+  const [isEditRoomOpen, setIsEditRoomOpen] = useState(false);
+  const [isUpdatingRoom, setIsUpdatingRoom] = useState(false);
+  // State for delete room modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingRoom, setDeletingRoom] = useState(null);
+  const [isDeletingRoom, setIsDeletingRoom] = useState(false);
 
   const propertyId = property?.id || null;
 
@@ -175,7 +185,7 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
 
   useEffect(() => {
     fetchRooms();
-  }, [fetchRooms, refreshKey]);
+  }, [fetchRooms]);
 
   const roomStats = useMemo(() => {
     const total = pagination?.total ?? rooms.length;
@@ -257,6 +267,74 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
     setSelectedRoom(null);
   };
 
+  const handleConfirmDelete = async (roomId) => {
+    try {
+      setIsDeletingRoom(true);
+
+      // Gọi API xóa phòng
+      await roomService.delete(roomId);
+
+      toast.success("Xóa phòng thành công!", { autoClose: 1500 });
+
+      // Đóng modal và reset state
+      setIsDeleteModalOpen(false);
+      setDeletingRoom(null);
+
+      // Refresh lại danh sách phòng
+      if (page !== 1 && rooms.length === 1) {
+        setPage(page - 1); // Nếu xóa item cuối cùng của trang, lùi lại 1 trang
+      } else {
+        await fetchRooms();
+      }
+      // báo cho thằng khu nhà để nó tải lại 
+      onRoomUpdated?.();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        "Không thể xóa phòng lúc này. Vui lòng thử lại."
+      );
+    } finally {
+      setIsDeletingRoom(false);
+    }
+  };
+
+  const handleOpenEditRoom = (room) => {
+    setEditingRoom(room);
+    setIsEditRoomOpen(true);
+  };
+
+  const handleCloseEditRoom = () => {
+    setIsEditRoomOpen(false);
+    setEditingRoom(null);
+  };
+
+  const handleUpdateRoom = async (formData, room) => {
+    if (!room?.id) {
+      toast.warning("Không tìm thấy phòng cần cập nhật.");
+      return;
+    }
+    try {
+      setIsUpdatingRoom(true);
+      await roomService.update(room.id, formData);
+
+      toast.success("Cập nhật phòng thành công!", { autoClose: 1500 });
+      handleCloseEditRoom();
+
+      // Gọi trực tiếp hàm fetchRooms nội bộ để làm mới danh sách phòng
+      await fetchRooms();
+
+      // Báo cho trang cha biết để cập nhật lại số liệu Khu nhà nếu cần
+      // onRoomUpdated?.();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        "Không thể cập nhật phòng. Vui lòng thử lại."
+      );
+    } finally {
+      setIsUpdatingRoom(false);
+    }
+  };
+
   const handleAction = (actionKey, room) => {
     setActiveActionRoomId(null);
 
@@ -266,10 +344,16 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
     }
 
     if (actionKey === "edit") {
-      onEditRoom?.(room);
-      console.log("Edit room", room);
+      handleOpenEditRoom(room);
       return;
     }
+
+    if (actionKey === "delete") {
+      setDeletingRoom(room);
+      setIsDeleteModalOpen(true);
+      return;
+    }
+
     const actionLabels = {
       view: "Xem chi tiết phòng",
       edit: "Chỉnh sửa phòng",
@@ -731,8 +815,8 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
                     type="button"
                     onClick={() => setPage(pageNumber)}
                     className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
-                        ? "bg-brand text-white shadow-sm"
-                        : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+                      ? "bg-brand text-white shadow-sm"
+                      : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
                       }`}
                   >
                     {pageNumber}
@@ -767,6 +851,25 @@ export default function RoomList({ property, onEditRoom, refreshKey, }) {
         onSubmit={handleCreateRoom}
         isSubmitting={isCreatingRoom}
         property={property}
+      />
+
+      <EditRoomModal
+        open={isEditRoomOpen}
+        room={editingRoom}
+        onClose={handleCloseEditRoom}
+        onSubmit={handleUpdateRoom}
+        isSubmitting={isUpdatingRoom}
+        properties={properties}
+      />
+      <DeleteRoomModal
+        open={isDeleteModalOpen}
+        room={deletingRoom}
+        isDeleting={isDeletingRoom}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingRoom(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
 
       <MobileRoomActionSheet
