@@ -37,6 +37,7 @@ export default function RoomsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [propertyId, setPropertyId] = useState("");
+  const [sort, setSort] = useState("created_at_desc");
 
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [roomStats, setRoomStats] = useState(emptyRoomStats);
@@ -92,6 +93,7 @@ export default function RoomsPage() {
         search: search || undefined,
         status: status || undefined,
         property_id: propertyId || undefined,
+        sort: sort || undefined,
       });
       console.log("Fetched rooms:", response.data.data);
       setRooms(response.data.data || []);
@@ -104,7 +106,7 @@ export default function RoomsPage() {
     } finally {
       setIsLoadingRooms(false);
     }
-  }, [page, search, status, propertyId]);
+  }, [page, search, status, propertyId,sort]);
 
   useEffect(() => {
     fetchProperties();
@@ -116,6 +118,16 @@ export default function RoomsPage() {
 
   const handleOpenCreateRoom = () => {
     setIsAddModalOpen(true);
+  };
+
+  // hàm dọn dẹp bộ lọc
+  const handleClearFilters = () => {
+    setSearchText("");
+    setSearch("");
+    setStatus("");
+    setPropertyId("");
+    setSort("created_at_desc");
+    setPage(1);
   };
 
   const handleCreateRoom = async (formData, targetPropertyId) => {
@@ -273,38 +285,6 @@ export default function RoomsPage() {
         <div className="flex items-center gap-2 mt-3 lg:mt-0 pb-1 lg:pb-1 overflow-x-auto no-scrollbar">
           <button
             type="button"
-            onClick={() => {
-              setStatus("");
-              setPropertyId("");
-              setSearchText("");
-              setSearch("");
-              setPage(1);
-            }}
-            className="bg-white border border-slate-200 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0"
-          >
-            <i className="fa-solid fa-filter text-brand"></i>
-            <span className="hidden sm:inline">Tất cả trạng thái</span>
-            <span className="sm:hidden">Lọc</span>
-            <i className="fa-solid fa-angle-down text-[10px] ml-0.5 text-slate-400"></i>
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              toast.info("Chức năng sắp xếp phòng sẽ làm ở bước sau.", {
-                autoClose: 1200,
-              })
-            }
-            className="bg-white border border-slate-200 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0"
-          >
-            <i className="fa-solid fa-arrow-up-wide-short text-slate-400"></i>
-            <span className="hidden sm:inline">Sắp xếp: Mới nhất</span>
-            <span className="sm:hidden">Sắp xếp</span>
-            <i className="fa-solid fa-angle-down text-[10px] ml-0.5 text-slate-400"></i>
-          </button>
-
-          <button
-            type="button"
             onClick={handleExportExcel}
             className="bg-white border border-slate-200 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0"
           >
@@ -331,6 +311,7 @@ export default function RoomsPage() {
 
         <RoomTable
           rooms={rooms}
+          properties={properties}
           pagination={pagination}
           page={page}
           onPageChange={setPage}
@@ -347,6 +328,12 @@ export default function RoomsPage() {
             setPropertyId(value);
             setPage(1);
           }}
+          sort={sort} // <-- Truyền state sort
+          onSortChange={(value) => { // <-- Xử lý đổi sort
+            setSort(value);
+            setPage(1);
+          }}
+          onClearFilters={handleClearFilters} // <-- Xử lý xóa lọc
           onEditRoom={handleOpenEditRoom}
           onViewRoom={handleOpenRoomDetail}
           onDeleteRoom={handleOpenDeleteModal}
@@ -384,7 +371,7 @@ export default function RoomsPage() {
           setDeletingRoom(null);
         }}
         onConfirm={handleConfirmDelete}
-       />
+      />
     </div>
   );
 }

@@ -96,29 +96,29 @@ function RoomActionsMenu({ room, onAction }) {
     },
     ...(room.status === "available"
       ? [
-          {
-            key: "createLease",
-            label: "Tạo hợp đồng / thêm khách",
-            icon: "fa-solid fa-user-plus",
-            className: "text-brand",
-          },
-          {
-            key: "maintenance",
-            label: "Chuyển sang bảo trì",
-            icon: "fa-solid fa-wrench",
-            className: "text-orange-600",
-          },
-        ]
+        {
+          key: "createLease",
+          label: "Tạo hợp đồng / thêm khách",
+          icon: "fa-solid fa-user-plus",
+          className: "text-brand",
+        },
+        {
+          key: "maintenance",
+          label: "Chuyển sang bảo trì",
+          icon: "fa-solid fa-wrench",
+          className: "text-orange-600",
+        },
+      ]
       : []),
     ...(room.status === "maintenance"
       ? [
-          {
-            key: "available",
-            label: "Đánh dấu phòng trống",
-            icon: "fa-solid fa-door-open",
-            className: "text-brand",
-          },
-        ]
+        {
+          key: "available",
+          label: "Đánh dấu phòng trống",
+          icon: "fa-solid fa-door-open",
+          className: "text-brand",
+        },
+      ]
       : []),
     {
       key: "delete",
@@ -340,6 +340,7 @@ function EmptyRoomState() {
 
 export default function RoomTable({
   rooms = [],
+  properties = [],
   pagination,
   page,
   onPageChange,
@@ -348,6 +349,11 @@ export default function RoomTable({
   onSearchTextChange,
   status = "",
   onStatusChange,
+  propertyId = "",
+  onPropertyIdChange,
+  sort = "created_at_desc",
+  onSortChange,
+  onClearFilters,
   onEditRoom,
   onViewRoom,
   onDeleteRoom,
@@ -357,6 +363,13 @@ export default function RoomTable({
   onUpdateStatus,
 }) {
   const [activeActionRoomId, setActiveActionRoomId] = useState(null);
+
+  // Kiểm tra xem user có đang dùng bất kỳ bộ lọc nào không
+  const isFilterActive =
+    searchText !== "" ||
+    status !== "" ||
+    propertyId !== "" ||
+    sort !== "created_at_desc";
 
   const handleAction = (actionKey, room) => {
     setActiveActionRoomId(null);
@@ -405,22 +418,38 @@ export default function RoomTable({
 
   return (
     <div className="mb-6 flex flex-col gap-3 lg:gap-0 lg:bg-white lg:border lg:border-slate-200 lg:rounded-xl lg:shadow-sm">
-      {/* Filters */}
+      {/* Filters & Sắp xếp */}
       <div className="bg-white border border-slate-200 rounded-xl lg:rounded-none lg:border-0 lg:border-b lg:border-slate-100 p-3 lg:p-4 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between shadow-sm lg:shadow-none">
+
         <div className="flex flex-col lg:flex-row gap-3 lg:items-center flex-1 min-w-0">
+          {/* Ô Tìm kiếm */}
           <div className="relative w-full lg:w-[260px] shrink-0">
             <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-
             <input
               type="text"
               value={searchText}
               onChange={(event) => onSearchTextChange?.(event.target.value)}
-              placeholder="Tìm kiếm phòng, khu nhà..."
+              placeholder="Tìm kiếm phòng..."
               className="w-full pl-9 pr-3 py-2.5 lg:py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand focus:ring-1 focus:ring-brand outline-none"
             />
           </div>
 
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 lg:pb-0 lg:flex-wrap">
+            {/* Dropdown Chọn Khu nhà (Data thật) */}
+            <select
+              value={propertyId}
+              onChange={(event) => onPropertyIdChange?.(event.target.value)}
+              className="shrink-0 min-w-[150px] border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 lg:py-2 text-slate-600 outline-none focus:border-brand bg-white"
+            >
+              <option value="">Tất cả khu nhà</option>
+              {properties.map((property) => (
+                <option key={property.id} value={property.id}>
+                  {property.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Dropdown Trạng thái */}
             <select
               value={status}
               onChange={(event) => onStatusChange?.(event.target.value)}
@@ -432,40 +461,30 @@ export default function RoomTable({
               <option value="maintenance">Bảo trì</option>
             </select>
 
-            <select className="shrink-0 min-w-[150px] border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 lg:py-2 text-slate-600 outline-none focus:border-brand bg-white">
-              <option>Thanh toán</option>
-            </select>
-
-            <select className="shrink-0 min-w-[150px] border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 lg:py-2 text-slate-600 outline-none focus:border-brand bg-white">
-              <option>HĐ hết hạn</option>
-            </select>
-
-            <button
-              type="button"
-              className="shrink-0 border border-slate-200 rounded-lg px-3 py-2.5 lg:py-2 text-[13px] text-slate-600 hover:bg-slate-50 flex items-center gap-2 bg-white"
+            {/* Dropdown Sắp xếp */}
+            <select
+              value={sort}
+              onChange={(event) => onSortChange?.(event.target.value)}
+              className="shrink-0 min-w-[160px] border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 lg:py-2 text-slate-600 outline-none focus:border-brand bg-white"
             >
-              <i className="fa-solid fa-filter"></i>
-              Thêm lọc
-            </button>
+              <option value="created_at_desc">Mới nhất</option>
+              <option value="created_at_asc">Cũ nhất</option>
+              <option value="price_asc">Giá: Thấp đến cao</option>
+              <option value="price_desc">Giá: Cao đến thấp</option>
+            </select>
           </div>
         </div>
 
-        <div className="hidden lg:flex items-center gap-2">
+        {/* Nút Xóa lọc chỉ hiện ra khi có lọc/tìm kiếm/sắp xếp khác mặc định */}
+        {isFilterActive && (
           <button
             type="button"
-            className="text-[13px] text-slate-500 hover:text-slate-800 px-2"
+            onClick={onClearFilters}
+            className="hidden lg:flex shrink-0 text-[13px] text-red-500 hover:text-red-600 font-medium px-2 items-center gap-1.5 transition-colors"
           >
-            Xóa lọc
+            <i className="fa-solid fa-xmark"></i> Xóa lọc
           </button>
-
-          <button
-            type="button"
-            className="bg-brand-50 text-brand border border-green-200 rounded-lg px-3 py-2 text-[13px] font-medium hover:bg-green-100 flex items-center gap-2"
-          >
-            <i className="fa-regular fa-floppy-disk"></i>
-            Lưu bộ lọc
-          </button>
-        </div>
+        )}
       </div>
 
       {/* Mobile cards */}
@@ -689,8 +708,7 @@ export default function RoomTable({
           {pagination ? (
             <>
               <span className="lg:hidden">
-                Trang {pagination.current_page || 1}/
-                {pagination.last_page || 1} · {pagination.total || 0} phòng
+                Trang {pagination.current_page || 1}/{pagination.last_page || 1} · {pagination.total || 0} phòng
               </span>
 
               <span className="hidden lg:inline">
@@ -706,38 +724,57 @@ export default function RoomTable({
           )}
         </span>
 
-        <div className="flex items-center gap-3 lg:gap-4">
-          <div className="flex gap-1">
+        {pagination?.last_page > 1 && (
+          <div className="flex items-center gap-1">
+            {/* Nút lùi trang */}
             <button
               type="button"
-              disabled={!canGoPrev}
+              disabled={page <= 1}
               onClick={() => onPageChange?.(Math.max(1, page - 1))}
-              className="w-8 h-8 rounded-lg lg:rounded border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed bg-white"
+              className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <i className="fa-solid fa-angle-left text-[12px]"></i>
+              <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
             </button>
 
+            {/* MOBILE UI: Chỉ hiện một ô số trang hiện tại */}
             <button
               type="button"
-              className="w-8 h-8 rounded-lg lg:rounded bg-brand text-white font-medium flex items-center justify-center text-[13px]"
+              className="flex lg:hidden w-8 h-8 rounded-lg items-center justify-center bg-brand text-white font-medium text-[13px]"
             >
-              {pagination?.current_page || 1}
+              {page}
             </button>
 
+            {/* DESKTOP UI: Hiện đầy đủ dãy số trang */}
+            <div className="hidden lg:flex gap-1">
+              {Array.from({ length: pagination.last_page }).map((_, index) => {
+                const pageNumber = index + 1;
+                return (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    onClick={() => onPageChange?.(pageNumber)}
+                    className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
+                        ? "bg-brand text-white shadow-sm"
+                        : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+                      }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Nút tiến trang */}
             <button
               type="button"
-              disabled={!canGoNext}
+              disabled={page >= pagination.last_page}
               onClick={() => onPageChange?.(page + 1)}
-              className="w-8 h-8 rounded-lg lg:rounded border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed bg-white"
+              className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <i className="fa-solid fa-angle-right text-[12px]"></i>
+              <i className="fa-solid fa-angle-right text-[12px] lg:text-[11px]"></i>
             </button>
           </div>
-
-          <select className="hidden lg:block border border-slate-200 rounded-lg text-[13px] px-3 py-1.5 text-slate-600 outline-none focus:border-brand bg-white">
-            <option>10 / trang</option>
-          </select>
-        </div>
+        )}
       </div>
     </div>
   );
