@@ -10,8 +10,11 @@ import ViewRoomModal from "@/components/rooms/ViewRoomModal";
 import DeleteRoomModal from "@/components/rooms/DeleteRoomModal";
 import propertyService from "@/services/propertyService";
 import roomService from "@/services/roomService";
-
-
+import AddLeaseModal from "@/components/leases/AddLeaseModal";
+import leasesService from "@/services/leasesService";
+import AddReservationModal from "@/components/rooms/AddReservationModal";
+import CancelReservationModal from "@/components/rooms/CancelReservationModal";
+import reservationService from "@/services/reservationService";
 const PER_PAGE = 10;
 
 const emptyRoomStats = {
@@ -60,6 +63,15 @@ export default function RoomsPage() {
   const [deletingRoom, setDeletingRoom] = useState(null);
   const [isDeletingRoom, setIsDeletingRoom] = useState(false);
 
+  // Quản lý Đặt cọc
+  const [isReserveModalOpen, setIsReserveModalOpen] = useState(false);
+  const [isCancelReserveModalOpen, setIsCancelReserveModalOpen] = useState(false);
+  const [actionRoom, setActionRoom] = useState(null); // Lưu phòng đang thao tác
+  const [isSubmittingReservation, setIsSubmittingReservation] = useState(false);
+  // Quản lý Lập hợp đồng
+  const [isAddLeaseModalOpen, setIsAddLeaseModalOpen] = useState(false);
+  const [isCreatingLease, setIsCreatingLease] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchText.trim());
@@ -106,7 +118,7 @@ export default function RoomsPage() {
     } finally {
       setIsLoadingRooms(false);
     }
-  }, [page, search, status, propertyId,sort]);
+  }, [page, search, status, propertyId, sort]);
 
   useEffect(() => {
     fetchProperties();
@@ -262,6 +274,69 @@ export default function RoomsPage() {
     });
   };
 
+  const handleCreateReservation = async (data) => {
+    try {
+      setIsSubmittingReservation(true);
+      // data.room_id đã được đính kèm bên trong Modal
+      await reservationService.create(data);
+      toast.success("Đã nhận cọc và tạo phiếu thu thành công!");
+      setIsReserveModalOpen(false);
+      fetchRooms(); // Load lại list phòng để cập nhật status sang màu Cam
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra");
+    } finally {
+      setIsSubmittingReservation(false);
+    }
+  };
+
+  const handleCancelReservation = async (data) => {
+    try {
+      setIsSubmittingReservation(true);
+      // Gọi API hủy (Lưu ý: API backend mình viết ở trên cần reservation_id. 
+      // Nếu trong frontend bạn chưa có reservation_id, hãy tìm reservation active thông qua room_id, hoặc điều chỉnh API backend nhận room_id).
+      await reservationService.cancel(data.room_id, data);
+      toast.success("Đã hủy cọc phòng thành công!");
+      setIsCancelReserveModalOpen(false);
+      fetchRooms();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra");
+    } finally {
+      setIsSubmittingReservation(false);
+    }
+  };
+
+  // Mở modal lập hợp đồng
+  const handleOpenCreateLease = (room) => {
+    setActionRoom(room);
+    setIsAddLeaseModalOpen(true);
+  };
+
+  // Submit form hợp đồng
+  const handleCreateLease = async (formData) => {
+    try {
+      setIsCreatingLease(true);
+      await leasesService.create(formData);
+      toast.success("Tạo hợp đồng thành công!", { autoClose: 1500 });
+      setIsAddLeaseModalOpen(false);
+      await fetchRooms(); // Refresh lại danh sách phòng
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Lỗi tạo hợp đồng.");
+    } finally {
+      setIsCreatingLease(false);
+    }
+  };
+
+  // Mở modal cọc / hủy cọc
+  const handleOpenReserve = (room) => {
+    setActionRoom(room);
+    setIsReserveModalOpen(true);
+  };
+
+  const handleOpenCancelReserve = (room) => {
+    setActionRoom(room);
+    setIsCancelReserveModalOpen(true);
+  };
+
   const tabClasses = ({ isActive }) =>
     `px-4 sm:px-5 py-3 text-[13px] sm:text-[14px] transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${isActive
       ? "font-bold text-brand border-brand"
@@ -337,6 +412,10 @@ export default function RoomsPage() {
           onEditRoom={handleOpenEditRoom}
           onViewRoom={handleOpenRoomDetail}
           onDeleteRoom={handleOpenDeleteModal}
+
+          onCreateLease={handleOpenCreateLease} // Truyền hàm Lên HĐ xuống
+          onReserve={handleOpenReserve}         // Truyền hàm Cọc xuống
+          onCancelReserve={handleOpenCancelReserve} // Truyền hàm Hủy cọc xuống
         />
       </div>
 
@@ -371,6 +450,32 @@ export default function RoomsPage() {
           setDeletingRoom(null);
         }}
         onConfirm={handleConfirmDelete}
+      />
+      <AddLeaseModal
+        open={isAddLeaseModalOpen}
+        onClose={() => {
+          setIsAddLeaseModalOpen(false);
+          setActionRoom(null);
+        }}
+        onSubmit={handleCreateLease}
+        isSubmitting={isCreatingLease}
+        properties={properties}
+        defaultRoom={actionRoom} // <--- Đẩy phòng đang chọn vào đây để nó tự fill
+      />
+      <AddReservationModal
+        open={isReserveModalOpen}
+        onClose={() => setIsReserveModalOpen(false)}
+        room={actionRoom}
+        onSubmit={handleCreateReservation}
+        isSubmitting={isSubmittingReservation}
+      />
+
+      <CancelReservationModal
+        open={isCancelReserveModalOpen}
+        onClose={() => setIsCancelReserveModalOpen(false)}
+        room={actionRoom}
+        onSubmit={handleCancelReservation}
+        isSubmitting={isSubmittingReservation}
       />
     </div>
   );

@@ -7,6 +7,14 @@ const formatCurrency = (value) => {
 
 const getStatusConfig = (status) => {
   switch (status) {
+    case "reserved": // case Đặt cọc
+      return {
+        label: "Đã cọc",
+        shortLabel: "Cọc",
+        badgeClass: "bg-amber-50 text-amber-600 border border-amber-200",
+        iconClass: "bg-amber-50 text-amber-500",
+        icon: "fa-key",
+      };
     case "occupied":
       return {
         label: "Đang thuê",
@@ -77,12 +85,6 @@ function RoomActionsMenu({ room, onAction }) {
       className: "text-slate-700",
     },
     {
-      key: "images",
-      label: "Cập nhật hình ảnh",
-      icon: "fa-regular fa-images",
-      className: "text-slate-700",
-    },
-    {
       key: "meter",
       label: "Ghi điện nước",
       icon: "fa-solid fa-gauge-high",
@@ -110,16 +112,7 @@ function RoomActionsMenu({ room, onAction }) {
         },
       ]
       : []),
-    ...(room.status === "maintenance"
-      ? [
-        {
-          key: "available",
-          label: "Đánh dấu phòng trống",
-          icon: "fa-solid fa-door-open",
-          className: "text-brand",
-        },
-      ]
-      : []),
+
     {
       key: "delete",
       label: "Xóa phòng",
@@ -263,44 +256,68 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
         </div>
       </div>
 
-      {/* Footer actions */}
+      {/* Footer actions Mobile */}
       <div className="px-3 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2">
-        <button
-          type="button"
-          onClick={() => onAction?.("view", room)}
-          className="flex-1 py-2 rounded-lg border border-slate-200 bg-white text-[12px] font-medium text-slate-600 flex items-center justify-center gap-1.5 active:bg-slate-100"
-        >
-          <i className="fa-regular fa-eye text-slate-400"></i>
-          Xem chi tiết
-        </button>
-
         {room.status === "available" ? (
-          <button
-            type="button"
-            onClick={() => onAction?.("createLease", room)}
-            className="flex-1 py-2 rounded-lg border border-brand bg-brand text-[12px] font-medium text-white flex items-center justify-center gap-1.5 active:bg-brand-dark"
-          >
-            <i className="fa-solid fa-user-plus text-[11px]"></i>
-            Thêm khách
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => onAction?.("reserve", room)}
+              className="flex-1 py-2 rounded-lg border border-amber-200 bg-amber-50 text-[12px] font-semibold text-amber-600 flex items-center justify-center gap-1.5 active:bg-amber-100"
+            >
+              <i className="fa-solid fa-hand-holding-dollar"></i> Nhận cọc
+            </button>
+            <button
+              type="button"
+              onClick={() => onAction?.("createLease", room)}
+              className="flex-1 py-2 rounded-lg border border-brand bg-brand text-[12px] font-semibold text-white flex items-center justify-center gap-1.5 active:bg-brand-dark"
+            >
+              <i className="fa-solid fa-file-signature"></i> Tạo hợp đồng
+            </button>
+          </>
+        ) : room.status === "reserved" ? (
+          <>
+            <button
+              type="button"
+              onClick={() => onAction?.("createLease", room)}
+              className="flex-1 py-2 rounded-lg border border-brand bg-brand text-[12px] font-semibold text-white flex items-center justify-center gap-1.5 active:bg-brand-dark"
+            >
+              <i className="fa-solid fa-check-double"></i> Nhận phòng
+            </button>
+            <button
+              type="button"
+              onClick={() => onAction?.("cancelReserve", room)}
+              className="flex-1 py-2 rounded-lg border border-red-200 bg-red-50 text-[12px] font-semibold text-red-600 flex items-center justify-center gap-1.5 active:bg-red-100"
+            >
+              <i className="fa-solid fa-ban"></i> Hủy cọc
+            </button>
+          </>
         ) : room.status === "maintenance" ? (
           <button
             type="button"
             onClick={() => onAction?.("available", room)}
-            className="flex-1 py-2 rounded-lg border border-orange-200 bg-orange-50 text-[12px] font-medium text-orange-600 flex items-center justify-center gap-1.5 active:bg-orange-100"
+            className="flex-1 py-2 rounded-lg border border-orange-200 bg-orange-50 text-[12px] font-semibold text-orange-600 flex items-center justify-center gap-1.5 active:bg-orange-100"
           >
-            <i className="fa-solid fa-wrench text-[11px]"></i>
-            Bảo trì
+            <i className="fa-solid fa-wrench"></i> Bảo trì xong
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={() => onAction?.("invoice", room)}
-            className="flex-1 py-2 rounded-lg border border-green-200 bg-green-50 text-[12px] font-medium text-brand flex items-center justify-center gap-1.5 active:bg-green-100"
-          >
-            <i className="fa-solid fa-file-invoice-dollar text-[11px]"></i>
-            Hóa đơn
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => onAction?.("view", room)}
+              className="flex-1 py-2 rounded-lg border border-slate-200 bg-white text-[12px] font-medium text-slate-600 flex items-center justify-center gap-1.5 active:bg-slate-100"
+            >
+              <i className="fa-regular fa-eye text-slate-400"></i>
+              Xem chi tiết
+            </button>
+            <button
+              type="button"
+              onClick={() => onAction?.("invoice", room)}
+              className="flex-1 py-2 rounded-lg border border-green-200 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100"
+            >
+              <i className="fa-solid fa-file-invoice-dollar"></i> Hóa đơn
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -361,6 +378,8 @@ export default function RoomTable({
   onViewInvoices,
   onRecordMeter,
   onUpdateStatus,
+  onReserve,
+  onCancelReserve,
 }) {
   const [activeActionRoomId, setActiveActionRoomId] = useState(null);
 
@@ -391,7 +410,12 @@ export default function RoomTable({
       case "createLease":
         onCreateLease?.(room);
         return;
-
+      case "reserve":
+        onReserve?.(room);
+        return;
+      case "cancelReserve":
+        onCancelReserve?.(room);
+        return;
       case "invoice":
         onViewInvoices?.(room);
         return;
@@ -553,11 +577,11 @@ export default function RoomTable({
               </th>
 
               <th className="py-3 px-4 border-b border-slate-100">
-                HĐ hết hạn{" "}
+                Ngày tạo{" "}
                 <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
               </th>
 
-              <th className="py-3 px-4 border-b border-slate-100 text-center">
+              <th className="py-3 px-4 border-b border-slate-100 text-right w-40">
                 Thao tác
               </th>
             </tr>
@@ -650,29 +674,41 @@ export default function RoomTable({
                     </td>
 
                     <td className="py-3 px-4">
-                      <span className="text-slate-400">—</span>
+                      <span className="text-slate-400">{room.created_at ? new Date(room.created_at).toLocaleDateString() : "—"}</span>
                     </td>
 
                     <td className="py-3 px-4">
-                      <div className="flex justify-center gap-2 relative">
-                        <button
-                          type="button"
-                          onClick={() => handleAction("view", room)}
-                          className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center"
-                          title="Xem chi tiết"
-                        >
-                          <i className="fa-regular fa-eye"></i>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleAction("edit", room)}
-                          className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-brand hover:border-green-200 hover:bg-green-50 flex items-center justify-center"
-                          title="Sửa phòng"
-                        >
-                          <i className="fa-regular fa-pen-to-square"></i>
-                        </button>
-
+                      <div className="flex items-center justify-end gap-2 relative">
+                        {/* TRẠNG THÁI TRỐNG */}
+                        {room.status === "available" && (
+                          <>
+                            <button onClick={() => handleAction("reserve", room)} className="flex items-center px-3 py-1.5 bg-white text-amber-600 border border-amber-200 rounded-lg text-[12px] font-semibold hover:bg-amber-50 transition-all shadow-sm whitespace-nowrap">
+                              <i className="fa-solid fa-hand-holding-dollar mr-1.5"></i> Nhận cọc
+                            </button>
+                            <button onClick={() => handleAction("createLease", room)} className="flex items-center px-3 py-1.5 bg-brand text-white border border-brand rounded-lg text-[12px] font-semibold hover:bg-brand-dark transition-all shadow-sm whitespace-nowrap">
+                              <i className="fa-solid fa-file-signature mr-1.5"></i> Tạo HĐ
+                            </button>
+                          </>
+                        )}
+                        {/* TRẠNG THÁI ĐÃ CỌC */}
+                        {room.status === "reserved" && (
+                          <>
+                            {/* Hủy cọc (Secondary) đặt bên trái, Nhận phòng (Primary) đặt bên phải */}
+                            <button onClick={() => handleAction("cancelReserve", room)} className="flex items-center px-3 py-1.5 bg-white text-red-600 border border-red-200 rounded-lg text-[12px] font-semibold hover:bg-red-50 transition-all shadow-sm whitespace-nowrap">
+                              <i className="fa-solid fa-ban mr-1.5"></i> Hủy cọc
+                            </button>
+                            <button onClick={() => handleAction("createLease", room)} className="flex items-center px-3 py-1.5 bg-brand text-white border border-brand rounded-lg text-[12px] font-semibold hover:bg-brand-dark transition-all shadow-sm whitespace-nowrap">
+                              <i className="fa-solid fa-check-double mr-1.5"></i> Nhận phòng
+                            </button>
+                          </>
+                        )}
+                        {/* TRẠNG THÁI ĐANG THUÊ */}
+                        {room.status === "occupied" && (
+                          <button onClick={() => handleAction("invoice", room)} className="flex items-center px-3 py-1.5 bg-white text-blue-600 border border-blue-200 rounded-lg text-[12px] font-semibold hover:bg-blue-50 transition-all shadow-sm whitespace-nowrap">
+                            <i className="fa-solid fa-file-invoice-dollar mr-1.5"></i> Hóa đơn
+                          </button>
+                        )}
+                        {/* NÚT MENU 3 CHẤM */}
                         <button
                           type="button"
                           onClick={() =>
@@ -680,12 +716,12 @@ export default function RoomTable({
                               currentId === room.id ? null : room.id,
                             )
                           }
-                          className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center bg-white"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 hover:text-slate-800 transition-all shadow-sm shrink-0"
                           title="Thao tác khác"
                         >
                           <i className="fa-solid fa-ellipsis-vertical"></i>
                         </button>
-
+                        {/* DROPDOWN MENU */}
                         {activeActionRoomId === room.id && (
                           <RoomActionsMenu
                             room={room}
@@ -754,8 +790,8 @@ export default function RoomTable({
                     type="button"
                     onClick={() => onPageChange?.(pageNumber)}
                     className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
-                        ? "bg-brand text-white shadow-sm"
-                        : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+                      ? "bg-brand text-white shadow-sm"
+                      : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
                       }`}
                   >
                     {pageNumber}

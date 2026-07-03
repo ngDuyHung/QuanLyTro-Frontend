@@ -34,7 +34,9 @@ const initialForm = {
 };
 
 const isAvailableRoom = (room) => {
-  return room.status === "available" || room.status === "empty" || room.status === "vacant";
+  return room.status === "available" ||
+    room.status === "reserved" ||
+    room.status === "empty";
 };
 
 export default function AddLeaseModal({
@@ -43,6 +45,7 @@ export default function AddLeaseModal({
   onSubmit,
   isSubmitting = false,
   properties = [],
+  defaultRoom = null
 }) {
   const [form, setForm] = useState(initialForm);
   const [frontImage, setFrontImage] = useState(null);
@@ -84,14 +87,26 @@ export default function AddLeaseModal({
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
+      // AUTO FILL DATA NẾU CÓ TRUYỀN defaultRoom TỪ NGOÀI VÀO
+      if (defaultRoom) {
+        setForm(prev => ({
+          ...prev,
+          property_id: defaultRoom.property_id,
+          room_id: defaultRoom.id,
+          room_price: formatMoneyInput(defaultRoom.current_price),
+          deposit: formatMoneyInput(defaultRoom.current_price),
+          billing_day: defaultRoom.billing_day || "1",
+        }));
+      }
     } else {
       document.body.style.overflow = "";
+      setForm(initialForm);
     }
 
     return () => {
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [open, defaultRoom]);
 
 
   useEffect(() => {
@@ -139,10 +154,8 @@ export default function AddLeaseModal({
       try {
         setIsLoadingRooms(true);
         setRoomNotice("");
-
         const response = await roomService.getByProperty(form.property_id, {
           per_page: 100,
-          status: "available",
         });
 
         const allRooms = response.data.data || [];
