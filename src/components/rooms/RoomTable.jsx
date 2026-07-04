@@ -84,34 +84,22 @@ function RoomActionsMenu({ room, onAction }) {
       icon: "fa-regular fa-pen-to-square",
       className: "text-slate-700",
     },
-    {
-      key: "meter",
-      label: "Ghi điện nước",
-      icon: "fa-solid fa-gauge-high",
-      className: "text-slate-700",
-    },
-    {
-      key: "invoice",
-      label: "Lập hóa đơn",
-      icon: "fa-solid fa-file-invoice-dollar",
-      className: "text-slate-700",
-    },
-    ...(room.status === "available"
-      ? [
-        {
-          key: "createLease",
-          label: "Tạo hợp đồng / thêm khách",
-          icon: "fa-solid fa-user-plus",
-          className: "text-brand",
-        },
-        {
-          key: "maintenance",
-          label: "Chuyển sang bảo trì",
-          icon: "fa-solid fa-wrench",
-          className: "text-orange-600",
-        },
-      ]
-      : []),
+    // ...(room.status === "available"
+    //   ? [
+    //     {
+    //       key: "createLease",
+    //       label: "Tạo hợp đồng / thêm khách",
+    //       icon: "fa-solid fa-user-plus",
+    //       className: "text-brand",
+    //     },
+    //     {
+    //       key: "maintenance",
+    //       label: "Chuyển sang bảo trì",
+    //       icon: "fa-solid fa-wrench",
+    //       className: "text-orange-600",
+    //     },
+    //   ]
+    //   : []),
 
     {
       key: "delete",
@@ -196,8 +184,6 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
             >
               <i className="fa-solid fa-ellipsis-vertical text-[12px]"></i>
             </button>
-
-            {isMenuOpen && <RoomActionsMenu room={room} onAction={onAction} />}
           </div>
         </div>
       </div>
@@ -351,6 +337,79 @@ function EmptyRoomState() {
       <p className="text-[12px] text-slate-500 mt-1">
         Hãy thử đổi bộ lọc hoặc thêm phòng mới.
       </p>
+    </div>
+  );
+}
+
+function MobileRoomActionSheet({ room, open, onClose, onAction }) {
+  if (!open || !room) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] lg:hidden bg-slate-900/50 backdrop-blur-[2px] flex items-end"
+      onClick={onClose}
+    >
+      <div
+        className="w-full bg-white rounded-t-2xl shadow-2xl animate-[slideUp_0.2s_ease-out] overflow-hidden"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="px-5 pt-3 pb-4 border-b border-slate-100">
+          <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-4"></div>
+          <p className="text-[13px] text-slate-500">Thao tác phòng</p>
+          <h3 className="text-[16px] font-bold text-slate-800 mt-0.5 line-clamp-1">
+            {room.name}
+          </h3>
+        </div>
+
+        <div className="p-3">
+          <button
+            type="button"
+            onClick={() => { onClose(); onAction("view", room); }}
+            className="w-full px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-3"
+          >
+            <span className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+              <i className="fa-regular fa-eye text-[15px]"></i>
+            </span>
+            <span>Xem chi tiết</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { onClose(); onAction("edit", room); }}
+            className="w-full mt-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-3"
+          >
+            <span className="w-9 h-9 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0">
+              <i className="fa-regular fa-pen-to-square text-[15px]"></i>
+            </span>
+            <span>Chỉnh sửa phòng</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={room.status !== "available"}
+            onClick={() => { onClose(); onAction("delete", room); }}
+            className={`w-full mt-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold flex items-center gap-3 ${room.status === "available"
+              ? "text-red-600 hover:bg-red-50"
+              : "text-slate-400 cursor-not-allowed opacity-60"
+              }`}
+          >
+            <span className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${room.status === "available" ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-400"}`}>
+              <i className="fa-regular fa-trash-can text-[15px]"></i>
+            </span>
+            <span>Xóa phòng {room.status !== "available" && <span className="text-[11px] font-normal italic ml-1">(Chỉ xóa phòng trống)</span>}</span>
+          </button>
+        </div>
+
+        <div className="px-3 pb-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-3 rounded-xl bg-slate-100 text-[14px] font-semibold text-slate-600"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -812,6 +871,12 @@ export default function RoomTable({
           </div>
         )}
       </div>
+      <MobileRoomActionSheet
+        open={!!activeActionRoomId && window.innerWidth < 1024}
+        room={rooms.find(r => r.id === activeActionRoomId)}
+        onClose={() => setActiveActionRoomId(null)}
+        onAction={handleAction}
+      />
     </div>
   );
 }

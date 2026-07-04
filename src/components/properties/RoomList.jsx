@@ -5,6 +5,14 @@ import roomService from "@/services/roomService";
 import ViewRoomModal from "@/components/rooms/ViewRoomModal";
 import DeleteRoomModal from "@/components/rooms/DeleteRoomModal";
 import EditRoomModal from "@/components/rooms/EditRoomModal";
+import AddLeaseModal from "@/components/leases/AddLeaseModal";
+import leasesService from "@/services/leasesService";
+
+import AddReservationModal from "@/components/rooms/AddReservationModal";
+import CancelReservationModal from "@/components/rooms/CancelReservationModal";
+import reservationService from "@/services/reservationService";
+
+import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
 const PER_PAGE = 8;
 
 const formatCurrency = (value) => {
@@ -14,6 +22,13 @@ const formatCurrency = (value) => {
 
 const getStatusConfig = (status) => {
   switch (status) {
+    case "reserved":
+      return {
+        label: "Đã cọc",
+        badgeClass: "bg-amber-50 text-amber-600 border border-amber-200",
+        iconClass: "bg-amber-50 text-amber-500",
+        icon: "fa-key",
+      };
     case "occupied":
       return {
         label: "Đang thuê",
@@ -67,43 +82,96 @@ const getTenantPhone = (room) =>
 function RoomActionsMenu({ room, onAction, isNearBottom }) {
   const status = room.status;
 
+  // 1. Các thao tác cơ bản luôn có
   const actions = [
     {
       key: "view",
-      label: "Xem chi tiết",
+      label: "Xem chi tiết phòng",
       icon: "fa-regular fa-eye",
       className: "text-slate-700",
     },
     {
       key: "edit",
-      label: "Chỉnh sửa phòng",
+      label: "Chỉnh sửa thông tin",
       icon: "fa-regular fa-pen-to-square",
       className: "text-slate-700",
     },
-    {
-      key: "delete",
-      label: "Xóa phòng",
-      icon: "fa-regular fa-trash-can",
-      className: "text-red-600",
-    },
   ];
+
+  // 2. Bổ sung các thao tác nhanh dựa theo trạng thái phòng (Giống logic RoomTable)
+  if (status === "available") {
+    actions.unshift(
+      {
+        key: "reserve",
+        label: "Nhận đặt cọc",
+        icon: "fa-solid fa-hand-holding-dollar",
+        className: "text-amber-600 font-semibold border-b border-slate-100 pb-2 bg-amber-50/30",
+      },
+      {
+        key: "createLease",
+        label: "Tạo hợp đồng mới",
+        icon: "fa-solid fa-file-signature",
+        className: "text-brand font-semibold border-b border-slate-100 pb-2 bg-brand/5",
+      }
+    );
+  } else if (status === "reserved") {
+    actions.unshift(
+      {
+        key: "createLease",
+        label: "Nhận phòng (Lập HĐ)",
+        icon: "fa-solid fa-check-double",
+        className: "text-brand font-semibold border-b border-slate-100 pb-2 bg-brand/5",
+      },
+      {
+        key: "cancelReserve",
+        label: "Hủy đặt cọc",
+        icon: "fa-solid fa-ban",
+        className: "text-red-600 font-semibold border-b border-slate-100 pb-2 bg-red-50/30",
+      }
+    );
+  } else if (status === "occupied") {
+    actions.unshift({
+      key: "invoice",
+      label: "Lập hóa đơn tháng",
+      icon: "fa-solid fa-file-invoice-dollar",
+      className: "text-blue-600 font-semibold border-b border-slate-100 pb-2 bg-blue-50/30",
+    });
+  }
+
+  // 3. Thao tác xóa phòng (chỉ cho phép khi phòng trống) đặt ở dưới cùng
+  actions.push({
+    key: "delete",
+    label: "Xóa phòng",
+    icon: "fa-regular fa-trash-can",
+    className: status === "available" ? "text-red-500" : "text-slate-400 cursor-not-allowed",
+    disabled: status !== "available",
+  });
 
   return (
     <div className={`absolute right-0 ${isNearBottom ? 'bottom-full mb-1' : 'top-full mt-1'} w-56 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/70 z-30 overflow-hidden text-left`}>
-      {actions.map((action) => (
+      {actions.map((action, idx) => (
         <button
-          key={action.key}
+          key={action.key || idx}
           type="button"
-          onClick={() => onAction(action.key, room)}
-          className={`w-full px-3.5 py-2.5 text-[13px] font-medium hover:bg-slate-50 flex items-center gap-2.5 ${action.className}`}
+          disabled={action.disabled}
+          onClick={() => {
+            if (action.disabled) return;
+            onAction(action.key, room);
+          }}
+          className={`w-full px-4 py-2.5 text-[13px] font-medium hover:bg-slate-50 flex items-center gap-2.5 transition-colors disabled:hover:bg-white disabled:cursor-not-allowed ${action.className || ""}`}
         >
-          <i className={`${action.icon} w-4 text-center text-[12px]`}></i>
+          <i className={`${action.icon} w-4 text-center text-[13px]`}></i>
           <span>{action.label}</span>
         </button>
       ))}
+
+      {status !== "available" && (
+        <div className="px-3.5 py-2 bg-amber-50/60 border-t border-amber-100 text-[11px] leading-4 text-amber-700">
+          Chỉ xóa được phòng đang trống.
+        </div>
+      )}
     </div>
   );
-
 }
 
 function EmptyRoomState({ property }) {
@@ -145,6 +213,19 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingRoom, setDeletingRoom] = useState(null);
   const [isDeletingRoom, setIsDeletingRoom] = useState(false);
+
+  // Quản lý Đặt cọc
+  const [isReserveModalOpen, setIsReserveModalOpen] = useState(false);
+  const [isCancelReserveModalOpen, setIsCancelReserveModalOpen] = useState(false);
+  const [actionRoom, setActionRoom] = useState(null);
+  const [isSubmittingReservation, setIsSubmittingReservation] = useState(false);
+
+  // Quản lý Lập hợp đồng
+  const [isAddLeaseModalOpen, setIsAddLeaseModalOpen] = useState(false);
+  const [isCreatingLease, setIsCreatingLease] = useState(false);
+
+  // Quản lý Hóa đơn
+  const [isCreateInvoiceModalOpen, setIsCreateInvoiceModalOpen] = useState(false);
 
   const propertyId = property?.id || null;
 
@@ -298,6 +379,51 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
     }
   };
 
+  const handleCreateReservation = async (data) => {
+    try {
+      setIsSubmittingReservation(true);
+      await reservationService.create(data);
+      toast.success("Đã nhận cọc và tạo phiếu thu thành công!");
+      setIsReserveModalOpen(false);
+      await fetchRooms();
+      onRoomUpdated?.(); // Báo cho Khu nhà update lại số liệu nếu cần
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra");
+    } finally {
+      setIsSubmittingReservation(false);
+    }
+  };
+
+  const handleCancelReservation = async (data) => {
+    try {
+      setIsSubmittingReservation(true);
+      await reservationService.cancel(data.room_id, data);
+      toast.success("Đã hủy cọc phòng thành công!");
+      setIsCancelReserveModalOpen(false);
+      await fetchRooms();
+      onRoomUpdated?.();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra");
+    } finally {
+      setIsSubmittingReservation(false);
+    }
+  };
+
+  const handleCreateLease = async (formData) => {
+    try {
+      setIsCreatingLease(true);
+      await leasesService.create(formData);
+      toast.success("Tạo hợp đồng thành công!", { autoClose: 1500 });
+      setIsAddLeaseModalOpen(false);
+      await fetchRooms();
+      onRoomUpdated?.();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Lỗi tạo hợp đồng.");
+    } finally {
+      setIsCreatingLease(false);
+    }
+  };
+
   const handleOpenEditRoom = (room) => {
     setEditingRoom(room);
     setIsEditRoomOpen(true);
@@ -342,31 +468,47 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
       handleOpenRoomDetail(room);
       return;
     }
-
     if (actionKey === "edit") {
       handleOpenEditRoom(room);
       return;
     }
-
     if (actionKey === "delete") {
       setDeletingRoom(room);
       setIsDeleteModalOpen(true);
       return;
     }
 
+    // Xử lý các action mới thêm
+    if (actionKey === "reserve") {
+      setActionRoom(room);
+      setIsReserveModalOpen(true);
+      return;
+    }
+    if (actionKey === "cancelReserve") {
+      setActionRoom(room);
+      setIsCancelReserveModalOpen(true);
+      return;
+    }
+    if (actionKey === "createLease") {
+      setActionRoom(room);
+      setIsAddLeaseModalOpen(true);
+      return;
+    }
+    if (actionKey === "invoice") {
+      setActionRoom(room);
+      setIsCreateInvoiceModalOpen(true);
+      return;
+    }
+
+    // Các tính năng còn lại (Ghi điện nước, đổi trạng thái) vẫn để tạm toast info
     const actionLabels = {
-      view: "Xem chi tiết phòng",
-      edit: "Chỉnh sửa phòng",
       images: "Cập nhật hình ảnh",
       meter: "Ghi điện nước",
-      invoice: "Xem hóa đơn",
-      createLease: "Tạo hợp đồng / thêm khách",
       maintenance: "Chuyển phòng sang bảo trì",
       available: "Đánh dấu phòng trống",
-      delete: "Xóa phòng",
     };
 
-    toast.info(`${actionLabels[actionKey] || "Thao tác"}: ${room.name} đang update`, {
+    toast.info(`${actionLabels[actionKey] || "Thao tác"}: Tính năng đang update`, {
       autoClose: 1200,
     });
   };
@@ -600,44 +742,68 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                       </p>
                     </div>
                   </div>
-
+                  {/* Footer actions Mobile */}
                   <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleAction("view", room)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-slate-200 rounded-lg bg-white text-[12px] font-medium text-slate-600 active:bg-slate-100"
-                    >
-                      <i className="fa-regular fa-eye text-slate-400"></i>
-                      Xem chi tiết
-                    </button>
-
                     {room.status === "available" ? (
-                      <button
-                        type="button"
-                        onClick={() => handleAction("createLease", room)}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-brand rounded-lg bg-brand text-[12px] font-medium text-white active:bg-brand-dark"
-                      >
-                        <i className="fa-solid fa-user-plus text-[11px]"></i>
-                        Thêm khách
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleAction("reserve", room)}
+                          className="flex-1 py-2 rounded-lg border border-amber-200 bg-amber-50 text-[12px] font-semibold text-amber-600 flex items-center justify-center gap-1.5 active:bg-amber-100"
+                        >
+                          <i className="fa-solid fa-hand-holding-dollar"></i> Nhận cọc
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAction("createLease", room)}
+                          className="flex-1 py-2 rounded-lg border border-brand bg-brand text-[12px] font-semibold text-white flex items-center justify-center gap-1.5 active:bg-brand-dark"
+                        >
+                          <i className="fa-solid fa-file-signature"></i> Tạo hợp đồng
+                        </button>
+                      </>
+                    ) : room.status === "reserved" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleAction("createLease", room)}
+                          className="flex-1 py-2 rounded-lg border border-brand bg-brand text-[12px] font-semibold text-white flex items-center justify-center gap-1.5 active:bg-brand-dark"
+                        >
+                          <i className="fa-solid fa-check-double"></i> Nhận phòng
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAction("cancelReserve", room)}
+                          className="flex-1 py-2 rounded-lg border border-red-200 bg-red-50 text-[12px] font-semibold text-red-600 flex items-center justify-center gap-1.5 active:bg-red-100"
+                        >
+                          <i className="fa-solid fa-ban"></i> Hủy cọc
+                        </button>
+                      </>
                     ) : room.status === "maintenance" ? (
                       <button
                         type="button"
                         onClick={() => handleAction("available", room)}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-orange-200 rounded-lg bg-orange-50 text-[12px] font-medium text-orange-600 active:bg-orange-100"
+                        className="flex-1 py-2 rounded-lg border border-orange-200 bg-orange-50 text-[12px] font-semibold text-orange-600 flex items-center justify-center gap-1.5 active:bg-orange-100"
                       >
-                        <i className="fa-solid fa-wrench text-[11px]"></i>
-                        Bảo trì
+                        <i className="fa-solid fa-wrench"></i> Bảo trì xong
                       </button>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleAction("invoice", room)}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-green-200 rounded-lg bg-green-50 text-[12px] font-medium text-brand active:bg-green-100"
-                      >
-                        <i className="fa-solid fa-file-invoice-dollar text-[11px]"></i>
-                        Hóa đơn
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleAction("view", room)}
+                          className="flex-1 py-2 rounded-lg border border-slate-200 bg-white text-[12px] font-medium text-slate-600 flex items-center justify-center gap-1.5 active:bg-slate-100"
+                        >
+                          <i className="fa-regular fa-eye text-slate-400"></i>
+                          Xem chi tiết
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAction("invoice", room)}
+                          className="flex-1 py-2 rounded-lg border border-green-200 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100"
+                        >
+                          <i className="fa-solid fa-file-invoice-dollar"></i> Lập hóa đơn
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -877,6 +1043,46 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
         room={rooms.find(r => r.id === activeActionRoomId)}
         onClose={() => setActiveActionRoomId(null)}
         onAction={handleAction}
+      />
+      <AddLeaseModal
+        open={isAddLeaseModalOpen}
+        onClose={() => {
+          setIsAddLeaseModalOpen(false);
+          setActionRoom(null);
+        }}
+        onSubmit={handleCreateLease}
+        isSubmitting={isCreatingLease}
+        properties={properties}
+        defaultRoom={actionRoom}
+      />
+
+      <AddReservationModal
+        open={isReserveModalOpen}
+        onClose={() => setIsReserveModalOpen(false)}
+        room={actionRoom}
+        onSubmit={handleCreateReservation}
+        isSubmitting={isSubmittingReservation}
+      />
+
+      <CancelReservationModal
+        open={isCancelReserveModalOpen}
+        onClose={() => setIsCancelReserveModalOpen(false)}
+        room={actionRoom}
+        onSubmit={handleCancelReservation}
+        isSubmitting={isSubmittingReservation}
+      />
+
+      <CreateInvoiceModal
+        open={isCreateInvoiceModalOpen}
+        onClose={() => {
+          setIsCreateInvoiceModalOpen(false);
+          setActionRoom(null);
+        }}
+        properties={properties}
+        defaultRoom={actionRoom}
+        onSuccess={() => {
+          fetchRooms();
+        }}
       />
     </div>
   );
