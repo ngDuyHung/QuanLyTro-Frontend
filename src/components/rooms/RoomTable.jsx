@@ -540,6 +540,7 @@ export default function RoomTable({
             >
               <option value="">Tất cả trạng thái</option>
               <option value="available">Phòng trống</option>
+              <option value ="reserved">Đang đặt cọc</option>
               <option value="occupied">Đang thuê</option>
               <option value="maintenance">Bảo trì</option>
             </select>
@@ -596,7 +597,7 @@ export default function RoomTable({
       </div>
 
       {/* Desktop table */}
-      <div className="hidden lg:block overflow-x-auto w-full">
+      <div className="hidden lg:block overflow-visible w-full">
         <table className="w-full text-left whitespace-nowrap">
           <thead className="bg-slate-50/50 text-[12px] text-slate-500 font-medium">
             <tr>
@@ -676,7 +677,8 @@ export default function RoomTable({
                 return (
                   <tr
                     key={room.id}
-                    className="border-b border-slate-50 hover:bg-slate-50 transition-colors"
+                    className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${activeActionRoomId === room.id ? "relative z-40" : "relative z-0"
+                      }`}
                   >
                     <td className="py-3 px-4">
                       <input

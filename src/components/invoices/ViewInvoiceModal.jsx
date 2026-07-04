@@ -132,7 +132,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                 <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
 
                     {/* CỘT TRÁI: Giao diện dữ liệu thô của hệ thống (System Dashboard View) */}
-                    <div className="w-full lg:w-[400px] overflow-y-auto p-4 sm:p-5 border-r border-slate-200 bg-white shrink-0 [&::-webkit-scrollbar]:hidden">
+                    <div className="w-full lg:w-[400px] max-h-[40vh] lg:max-h-none overflow-y-auto p-4 sm:p-5 border-b lg:border-b-0 lg:border-r border-slate-200 bg-white shrink-0 [&::-webkit-scrollbar]:hidden">
                         {isLoading || !invoice ? (
                             <div className="flex justify-center items-center h-48 text-brand">
                                 <i className="fa-solid fa-spinner animate-spin text-xl"></i>
