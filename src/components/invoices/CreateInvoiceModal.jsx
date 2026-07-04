@@ -19,6 +19,7 @@ export default function CreateInvoiceModal({
     onClose,
     properties = [],
     onSuccess,
+    defaultRoom = null
 }) {
     const [form, setForm] = useState(initialForm);
     const [leases, setLeases] = useState([]);
@@ -52,7 +53,11 @@ export default function CreateInvoiceModal({
 
     useEffect(() => {
         if (open) {
-            setForm(initialForm);
+            setForm({
+                ...initialForm,
+                // Nếu có defaultRoom truyền vào thì tự fill property_id
+                property_id: defaultRoom ? defaultRoom.property_id : "",
+            });
             setLeases([]);
             setRent({ price: 0 });
             setElectricity({ prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false });
@@ -61,7 +66,7 @@ export default function CreateInvoiceModal({
             setClientError("");
             setSubmitAction(null);
         }
-    }, [open]);
+    }, [open, defaultRoom]);
 
     useEffect(() => {
         if (!open || !form.property_id) {
@@ -76,8 +81,18 @@ export default function CreateInvoiceModal({
                     status: "active",
                     per_page: 100,
                 });
-                console.log("Leases fetched:", response.data.data);
-                setLeases(response.data.data || []);
+
+                const fetchedLeases = response.data.data || [];
+                setLeases(fetchedLeases);
+
+                // --- BỔ SUNG LOGIC AUTO-FILL ---
+                // Khi đã tải xong danh sách Hợp đồng, tìm Hợp đồng thuộc phòng defaultRoom
+                if (defaultRoom) {
+                    const matchedLease = fetchedLeases.find(l => String(l.room_id) === String(defaultRoom.id));
+                    if (matchedLease) {
+                        setForm(prev => ({ ...prev, lease_id: matchedLease.id }));
+                    }
+                }
             } catch (error) {
                 setClientError("Lỗi tải danh sách phòng.");
             } finally {
@@ -85,7 +100,7 @@ export default function CreateInvoiceModal({
             }
         };
         fetchLeases();
-    }, [open, form.property_id]);
+    }, [open, form.property_id, defaultRoom]);
 
     useEffect(() => {
         if (!open || !form.lease_id || !form.period_to) return;
@@ -458,7 +473,7 @@ export default function CreateInvoiceModal({
                                         <div className="flex justify-between items-center lg:w-[120px] shrink-0 border-b border-slate-100 lg:border-0 pb-1.5 lg:pb-0">
                                             <div className="font-bold text-[14px] lg:text-[13px] text-slate-700 flex items-center">
                                                 <i className={`fa-solid ${item.icon} fa-fw text-${item.type === 'electricity' ? 'amber' : 'blue'}-500 mr-2 lg:mr-1 text-[15px] lg:text-[14px]`}></i>
-                                                {item.label}
+                                                {item.label}/{item.unit}
                                             </div>
                                             <div className="lg:hidden text-[14px] font-black text-brand">
                                                 {amount.toLocaleString()} đ
@@ -630,8 +645,8 @@ export default function CreateInvoiceModal({
                                                         onChange={(e) => handleUpdateDynamicItem(item.id, 'charge_type', e.target.value)}
                                                         className="w-[160px] sm:w-full p-2 bg-white border border-slate-200 rounded-lg text-[13px] outline-none focus:border-brand font-semibold text-slate-700 shadow-sm sm:shadow-none"
                                                     >
-                                                        <option value="garbage">Tiền rác</option>
-                                                        <option value="internet">Internet/Wifi</option>
+                                                        <option value="garbage">Tiền rác/tháng</option>
+                                                        <option value="internet">Internet/tháng</option>
                                                         <option value="discount">Giảm trừ</option>
                                                         <option value="other">Khác</option>
                                                     </select>

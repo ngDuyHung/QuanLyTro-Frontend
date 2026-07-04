@@ -242,7 +242,7 @@ export default function UtilitiesTable({
                       
                       <td className="py-3 px-4">
                         <span className={`px-2.5 py-1 border text-[11px] font-semibold rounded-md flex items-center gap-1.5 w-fit ${typeConfig.className}`}>
-                          <i className={`fa-solid ${typeConfig.icon}`}></i> {typeConfig.label}
+                          <i className={`fa-solid ${typeConfig.icon}`}></i> {typeConfig.label}/{typeConfig.unit}
                         </span>
                       </td>
 

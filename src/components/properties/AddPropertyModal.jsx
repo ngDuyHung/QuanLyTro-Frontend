@@ -429,7 +429,7 @@ export default function AddPropertyModal({
                         <div className="col-span-12 sm:col-span-3 flex items-center gap-2 bg-slate-50 sm:bg-transparent p-2 sm:p-0 rounded-lg">
                           <div className="w-2 h-2 rounded-full bg-brand shrink-0"></div>
                           <span className="text-[13px] font-bold text-slate-800">
-                            {service.service_type_label}
+                            {service.service_type_label}/{service.service_type === "electricity" ? "kWh" : service.service_type === "water" ? "m³" : service.service_type === "garbage" ? "tháng" : service.service_type === "internet" ? "tháng" : "đơn vị"}
                           </span>
                         </div>
 

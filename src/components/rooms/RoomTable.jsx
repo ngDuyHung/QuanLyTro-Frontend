@@ -92,7 +92,7 @@ function RoomActionsMenu({ room, onAction }) {
     },
     {
       key: "invoice",
-      label: "Xem hóa đơn",
+      label: "Lập hóa đơn",
       icon: "fa-solid fa-file-invoice-dollar",
       className: "text-slate-700",
     },
@@ -315,7 +315,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
               onClick={() => onAction?.("invoice", room)}
               className="flex-1 py-2 rounded-lg border border-green-200 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100"
             >
-              <i className="fa-solid fa-file-invoice-dollar"></i> Hóa đơn
+              <i className="fa-solid fa-file-invoice-dollar"></i>Lập hóa đơn
             </button>
           </>
         )}
@@ -705,7 +705,7 @@ export default function RoomTable({
                         {/* TRẠNG THÁI ĐANG THUÊ */}
                         {room.status === "occupied" && (
                           <button onClick={() => handleAction("invoice", room)} className="flex items-center px-3 py-1.5 bg-white text-blue-600 border border-blue-200 rounded-lg text-[12px] font-semibold hover:bg-blue-50 transition-all shadow-sm whitespace-nowrap">
-                            <i className="fa-solid fa-file-invoice-dollar mr-1.5"></i> Hóa đơn
+                            <i className="fa-solid fa-file-invoice-dollar mr-1.5"></i>Lập hóa đơn
                           </button>
                         )}
                         {/* NÚT MENU 3 CHẤM */}

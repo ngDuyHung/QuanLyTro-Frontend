@@ -15,6 +15,7 @@ import leasesService from "@/services/leasesService";
 import AddReservationModal from "@/components/rooms/AddReservationModal";
 import CancelReservationModal from "@/components/rooms/CancelReservationModal";
 import reservationService from "@/services/reservationService";
+import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
 const PER_PAGE = 10;
 
 const emptyRoomStats = {
@@ -71,6 +72,8 @@ export default function RoomsPage() {
   // Quản lý Lập hợp đồng
   const [isAddLeaseModalOpen, setIsAddLeaseModalOpen] = useState(false);
   const [isCreatingLease, setIsCreatingLease] = useState(false);
+
+  const [isCreateInvoiceModalOpen, setIsCreateInvoiceModalOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -343,6 +346,11 @@ export default function RoomsPage() {
       : "font-medium text-slate-500 hover:text-slate-800 border-transparent"
     }`;
 
+
+  const handleOpenCreateInvoice = (room) => {
+    setActionRoom(room); // Dùng chung state actionRoom đang có sẵn
+    setIsCreateInvoiceModalOpen(true);
+  };
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar p-4 pt-0 md:p-6 lg:p-6 lg:pt-4 flex flex-col h-full bg-slate-50">
       {/* Header */}
@@ -416,6 +424,7 @@ export default function RoomsPage() {
           onCreateLease={handleOpenCreateLease} // Truyền hàm Lên HĐ xuống
           onReserve={handleOpenReserve}         // Truyền hàm Cọc xuống
           onCancelReserve={handleOpenCancelReserve} // Truyền hàm Hủy cọc xuống
+          onViewInvoices={handleOpenCreateInvoice}
         />
       </div>
 
@@ -476,6 +485,19 @@ export default function RoomsPage() {
         room={actionRoom}
         onSubmit={handleCancelReservation}
         isSubmitting={isSubmittingReservation}
+      />
+      <CreateInvoiceModal
+        open={isCreateInvoiceModalOpen}
+        onClose={() => {
+          setIsCreateInvoiceModalOpen(false);
+          setActionRoom(null);
+        }}
+        properties={properties}
+        defaultRoom={actionRoom} // Truyền phòng đang chọn vào đây
+        onSuccess={() => {
+          // Tùy chọn: Gọi fetchRooms() nếu muốn cập nhật lại thống kê trên trang sau khi tạo
+          // fetchRooms();
+        }}
       />
     </div>
   );
