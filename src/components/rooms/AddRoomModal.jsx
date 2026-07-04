@@ -7,7 +7,7 @@ const initialForm = {
   floor_number: "",
   area: "",
   current_price: "",
-  max_occupants: "",
+  max_occupants: "7",
   status: "available",
   billing_day: "",
   allow_shared: true,

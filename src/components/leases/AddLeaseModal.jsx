@@ -96,6 +96,9 @@ export default function AddLeaseModal({
           room_price: formatMoneyInput(defaultRoom.current_price),
           deposit: formatMoneyInput(defaultRoom.current_price),
           billing_day: defaultRoom.billing_day || "1",
+          start_date: defaultRoom.pending_reservation?.expected_move_in_date || new Date().toISOString().slice(0, 10),
+          full_name: defaultRoom.pending_reservation?.tenant_name || "",
+          phone: defaultRoom.pending_reservation?.tenant_phone || "",
         }));
       }
     } else {
@@ -543,7 +546,7 @@ export default function AddLeaseModal({
 
                   <div>
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Tiền cọc
+                      Tiền thế chân
                     </label>
                     <input
                       type="text"
@@ -573,7 +576,7 @@ export default function AddLeaseModal({
                   <div className="bg-blue-50 border border-blue-100 text-blue-700 px-4 py-3 rounded-lg text-[13px] flex items-start gap-3">
                     <i className="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
                     <p>
-                      Chỉ hiển thị phòng trống. Sau khi tạo hợp đồng, phòng sẽ chuyển sang trạng thái đang thuê.
+                      Chú ý điền đúng số lượng người đang ở để dựa vào đây tính hóa đơn và các khoản phí khác.
                     </p>
                   </div>
                 </div>

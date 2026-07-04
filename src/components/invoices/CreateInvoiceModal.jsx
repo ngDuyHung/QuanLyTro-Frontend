@@ -100,7 +100,7 @@ export default function CreateInvoiceModal({
             }
         };
         fetchLeases();
-    }, [open, form.property_id, defaultRoom]);
+    }, [open, form.property_id]);
 
     useEffect(() => {
         if (!open || !form.lease_id || !form.period_to) return;
@@ -274,15 +274,40 @@ export default function CreateInvoiceModal({
                 processUtility(water, 'water')
             ]);
 
+            // Tính toán số lượng sử dụng
+            const elecUsage = Number(electricity.current) - Number(electricity.prev);
+            const waterUsage = Number(water.current) - Number(water.prev);
+
             // Bước 2: Tạo hóa đơn
             const items = [];
             items.push({ charge_type: "room", description: "Tiền phòng", unit: "Tháng", quantity: 1, unit_price_snapshot: rent.price });
 
-            // THÊM TRƯỜNG free_quantity_snapshot Ở ĐÂY
-            if (elecUsage > 0) items.push({ charge_type: "electricity", description: "Tiền điện", unit: "kWh", quantity: elecUsage, unit_price_snapshot: electricity.price, free_quantity_snapshot: electricity.free });
-            if (waterUsage > 0) items.push({ charge_type: "water", description: "Tiền nước", unit: "m³", quantity: waterUsage, unit_price_snapshot: water.price, free_quantity_snapshot: water.free });
+            // Sửa thành >= 0 và nâng cấp phần description
+            if (elecUsage >= 0 && electricity.current !== "") {
+                items.push({
+                    charge_type: "electricity",
+                    description: `Tiền điện ( ${electricity.prev} - ${electricity.current})`,
+                    unit: "kWh",
+                    quantity: elecUsage,
+                    unit_price_snapshot: electricity.price,
+                    free_quantity_snapshot: electricity.free
+                });
+            }
+
+            if (waterUsage >= 0 && water.current !== "") {
+                items.push({
+                    charge_type: "water",
+                    description: `Tiền nước (${water.prev} - ${water.current})`,
+                    unit: "m³",
+                    quantity: waterUsage,
+                    unit_price_snapshot: water.price,
+                    free_quantity_snapshot: water.free
+                });
+            }
+
+            // -- LẤY CÁC DỊCH VỤ KHÁC --
             dynamicItems.forEach(item => {
-                if (item.description && item.unit_price_snapshot > 0) {
+                if (item.description && item.unit_price_snapshot >= 0) { //  >= 0 để lỡ có dịch vụ giá 0đ vẫn hiện
                     items.push({
                         charge_type: item.charge_type,
                         description: item.description,
@@ -648,6 +673,7 @@ export default function CreateInvoiceModal({
                                                         <option value="garbage">Tiền rác/tháng</option>
                                                         <option value="internet">Internet/tháng</option>
                                                         <option value="discount">Giảm trừ</option>
+                                                        <option value ="deposit">Cọc/thế chân</option>
                                                         <option value="other">Khác</option>
                                                     </select>
 
@@ -661,8 +687,8 @@ export default function CreateInvoiceModal({
                                                     </button>
                                                 </div>
 
-                                                {/* 2. Ô nhập mô tả: Luôn hiện trên PC. Trên mobile: chỉ ẩn đi đối với Rác/Internet/Cọc cho gọn gàng */}
-                                                <div className={`w-full sm:flex-1 flex-col gap-1 ${['garbage', 'internet', 'deposit'].includes(item.charge_type) ? 'hidden sm:flex' : 'flex'
+                                                {/* 2. Ô nhập mô tả: Luôn hiện trên PC. Trên mobile: chỉ ẩn đi đối với Rác/Internet cho gọn gàng */}
+                                                <div className={`w-full sm:flex-1 flex-col gap-1 ${['garbage', 'internet'].includes(item.charge_type) ? 'hidden sm:flex' : 'flex'
                                                     }`}>
                                                     <span className="text-[11px] font-bold text-slate-400 uppercase sm:hidden">Ghi chú cụ thể</span>
                                                     <input
