@@ -226,7 +226,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
 
   // Quản lý Hóa đơn
   const [isCreateInvoiceModalOpen, setIsCreateInvoiceModalOpen] = useState(false);
-
+  const [sort, setSort] = useState("created_at_desc");
   const propertyId = property?.id || null;
 
   const fetchRooms = useCallback(async () => {
@@ -242,6 +242,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
       const response = await roomService.getByProperty(propertyId, {
         page,
         per_page: PER_PAGE,
+        sort: sort,
       });
       console.log("response data", response.data.data);
 
@@ -255,7 +256,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
     } finally {
       setIsLoadingRooms(false);
     }
-  }, [propertyId, page]);
+  }, [propertyId, page, sort]);
 
   useEffect(() => {
     setPage(1);
@@ -614,19 +615,30 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() =>
-              toast.info("Chức năng sắp xếp phòng sẽ làm ở bước sau.", {
-                autoClose: 1200,
-              })
-            }
-            className="hidden lg:flex border border-green-200 text-brand px-2.5 py-1.5 rounded-lg text-[13px] font-medium hover:bg-brand-50 transition-colors items-center gap-1.5"
-          >
+          <div className="relative hidden lg:flex border border-green-200 text-brand px-2.5 py-1.5 rounded-lg text-[13px] font-medium hover:bg-brand-50 transition-colors items-center gap-1.5 cursor-pointer">
             <i className="fa-solid fa-arrow-down-a-z"></i>
-            <span>Sắp xếp phòng</span>
-          </button>
+            <span>
+              {sort === "created_at_desc" && "Sắp xếp: Mới nhất"}
+              {sort === "created_at_asc" && "Sắp xếp: Cũ nhất"}
+              {sort === "price_asc" && "Sắp xếp: Giá thấp - cao"}
+              {sort === "price_desc" && "Sắp xếp: Giá cao - thấp"}
+            </span>
 
+            {/* Thẻ select ẩn danh, phủ kín và đè lên trên nút cũ */}
+            <select
+              value={sort}
+              onChange={(e) => {
+                setSort(e.target.value);
+                setPage(1); // Reset về trang 1 khi đổi bộ lọc
+              }}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            >
+              <option value="created_at_desc">Mới nhất</option>
+              <option value="created_at_asc">Cũ nhất</option>
+              <option value="price_asc">Giá: Thấp đến cao</option>
+              <option value="price_desc">Giá: Cao đến thấp</option>
+            </select>
+          </div>
           <button
             type="button"
             onClick={() => setIsAddRoomOpen(true)}
