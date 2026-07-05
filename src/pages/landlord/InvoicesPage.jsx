@@ -10,6 +10,7 @@ import CancelInvoiceModal from "@/components/invoices/CancelInvoiceModal";
 import DeleteInvoiceModal from "@/components/invoices/DeleteInvoiceModal";
 import ViewInvoiceModal from "@/components/invoices/ViewInvoiceModal";
 import InvoiceTemplateModal from "@/components/invoices/InvoiceTemplateModal";
+import { useSearchParams } from "react-router-dom";
 export default function InvoicesPage() {
     // --- Quản lý dữ liệu hệ thống ---
     const [invoices, setInvoices] = useState([]);
@@ -18,13 +19,17 @@ export default function InvoicesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [pagination, setPagination] = useState(null);
 
+    // lấy các tham số từ URL để lọc dữ liệu (nếu có)
+    const [searchParams] = useSearchParams();
+
     // --- Trạng thái bộ lọc (Filters) ---
     const [page, setPage] = useState(1);
-    const [propertyId, setPropertyId] = useState("");
-    const [roomId, setRoomId] = useState("");
+    const [propertyId, setPropertyId] = useState(searchParams.get("property_id") || "");
+    const [roomId, setRoomId] = useState(searchParams.get("room_id") || "");
     const [status, setStatus] = useState("");
     const [invoiceType, setInvoiceType] = useState("");
     const [month, setMonth] = useState(""); // Định dạng: YYYY-MM
+
 
     // --- Trạng thái kiểm soát các Modal chức năng ---
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -36,9 +41,8 @@ export default function InvoicesPage() {
 
     // Lưu thông tin hóa đơn đang được chọn để Thao tác (Xem/Xóa/Hủy/Thu tiền)
     const [selectedInvoice, setSelectedInvoice] = useState(null);
-
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-    
+
     // 1. Tải danh sách Khu nhà phục vụ bộ lọc đầu tiên
     const fetchProperties = useCallback(async () => {
         try {
@@ -48,6 +52,12 @@ export default function InvoicesPage() {
             toast.error("Không thể tải danh sách khu nhà.");
         }
     }, []);
+
+    // 1. Kiểm tra URL có truyền sẵn property_id hoặc room_id để tự động lọc không
+    useEffect(() => {
+        setPropertyId(searchParams.get("property_id") || "");
+        setRoomId(searchParams.get("room_id") || "");
+    }, [searchParams]);
 
     // 2. Tải danh sách Phòng dựa trên Khu nhà được chọn để lọc sâu
     useEffect(() => {

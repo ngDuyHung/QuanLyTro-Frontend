@@ -670,36 +670,40 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
               const statusConfig = getStatusConfig(room.status);
               const tenantName = getTenantName(room);
               const tenantPhone = getTenantPhone(room);
-              const coverImage = getRoomCoverImage(room);
+              
+              // Xác định trạng thái nợ từ API (Sử dụng dữ liệu mới thêm ở Backend)
+              const hasDebt = room.has_unpaid_invoice && room.unpaid_amount > 0;
 
               return (
                 <div
                   key={room.id}
-                  className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-visible"
+                  className={`bg-white border rounded-xl shadow-sm overflow-visible transition-colors ${
+                    hasDebt ? "border-red-300 shadow-red-50" : "border-slate-200"
+                  }`}
                 >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                  {/* Header */}
+                  <div className={`flex items-start justify-between gap-3 px-4 py-3 border-b ${
+                    hasDebt ? "border-red-100 bg-red-50/40 rounded-t-xl" : "border-slate-100"
+                  }`}>
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${statusConfig.iconClass}`}
                       >
-                        <i
-                          className={`fa-solid ${statusConfig.icon} text-sm`}
-                        ></i>
+                        <i className={`fa-solid ${statusConfig.icon} text-[14px]`}></i>
                       </div>
 
                       <div className="min-w-0">
                         <p className="text-[14px] font-bold text-slate-800 leading-none truncate">
                           {room.name}
                         </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          {room.area
-                            ? `${room.area} m²`
-                            : "Chưa nhập diện tích"}
+                        {/* Ẩn diện tích, chỉ hiện thông báo nhỏ (nếu cần) hoặc để trống */}
+                        <p className="text-[11px] text-slate-500 mt-1 truncate">
+                          {room.property?.name || "Khu nhà"}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 relative">
+                    <div className="flex items-center gap-2 relative shrink-0">
                       <span
                         className={`px-2.5 py-1 text-[11px] font-semibold rounded-full ${statusConfig.badgeClass}`}
                       >
@@ -713,49 +717,76 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                             currentId === room.id ? null : room.id,
                           )
                         }
-                        className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 bg-white"
+                        className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 bg-white"
                       >
                         <i className="fa-solid fa-ellipsis-vertical text-[12px]"></i>
                       </button>
-
-
                     </div>
                   </div>
 
-                  <div className="px-4 py-3 flex items-center justify-between gap-3">
-                    {tenantName ? (
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                          <i className="fa-solid fa-user text-slate-400 text-[11px]"></i>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[13px] font-semibold text-slate-800 leading-none truncate">
-                            {tenantName}
-                          </p>
-                          <p className="text-[11px] text-slate-500 mt-0.5">
-                            {tenantPhone || "Chưa có số điện thoại"}
-                          </p>
-                        </div>
+                  {/* Main info (Chia 2 cột: Giá phòng & Thanh toán) */}
+                  <div className="px-4 py-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Cột 1: Giá phòng */}
+                      <div>
+                        <p className="text-[11px] text-slate-500 mb-1">Giá phòng</p>
+                        <p className="text-[15px] font-bold text-brand leading-tight truncate">
+                          {formatCurrency(room.current_price)}
+                        </p>
                       </div>
-                    ) : (
-                      <p className="text-[13px] text-slate-400 italic">
-                        {room.status === "maintenance"
-                          ? "Đang bảo trì"
-                          : "Chưa có khách thuê"}
-                      </p>
-                    )}
 
-                    <div className="text-right shrink-0">
-                      <p className="text-[15px] font-bold text-brand leading-none">
-                        {formatCurrency(room.current_price)}
-                      </p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        /tháng
-                      </p>
+                      {/* Cột 2: Trạng thái thanh toán */}
+                      <div>
+                        <p className="text-[11px] text-slate-500 mb-1">Thanh toán</p>
+                        {hasDebt ? (
+                          <p className="text-[14px] font-bold text-red-600 leading-tight flex items-center gap-1.5">
+                            <i className="fa-solid fa-circle-exclamation text-[12px]"></i>
+                            Nợ {formatCurrency(room.unpaid_amount)}
+                          </p>
+                        ) : room.status === "occupied" ? (
+                          <p className="text-[13px] font-semibold text-emerald-600 leading-tight flex items-center gap-1">
+                            <i className="fa-solid fa-circle-check text-[12px]"></i> Đã thu đủ
+                          </p>
+                        ) : (
+                          <p className="text-[13px] font-semibold text-slate-400 leading-tight">
+                            —
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Thông tin người thuê */}
+                    <div className="mt-3 pt-3 border-t border-slate-100">
+                      {tenantName ? (
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                            <i className="fa-solid fa-user text-slate-400 text-[11px]"></i>
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[13px] font-semibold text-slate-800 truncate">
+                              {tenantName}
+                            </p>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              {tenantPhone || "Chưa có số điện thoại"}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-[13px] text-slate-400 italic">
+                          <i className="fa-regular fa-user"></i>
+                          <span>
+                            {room.status === "maintenance"
+                              ? "Phòng đang bảo trì"
+                              : "Chưa có khách thuê"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
+
                   {/* Footer actions Mobile */}
-                  <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2">
+                  <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2 rounded-b-xl">
                     {room.status === "available" ? (
                       <>
                         <button

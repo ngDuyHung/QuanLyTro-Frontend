@@ -16,6 +16,7 @@ import AddReservationModal from "@/components/rooms/AddReservationModal";
 import CancelReservationModal from "@/components/rooms/CancelReservationModal";
 import reservationService from "@/services/reservationService";
 import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
+import importService from "@/services/importService";
 const PER_PAGE = 10;
 
 const emptyRoomStats = {
@@ -74,6 +75,9 @@ export default function RoomsPage() {
   const [isCreatingLease, setIsCreatingLease] = useState(false);
 
   const [isCreateInvoiceModalOpen, setIsCreateInvoiceModalOpen] = useState(false);
+
+  // state for exporting excel
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -271,10 +275,25 @@ export default function RoomsPage() {
   };
 
 
-  const handleExportExcel = () => {
-    toast.info("Chức năng xuất Excel sẽ làm ở bước sau.", {
-      autoClose: 1200,
-    });
+  const handleExportExcel = async () => {
+    try {
+      setIsExportingExcel(true);
+      const response = await importService.downloadTemplate();
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Mau_Nhap_Lieu_Khu_Nha.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast.success("Tải file mẫu thành công!");
+    } catch (error) {
+      toast.error("Không thể tải file mẫu. Vui lòng thử lại.");
+    } finally {
+      setIsExportingExcel(false);
+    }
   };
 
   const handleCreateReservation = async (data) => {
@@ -369,12 +388,22 @@ export default function RoomsPage() {
           <button
             type="button"
             onClick={handleExportExcel}
-            className="bg-white border border-slate-200 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0"
+            disabled={isExportingExcel} // chặn click khi đang export
+            className={`bg-white border border-slate-200 px-3 sm:px-3.5 py-2 rounded-lg 
+              text-[12px] sm:text-[13px] font-medium text-slate-600 
+              flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0
+              transition-opacity duration-300
+              ${isExportingExcel ? "opacity-50 pointer-events-none" : "hover:bg-slate-50"}`}
           >
-            <i className="fa-solid fa-download text-slate-400"></i>
+            {isExportingExcel ? (
+              <i className="fas fa-spinner fa-spin"></i>
+            ) : (
+              <i className="fa-solid fa-download text-slate-400"></i>
+            )}
             <span className="hidden sm:inline">Xuất Excel</span>
             <span className="sm:hidden">Xuất</span>
           </button>
+
 
           <button
             type="button"

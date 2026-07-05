@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import useAuthStore from "@/stores/authStore"; // Kiểm tra lại đường dẫn này cho đúng với dự án của bạn
 import { toast } from "react-toastify";
@@ -10,6 +10,18 @@ export default function LandlordLayout() {
 
   // 1. STATE ĐIỀU KHIỂN SIDEBAR TRÊN MOBILE
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // --- THÊM 2 ĐOẠN CODE NÀY ---
+  // Khởi tạo một Ref để trỏ vào khung cuộn nội dung
+  const scrollContainerRef = useRef(null);
+
+  // Lắng nghe sự thay đổi của URL, hễ đổi trang là cuộn lên đầu
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
+  // -----------------------------
 
   const handleLogout = () => {
     clearAuth();
@@ -36,7 +48,7 @@ export default function LandlordLayout() {
       {/* 2. LỚP PHỦ OVERLAY (Chỉ hiện trên Mobile khi isSidebarOpen == true) */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
+          className="fixed inset-0 bg-black/40 z-50 lg:hidden"
           onClick={closeSidebar}
         ></div>
       )}
@@ -44,7 +56,7 @@ export default function LandlordLayout() {
       {/* ================= SIDEBAR ================= */}
       {/* 3. ĐIỀU CHỈNH CLASS TRANSLATE DỰA VÀO STATE */}
       <aside
-        className={`fixed lg:relative w-[260px] bg-white border-r border-slate-200 flex flex-col h-full z-30 shrink-0 transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        className={`fixed lg:relative w-[260px] bg-white border-r border-slate-200 flex flex-col h-full z-60 shrink-0 transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
       >
         {/* LOGO & TITLE */}
@@ -263,7 +275,8 @@ export default function LandlordLayout() {
         </header>
 
         {/* VÙNG NỘI DUNG CUỘN */}
-        <div className="flex-1 overflow-y-auto flex flex-col pb-[65px] lg:pb-0">
+        <div ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto flex flex-col pb-[65px] lg:pb-0">
           <div className="flex-1 flex flex-col">
             <Outlet />
           </div>

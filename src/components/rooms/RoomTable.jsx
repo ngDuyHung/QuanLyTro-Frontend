@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 const formatCurrency = (value) => {
   const number = Number(value || 0);
   return `${new Intl.NumberFormat("vi-VN").format(number)}đ`;
@@ -141,14 +141,20 @@ function RoomActionsMenu({ room, onAction }) {
 }
 
 function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
+  const navigate = useNavigate();
   const statusConfig = getStatusConfig(room.status);
   const tenantName = getTenantName(room);
   const tenantPhone = getTenantPhone(room);
 
+  // Xác định trạng thái nợ từ API
+  const hasDebt = room.has_unpaid_invoice && room.unpaid_amount > 0;
+
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-visible">
+    <div className={`bg-white border rounded-xl shadow-sm overflow-visible transition-colors ${hasDebt ? "border-red-300 shadow-red-50" : "border-slate-200"
+      }`}>
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 px-3.5 py-3 border-b border-slate-100">
+      <div className={`flex items-start justify-between gap-3 px-3.5 py-3 border-b ${hasDebt ? "border-red-100 bg-red-50/40 rounded-t-xl" : "border-slate-100"
+        }`}>
         <div className="flex items-center gap-2.5 min-w-0">
           <div
             className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${statusConfig.iconClass}`}
@@ -188,31 +194,46 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
         </div>
       </div>
 
-      {/* Main info */}
+      {/* Main info (Chia 2 cột: Giá phòng & Thanh toán) */}
       <div className="px-3.5 py-3">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-3">
+          {/* Cột 1: Giá phòng */}
           <div>
-            <p className="text-[10px] text-slate-400 mb-1">Giá phòng</p>
-            <p className="text-[14px] font-bold text-brand leading-tight truncate">
+            <p className="text-[11px] text-slate-500 mb-1">Giá phòng</p>
+            <p className="text-[15px] font-bold text-brand leading-tight truncate">
               {formatCurrency(room.current_price)}
             </p>
           </div>
 
+          {/* Cột 2: Trạng thái thanh toán */}
           <div>
-            <p className="text-[10px] text-slate-400 mb-1">Diện tích</p>
-            <p className="text-[13px] font-semibold text-slate-700 leading-tight">
-              {room.area ? `${room.area} m²` : "—"}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-[10px] text-slate-400 mb-1">Thanh toán</p>
-            <p className="text-[13px] font-semibold text-slate-400 leading-tight">
-              —
-            </p>
+            <p className="text-[11px] text-slate-500 mb-1">Thanh toán</p>
+            {hasDebt ? (
+              /* --- THIẾT KẾ NÚT BẤM TRÊN MOBILE CỰC MƯỢT --- */
+              <div
+                onClick={(e) => {
+                  e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+                  navigate(`/landlord/invoices?property_id=${room.property_id}&room_id=${room.id}`);
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-bold bg-red-50 text-red-600 border border-red-200 active:bg-red-100 active:scale-[0.96] transition-all cursor-pointer shadow-sm"
+              >
+                <i className="fa-solid fa-circle-exclamation text-[12px]"></i>
+                <span>Nợ {formatCurrency(room.unpaid_amount)}</span>
+              </div>
+            ) : room.status === "occupied" ? (
+              <div className="flex items-center gap-1.5 text-emerald-600 font-semibold text-[13px] pt-0.5">
+                <i className="fa-solid fa-circle-check text-[14px]"></i>
+                <span>Đã thu đủ</span>
+              </div>
+            ) : (
+              <p className="text-[13px] font-semibold text-slate-400 leading-tight pt-0.5">
+                —
+              </p>
+            )}
           </div>
         </div>
 
+        {/* Thông tin người thuê */}
         <div className="mt-3 pt-3 border-t border-slate-100">
           {tenantName ? (
             <div className="flex items-center gap-2.5 min-w-0">
@@ -220,13 +241,15 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
                 <i className="fa-solid fa-user text-slate-400 text-[11px]"></i>
               </div>
 
-              <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-slate-800 truncate">
-                  {tenantName}
-                </p>
-                <p className="text-[11px] text-slate-500">
-                  {tenantPhone || "Chưa có số điện thoại"}
-                </p>
+              <div className="min-w-0 flex-1 flex justify-between items-center">
+                <div>
+                  <p className="text-[13px] font-semibold text-slate-800 truncate">
+                    {tenantName}
+                  </p>
+                  <p className="text-[11px] text-slate-500">
+                    {tenantPhone || "Chưa có số điện thoại"}
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
@@ -243,7 +266,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
       </div>
 
       {/* Footer actions Mobile */}
-      <div className="px-3 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2">
+      <div className="px-3 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2 rounded-b-xl">
         {room.status === "available" ? (
           <>
             <button
@@ -301,7 +324,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
               onClick={() => onAction?.("invoice", room)}
               className="flex-1 py-2 rounded-lg border border-green-200 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100"
             >
-              <i className="fa-solid fa-file-invoice-dollar"></i>Lập hóa đơn
+              <i className="fa-solid fa-file-invoice-dollar"></i> Lập hóa đơn
             </button>
           </>
         )}
@@ -413,7 +436,6 @@ function MobileRoomActionSheet({ room, open, onClose, onAction }) {
     </div>
   );
 }
-
 export default function RoomTable({
   rooms = [],
   properties = [],
@@ -441,88 +463,141 @@ export default function RoomTable({
   onCancelReserve,
 }) {
   const [activeActionRoomId, setActiveActionRoomId] = useState(null);
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false); // STATE MỚI CHO BỘ LỌC
+  const navigate = useNavigate();
 
-  // Kiểm tra xem user có đang dùng bất kỳ bộ lọc nào không
+  // Đếm số lượng bộ lọc đang được áp dụng để hiển thị Badge đỏ
+  const activeFilterCount =
+    (propertyId ? 1 : 0) +
+    (status ? 1 : 0) +
+    (sort !== "created_at_desc" ? 1 : 0);
+
   const isFilterActive =
-    searchText !== "" ||
-    status !== "" ||
-    propertyId !== "" ||
-    sort !== "created_at_desc";
+    searchText !== "" || activeFilterCount > 0;
+
+  // HÀM TẠO TIÊU ĐỀ CỘT CÓ THỂ CLICK ĐỂ SẮP XẾP
+  const renderSortableHeader = (label, sortAscKey, sortDescKey, widthClass = "") => {
+    const isActive = sort === sortAscKey || sort === sortDescKey;
+    const isAsc = sort === sortAscKey;
+    const nextSort = isAsc ? sortDescKey : sortAscKey;
+
+    return (
+      <th
+        className={`py-3 px-4 border-b border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors group select-none ${widthClass}`}
+        onClick={() => onSortChange?.(nextSort)}
+        title={`Nhấn để sắp xếp theo ${label}`}
+      >
+        <div className="flex items-center gap-1.5 w-max">
+          <span>{label}</span>
+          <i
+            className={`fa-solid text-[12px] ${isActive
+              ? isAsc
+                ? "fa-sort-up text-brand mt-1"
+                : "fa-sort-down text-brand mb-1"
+              : "fa-sort text-slate-300 group-hover:text-slate-400"
+              }`}
+          ></i>
+        </div>
+      </th>
+    );
+  };
 
   const handleAction = (actionKey, room) => {
     setActiveActionRoomId(null);
-
     switch (actionKey) {
-      case "view":
-        onViewRoom?.(room);
-        return;
-
+      case "view": onViewRoom?.(room); return;
       case "edit":
-      case "images":
-        onEditRoom?.(room);
-        return;
-
-      case "delete":
-        onDeleteRoom?.(room);
-        return;
-
-      case "createLease":
-        onCreateLease?.(room);
-        return;
-      case "reserve":
-        onReserve?.(room);
-        return;
-      case "cancelReserve":
-        onCancelReserve?.(room);
-        return;
-      case "invoice":
-        onViewInvoices?.(room);
-        return;
-
-      case "meter":
-        onRecordMeter?.(room);
-        return;
-
-      case "maintenance":
-        onUpdateStatus?.(room, "maintenance");
-        return;
-
-      case "available":
-        onUpdateStatus?.(room, "available");
-        return;
-
-      default:
-        return;
+      case "images": onEditRoom?.(room); return;
+      case "delete": onDeleteRoom?.(room); return;
+      case "createLease": onCreateLease?.(room); return;
+      case "reserve": onReserve?.(room); return;
+      case "cancelReserve": onCancelReserve?.(room); return;
+      case "invoice": onViewInvoices?.(room); return;
+      case "meter": onRecordMeter?.(room); return;
+      case "maintenance": onUpdateStatus?.(room, "maintenance"); return;
+      case "available": onUpdateStatus?.(room, "available"); return;
+      default: return;
     }
   };
 
-  const canGoPrev = Boolean(pagination && page > 1);
-  const canGoNext = Boolean(pagination && page < pagination.last_page);
+  // --- GIAO DIỆN NỘI DUNG CỦA BỘ LỌC (Dùng chung cho cả Desktop & Mobile) ---
+  const FilterContent = (
+    <>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[12px] font-semibold text-slate-700">Khu nhà</label>
+        <select
+          value={propertyId}
+          onChange={(event) => onPropertyIdChange?.(event.target.value)}
+          className="w-full border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 text-slate-600 outline-none focus:border-brand bg-slate-50 focus:bg-white transition-colors"
+        >
+          <option value="">Tất cả khu nhà</option>
+          {properties.map((property) => (
+            <option key={property.id} value={property.id}>
+              {property.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[12px] font-semibold text-slate-700">Trạng thái phòng</label>
+        <select
+          value={status}
+          onChange={(event) => onStatusChange?.(event.target.value)}
+          className="w-full border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 text-slate-600 outline-none focus:border-brand bg-slate-50 focus:bg-white transition-colors"
+        >
+          <option value="">Tất cả trạng thái</option>
+          <option value="available">Phòng trống</option>
+          <option value="reserved">Đang đặt cọc</option>
+          <option value="occupied">Đang thuê</option>
+          <option value="maintenance">Bảo trì</option>
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[12px] font-semibold text-slate-700">Sắp xếp theo</label>
+        <select
+          value={sort}
+          onChange={(event) => onSortChange?.(event.target.value)}
+          className="w-full border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 text-slate-600 outline-none focus:border-brand bg-slate-50 focus:bg-white transition-colors"
+        >
+          <option value="created_at_desc">Mới nhất</option>
+          <option value="created_at_asc">Cũ nhất</option>
+          <option value="price_asc">Giá phòng: Thấp đến cao</option>
+          <option value="price_desc">Giá phòng: Cao đến thấp</option>
+          <option value="name_asc">Tên phòng: A - Z</option>
+          <option value="name_desc">Tên phòng: Z - A</option>
+        </select>
+      </div>
+    </>
+  );
 
   return (
     <div className="mb-6 flex flex-col gap-3 lg:gap-0 lg:bg-white lg:border lg:border-slate-200 lg:rounded-xl lg:shadow-sm">
-      {/* Filters & Sắp xếp */}
-      <div className="bg-white border border-slate-200 rounded-xl lg:rounded-none lg:border-0 lg:border-b lg:border-slate-100 p-3 lg:p-4 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between shadow-sm lg:shadow-none">
 
-        <div className="flex flex-col lg:flex-row gap-3 lg:items-center flex-1 min-w-0">
+      {/* ========================================================= */}
+      {/* BỘ LỌC CHO DESKTOP (Hiển thị dàn trải, không bị giấu đi) */}
+      {/* ========================================================= */}
+      <div className="hidden lg:flex bg-white border-b border-slate-100 p-4 gap-3 items-center justify-between">
+        <div className="flex gap-3 items-center flex-1 min-w-0">
           {/* Ô Tìm kiếm */}
-          <div className="relative w-full lg:w-[260px] shrink-0">
+          <div className="relative w-[260px] shrink-0">
             <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input
               type="text"
               value={searchText}
               onChange={(event) => onSearchTextChange?.(event.target.value)}
               placeholder="Tìm kiếm phòng..."
-              className="w-full pl-9 pr-3 py-2.5 lg:py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+              className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-shadow"
             />
           </div>
 
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 lg:pb-0 lg:flex-wrap">
-            {/* Dropdown Chọn Khu nhà (Data thật) */}
+          <div className="flex gap-2">
+            {/* Dropdown Chọn Khu nhà */}
             <select
               value={propertyId}
               onChange={(event) => onPropertyIdChange?.(event.target.value)}
-              className="shrink-0 min-w-[150px] border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 lg:py-2 text-slate-600 outline-none focus:border-brand bg-white"
+              className="shrink-0 min-w-[150px] border border-slate-200 rounded-lg text-[13px] px-3 py-2 text-slate-600 outline-none focus:border-brand bg-white cursor-pointer hover:bg-slate-50 transition-colors"
             >
               <option value="">Tất cả khu nhà</option>
               {properties.map((property) => (
@@ -536,40 +611,107 @@ export default function RoomTable({
             <select
               value={status}
               onChange={(event) => onStatusChange?.(event.target.value)}
-              className="shrink-0 min-w-[150px] border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 lg:py-2 text-slate-600 outline-none focus:border-brand bg-white"
+              className="shrink-0 min-w-[150px] border border-slate-200 rounded-lg text-[13px] px-3 py-2 text-slate-600 outline-none focus:border-brand bg-white cursor-pointer hover:bg-slate-50 transition-colors"
             >
               <option value="">Tất cả trạng thái</option>
               <option value="available">Phòng trống</option>
-              <option value ="reserved">Đang đặt cọc</option>
+              <option value="reserved">Đang đặt cọc</option>
               <option value="occupied">Đang thuê</option>
               <option value="maintenance">Bảo trì</option>
             </select>
 
-            {/* Dropdown Sắp xếp */}
+            {/* Dropdown Sắp xếp (Chuyển ra ngoài cho PC) */}
             <select
               value={sort}
               onChange={(event) => onSortChange?.(event.target.value)}
-              className="shrink-0 min-w-[160px] border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 lg:py-2 text-slate-600 outline-none focus:border-brand bg-white"
+              className="shrink-0 min-w-[160px] border border-slate-200 rounded-lg text-[13px] px-3 py-2 text-slate-600 outline-none focus:border-brand bg-white cursor-pointer hover:bg-slate-50 transition-colors"
             >
-              <option value="created_at_desc">Mới nhất</option>
-              <option value="created_at_asc">Cũ nhất</option>
-              <option value="price_asc">Giá: Thấp đến cao</option>
-              <option value="price_desc">Giá: Cao đến thấp</option>
+              <option value="created_at_desc">Sắp xếp: Mới nhất</option>
+              <option value="created_at_asc">Sắp xếp: Cũ nhất</option>
+              <option value="price_asc">Giá phòng: Thấp đến cao</option>
+              <option value="price_desc">Giá phòng: Cao đến thấp</option>
+              <option value="name_asc">Tên phòng: A - Z</option>
+              <option value="name_desc">Tên phòng: Z - A</option>
             </select>
           </div>
         </div>
 
-        {/* Nút Xóa lọc chỉ hiện ra khi có lọc/tìm kiếm/sắp xếp khác mặc định */}
+        {/* Nút Xóa lọc PC */}
         {isFilterActive && (
           <button
             type="button"
             onClick={onClearFilters}
-            className="hidden lg:flex shrink-0 text-[13px] text-red-500 hover:text-red-600 font-medium px-2 items-center gap-1.5 transition-colors"
+            className="shrink-0 text-[13px] text-red-500 hover:text-red-600 font-medium px-2 flex items-center gap-1.5 transition-colors bg-red-50 hover:bg-red-100 py-1.5 rounded-md"
           >
             <i className="fa-solid fa-xmark"></i> Xóa lọc
           </button>
         )}
       </div>
+
+      {/* ========================================================= */}
+      {/* BỘ LỌC CHO MOBILE (Nút bấm thu gọn + Bottom Sheet)        */}
+      {/* ========================================================= */}
+      <div className="lg:hidden bg-white border border-slate-200 rounded-xl p-3 flex gap-3 items-center shadow-sm relative">
+        {/* Ô Tìm kiếm Mobile */}
+        <div className="relative flex-1">
+          <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input
+            type="text"
+            value={searchText}
+            onChange={(event) => onSearchTextChange?.(event.target.value)}
+            placeholder="Tìm kiếm..."
+            className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-[13px] focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+          />
+        </div>
+
+        {/* Nút Mở Bottom Sheet Mobile */}
+        <button
+          type="button"
+          onClick={() => setIsFilterMenuOpen(true)}
+          className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 border rounded-lg text-[13px] font-medium transition-colors ${activeFilterCount > 0
+            ? "border-brand text-brand bg-brand/5"
+            : "border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+            }`}
+        >
+          <i className="fa-solid fa-filter"></i>
+          <span className="hidden sm:inline">Lọc</span>
+
+          {/* Chấm đỏ thông báo số lượng bộ lọc đang bật */}
+          {activeFilterCount > 0 && (
+            <span className="bg-brand text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full shrink-0">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* BOTTOM SHEET CHO MOBILE */}
+      {isFilterMenuOpen && (
+        <div className="fixed inset-0 z-[60] lg:hidden bg-slate-900/50 backdrop-blur-[2px] flex items-end">
+          <div className="absolute inset-0" onClick={() => setIsFilterMenuOpen(false)}></div>
+          <div className="w-full bg-white rounded-t-2xl shadow-2xl animate-[slideUp_0.2s_ease-out] relative z-10 flex flex-col max-h-[85vh]">
+            <div className="px-5 pt-3 pb-4 border-b border-slate-100 shrink-0">
+              <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-4"></div>
+              <div className="flex justify-between items-center">
+                <h3 className="text-[16px] font-bold text-slate-800">Bộ lọc & Sắp xếp</h3>
+                {activeFilterCount > 0 && (
+                  <button onClick={() => { onClearFilters(); setIsFilterMenuOpen(false); }} className="text-[13px] text-red-500 font-medium">Xóa lọc</button>
+                )}
+              </div>
+            </div>
+
+            <div className="p-5 overflow-y-auto flex flex-col gap-5 no-scrollbar">
+              {FilterContent}
+            </div>
+
+            <div className="px-5 pb-5 pt-3 border-t border-slate-100 shrink-0">
+              <button onClick={() => setIsFilterMenuOpen(false)} className="w-full py-3 bg-brand text-white rounded-xl text-[14px] font-semibold active:scale-[0.98] transition-transform shadow-sm shadow-brand/30">
+                Áp dụng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile cards */}
       <div className="lg:hidden">
@@ -608,38 +750,19 @@ export default function RoomTable({
                 />
               </th>
 
-              <th className="py-3 px-4 border-b border-slate-100">
-                Phòng <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
-              </th>
+              {/* GỌI HÀM ĐỂ TẠO CỘT CÓ THỂ BẤM SORT */}
+              {renderSortableHeader("Phòng", "name_asc", "name_desc")}
 
-              <th className="py-3 px-4 border-b border-slate-100">
-                Khu nhà <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
-              </th>
+              <th className="py-3 px-4 border-b border-slate-100">Khu nhà</th>
+              <th className="py-3 px-4 border-b border-slate-100">Diện tích</th>
 
-              <th className="py-3 px-4 border-b border-slate-100">
-                Diện tích{" "}
-                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
-              </th>
+              {renderSortableHeader("Giá phòng", "price_asc", "price_desc")}
 
-              <th className="py-3 px-4 border-b border-slate-100">
-                Giá phòng{" "}
-                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
-              </th>
+              <th className="py-3 px-4 border-b border-slate-100">Trạng thái</th>
+              <th className="py-3 px-4 border-b border-slate-100">Người thuê</th>
+              <th className="py-3 px-4 border-b border-slate-100">Thanh toán</th>
 
-              <th className="py-3 px-4 border-b border-slate-100">
-                Trạng thái{" "}
-                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
-              </th>
-
-              <th className="py-3 px-4 border-b border-slate-100">
-                Người thuê{" "}
-                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
-              </th>
-
-              <th className="py-3 px-4 border-b border-slate-100">
-                Ngày tạo{" "}
-                <i className="fa-solid fa-sort ml-1 text-slate-300"></i>
-              </th>
+              {renderSortableHeader("Ngày tạo", "created_at_asc", "created_at_desc")}
 
               <th className="py-3 px-4 border-b border-slate-100 text-right w-40">
                 Thao tác
@@ -654,7 +777,7 @@ export default function RoomTable({
                   key={index}
                   className="border-b border-slate-50 animate-pulse"
                 >
-                  <td colSpan={9} className="py-3 px-4">
+                  <td colSpan={10} className="py-3 px-4">
                     <div className="h-8 bg-slate-100 rounded"></div>
                   </td>
                 </tr>
@@ -662,7 +785,7 @@ export default function RoomTable({
             ) : rooms.length === 0 ? (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={10}
                   className="py-10 px-4 text-center text-slate-400"
                 >
                   Chưa có phòng phù hợp.
@@ -731,6 +854,28 @@ export default function RoomTable({
                         </div>
                       ) : (
                         <span className="text-slate-400">—</span>
+                      )}
+                    </td>
+
+                    <td className="py-3 px-4">
+                      {room.has_unpaid_invoice && room.unpaid_amount > 0 ? (
+                        /* CHỈ CÓ TRẠNG THÁI NỢ MỚI LÀ BUTTON CÓ THỂ NHẤN */
+                        <div
+                          onClick={() => navigate(`/landlord/invoices?property_id=${room.property_id}&room_id=${room.id}`)}
+                          className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm"
+                          title={`Phòng ${room.name} đang nợ tiền. Nhấn để xem chi tiết hóa đơn.`}
+                        >
+                          <i className="fa-solid fa-circle-exclamation text-[11px]"></i>
+                          <span>Nợ {formatCurrency(room.unpaid_amount)}</span>
+                        </div>
+                      ) : room.status === "occupied" ? (
+                        /* ĐÃ THU ĐỦ CHỈ HIỂN THỊ TEXT + ICON THUẦN, KHÔNG CÓ KHUNG BỌC, KHÔNG CÓ CON TRỎ BẤM */
+                        <div className="flex items-center gap-1.5 text-emerald-600 font-semibold text-[13px] pl-1">
+                          <i className="fa-solid fa-circle-check text-[14px]"></i>
+                          <span>Đã thu đủ</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 pl-4">—</span>
                       )}
                     </td>
 
