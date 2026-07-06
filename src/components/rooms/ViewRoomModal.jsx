@@ -195,6 +195,10 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                       <p className="text-[14px] font-bold text-brand">{formatCurrency(room.current_price)}</p>
                     </div>
                     <div>
+                      <p className="text-[11px] font-semibold text-slate-400 uppercase mb-1">Tiền cọc/thế chân</p>
+                      <p className="text-[14px] font-bold text-brand">{formatCurrency(room.deposit_amount)}</p>
+                    </div>
+                    <div>
                       <p className="text-[11px] font-semibold text-slate-400 uppercase mb-1">Diện tích</p>
                       <p className="text-[14px] font-semibold text-slate-800">{room.area ? `${room.area} m²` : "---"}</p>
                     </div>
@@ -208,7 +212,7 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                         {Number(room.max_occupants) > 0 ? `Tối đa ${room.max_occupants} người` : "Không giới hạn"}
                       </p>
                     </div>
-                    <div className="col-span-2 sm:col-span-2">
+                    <div>
                       <p className="text-[11px] font-semibold text-slate-400 uppercase mb-1">Quy định thu tiền</p>
                       <p className="text-[14px] font-semibold text-slate-800">{getBillingDayLabel(room.billing_day)}</p>
                     </div>

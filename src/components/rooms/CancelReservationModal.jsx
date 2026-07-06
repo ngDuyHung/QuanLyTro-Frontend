@@ -142,6 +142,7 @@ export default function CancelReservationModal({
                                             required={form.is_refunding}
                                             value={form.refund_amount}
                                             onChange={handleChange}
+                                            inputMode="numeric"
                                             className="w-full h-10 px-3 border border-slate-200 rounded-lg text-[14px] text-red-600 font-semibold focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none"
                                             placeholder="Nhập số tiền..."
                                         />

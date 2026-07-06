@@ -137,6 +137,7 @@ export default function AddReservationModal({
                                         required
                                         value={form.deposit_amount}
                                         onChange={handleChange}
+                                        inputMode="numeric"
                                         className="w-full h-10 px-3 border border-slate-200 rounded-lg text-[14px] font-semibold text-brand focus:border-brand focus:ring-1 focus:ring-brand outline-none"
                                         placeholder="VD: 500.000"
                                     />

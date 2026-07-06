@@ -525,7 +525,7 @@ export default function RoomsPage() {
         defaultRoom={actionRoom} // Truyền phòng đang chọn vào đây
         onSuccess={() => {
           // Tùy chọn: Gọi fetchRooms() nếu muốn cập nhật lại thống kê trên trang sau khi tạo
-          // fetchRooms();
+          fetchRooms();
         }}
       />
     </div>

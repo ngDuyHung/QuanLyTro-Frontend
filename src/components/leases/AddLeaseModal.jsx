@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import roomService from "@/services/roomService";
 import ocrService from "@/services/ocrService";
 import servicePriceService from "@/services/servicePriceService";
@@ -23,9 +23,9 @@ const initialForm = {
   billing_day: "1",
   deposit: "0",
   room_price: "0",
-  occupants_count: "1",
-  electricity_reading: "0",
-  water_reading: "0",
+  occupants_count: "",
+  electricity_reading: "",
+  water_reading: "",
   full_name: "",
   phone: "",
   email: "",
@@ -74,6 +74,17 @@ export default function AddLeaseModal({
   const [availableServices, setAvailableServices] = useState([]);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
 
+  const scrollContainerRef = useRef(null);
+  // 2. Lắng nghe clientError, nếu có lỗi thì cuộn lên top
+  useEffect(() => {
+    if (clientError && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth" // Tạo hiệu ứng cuộn mượt mà
+      });
+    }
+  }, [clientError]);
+
   useEffect(() => {
     return () => {
       if (frontImagePreview) URL.revokeObjectURL(frontImagePreview);
@@ -94,7 +105,7 @@ export default function AddLeaseModal({
           property_id: defaultRoom.property_id,
           room_id: defaultRoom.id,
           room_price: formatMoneyInput(defaultRoom.current_price),
-          deposit: formatMoneyInput(defaultRoom.current_price),
+          deposit: formatMoneyInput(defaultRoom.deposit_amount),
           billing_day: defaultRoom.billing_day || "1",
           start_date: defaultRoom.pending_reservation?.expected_move_in_date || new Date().toISOString().slice(0, 10),
           full_name: defaultRoom.pending_reservation?.tenant_name || "",
@@ -337,10 +348,12 @@ export default function AddLeaseModal({
       return;
     }
 
-    // Validate sơ bộ cho services
-    const hasInvalidService = form.services.some(s => !s.service_type || s.quantity < 1);
-    if (hasInvalidService) {
-      setClientError("Vui lòng chọn loại dịch vụ và đảm bảo số lượng >= 1.");
+    if (!form.electricity_reading.trim() || Number(form.electricity_reading) < 0) {
+      setClientError("Vui lòng nhập chỉ số điện hợp lệ (tối thiểu 0).");
+      return;
+    }
+    if (!form.water_reading.trim() || Number(form.water_reading) < 0) {
+      setClientError("Vui lòng nhập chỉ số nước hợp lệ (tối thiểu 0).");
       return;
     }
 
@@ -425,7 +438,7 @@ export default function AddLeaseModal({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar bg-white">
           <div className="px-4 py-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8">
             <div className="lg:col-span-7 flex flex-col gap-8">
               <div>
@@ -540,6 +553,7 @@ export default function AddLeaseModal({
                       // readOnly
                       onChange={(e) => setForm(prev => ({ ...prev, room_price: formatMoneyInput(e.target.value) }))}
                       placeholder="VD: 1.000.000"
+                      inputMode="numeric"
                       className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>
@@ -553,6 +567,7 @@ export default function AddLeaseModal({
                       value={form.deposit}
                       onChange={(e) => setForm(prev => ({ ...prev, deposit: formatMoneyInput(e.target.value) }))}
                       placeholder="VD: 1000000"
+                      inputMode="numeric"
                       className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>
@@ -569,7 +584,7 @@ export default function AddLeaseModal({
                       pattern="[0-9]*"
                       onChange={handleChange("occupants_count")}
                       placeholder="Nhập số người ở dự kiến"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                      className="w-full px-3.5 py-2.5 bg-white border bg-blue-50 border border-blue-400 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>
 
@@ -713,6 +728,7 @@ export default function AddLeaseModal({
                       value={form.phone}
                       onChange={handleChange("phone")}
                       placeholder="Nhập số điện thoại"
+                      inputMode="numeric"
                       className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>
@@ -725,6 +741,7 @@ export default function AddLeaseModal({
                       value={form.id_card_number}
                       onChange={handleChange("id_card_number")}
                       placeholder="Nhập số CCCD/CMND"
+                      inputMode="numeric"
                       className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>
@@ -769,9 +786,11 @@ export default function AddLeaseModal({
                         <div className="relative flex-1">
                           <input
                             type="text" // Dùng text kết hợp onlyDigits để loại bỏ 2 nút mũi tên tăng giảm vướng víu
+                            inputMode="numeric"
                             value={form.electricity_reading}
                             onChange={(e) => setForm(prev => ({ ...prev, electricity_reading: onlyDigits(e.target.value) }))}
                             placeholder="Nhập số điện..."
+                            required
                             className="w-full pl-3.5 pr-14 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[16px] font-bold text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand focus:bg-white transition-colors"
                           />
                           <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-[13px] pointer-events-none">
@@ -813,9 +832,11 @@ export default function AddLeaseModal({
                         <div className="relative flex-1">
                           <input
                             type="text"
+                            inputMode="numeric"
                             value={form.water_reading}
                             onChange={(e) => setForm(prev => ({ ...prev, water_reading: onlyDigits(e.target.value) }))}
                             placeholder="Nhập số nước..."
+                            required
                             className="w-full pl-3.5 pr-14 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[16px] font-bold text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand focus:bg-white transition-colors"
                           />
                           <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-[13px] pointer-events-none">

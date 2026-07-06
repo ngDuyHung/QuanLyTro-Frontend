@@ -53,11 +53,43 @@ export default function CreateInvoiceModal({
 
     useEffect(() => {
         if (open) {
+            // --- TÍNH TOÁN NGÀY TỰ ĐỘNG CHUẨN UX ---
+            const today = new Date();
+            let fromDate, toDate, dueDate;
+
+            // Kiểm tra xem phòng có cấu hình ngày thu tiền không (billing_day)
+            const billingDay = defaultRoom ? parseInt(defaultRoom.billing_day, 10) : null;
+
+            if (billingDay && !isNaN(billingDay) && billingDay > 0) {
+                // TRƯỜNG HỢP 1: Lấy theo ngày thanh toán của phòng
+                fromDate = new Date(today.getFullYear(), today.getMonth(), billingDay);
+
+                // Lấy ngày này ở tháng sau rồi TRỪ ĐI 1 NGÀY (Ví dụ: Từ ngày 05/08 đến ngày 04/09)
+                toDate = new Date(today.getFullYear(), today.getMonth() + 1, billingDay);
+                toDate.setDate(toDate.getDate() - 1);
+            } else {
+                // TRƯỜNG HỢP 2: Mặc định lấy ngày hiện tại và tính tròn 1 tháng
+                fromDate = new Date();
+
+                // Tính ngày này ở tháng sau rồi TRỪ ĐI 1 NGÀY (Ví dụ: Từ ngày 07/08 đến ngày 06/09)
+                toDate = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+                toDate.setDate(toDate.getDate() - 1);
+            }
+
+            // Hạn thanh toán: Bằng ngày kết thúc ("Đến ngày") cộng thêm 10 ngày
+            dueDate = new Date(toDate.getTime());
+            dueDate.setDate(dueDate.getDate() + 10);
+
+            // Cập nhật vào form
             setForm({
                 ...initialForm,
-                // Nếu có defaultRoom truyền vào thì tự fill property_id
                 property_id: defaultRoom ? defaultRoom.property_id : "",
+                period_from: fromDate.toISOString().slice(0, 10),
+                period_to: toDate.toISOString().slice(0, 10),
+                due_date: dueDate.toISOString().slice(0, 10),
             });
+
+            // Reset các state phụ khác (Giữ nguyên phần cũ của bạn)
             setLeases([]);
             setRent({ price: 0 });
             setElectricity({ prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false });
@@ -148,7 +180,8 @@ export default function CreateInvoiceModal({
                             charge_type: item.charge_type,
                             description: item.description,
                             quantity: item.quantity,
-                            unit_price_snapshot: item.unit_price_snapshot
+                            unit_price_snapshot: item.unit_price_snapshot,
+                            unit: item.unit || "Tháng/Lần"
                         });
                     }
                 });
@@ -201,7 +234,7 @@ export default function CreateInvoiceModal({
     const handleAddDynamicItem = () => {
         setDynamicItems(prev => [
             ...prev,
-            { id: Date.now(), charge_type: "other", description: "", quantity: 1, unit_price_snapshot: 0 }
+            { id: Date.now(), charge_type: "other", description: "", quantity: 1, unit_price_snapshot: 0, unit: "Lần" }
         ]);
     };
 
@@ -311,7 +344,7 @@ export default function CreateInvoiceModal({
                     items.push({
                         charge_type: item.charge_type,
                         description: item.description,
-                        unit: item.charge_type === 'discount' ? 'Lần' : 'Tháng/Lần',
+                        unit: item.unit || (item.charge_type === 'discount' ? 'Lần' : 'Tháng/Lần'),
                         quantity: Number(item.quantity) || 1,
                         unit_price_snapshot: Number(item.unit_price_snapshot),
                     });
@@ -673,7 +706,7 @@ export default function CreateInvoiceModal({
                                                         <option value="garbage">Tiền rác/tháng</option>
                                                         <option value="internet">Internet/tháng</option>
                                                         <option value="discount">Giảm trừ</option>
-                                                        <option value ="deposit">Cọc/thế chân</option>
+                                                        <option value="deposit">Cọc/thế chân</option>
                                                         <option value="other">Khác</option>
                                                     </select>
 

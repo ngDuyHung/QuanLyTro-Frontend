@@ -6,6 +6,7 @@ const initialForm = {
   floor_number: "",
   area: "",
   current_price: "",
+  deposit_amount: "",
   max_occupants: "",
   status: "available",
   billing_day: "",
@@ -42,6 +43,7 @@ const toForm = (room) => ({
   area:
     room?.area === null || room?.area === undefined ? "" : String(room.area),
   current_price: formatMoneyInput(room?.current_price || ""),
+  deposit_amount: formatMoneyInput(room?.deposit_amount || ""),
   max_occupants:
     room?.max_occupants === null || room?.max_occupants === undefined
       ? ""
@@ -174,10 +176,15 @@ export default function EditRoomModal({
 
     setClientError("");
 
-    setForm((prev) => ({
-      ...prev,
-      [field]: field === "current_price" ? formatMoneyInput(value) : value,
-    }));
+    setForm((prev) => {
+      // Khai báo các trường cần format tiền
+      const moneyFields = ["current_price", "deposit_amount"];
+
+      return {
+        ...prev,
+        [field]: moneyFields.includes(field) ? formatMoneyInput(value) : value,
+      };
+    });
   };
 
   const handleSelectImages = (event) => {
@@ -331,6 +338,11 @@ export default function EditRoomModal({
       return;
     }
 
+    if (!parseMoney(form.deposit_amount)) {
+      setClientError("Vui lòng nhập tiền cọc.");
+      return;
+    }
+
     const payload = new FormData();
 
     payload.append("_method", "PUT");
@@ -339,6 +351,7 @@ export default function EditRoomModal({
     payload.append("floor_number", form.floor_number);
     payload.append("area", form.area || "");
     payload.append("current_price", String(parseMoney(form.current_price)));
+    payload.append("deposit_amount", String(parseMoney(form.deposit_amount)));
     payload.append(
       "max_occupants",
       form.max_occupants === "" ? "0" : String(form.max_occupants),
@@ -503,6 +516,27 @@ export default function EditRoomModal({
                       value={form.current_price}
                       onChange={handleChange("current_price")}
                       placeholder="VD: 2.800.000"
+                      required
+                      className="w-full pl-3.5 pr-8 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-bold text-brand"
+                    />
+
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">
+                      đ
+                    </span>
+                  </div>
+                </div>
+
+                <div className="sm:col-span-1">
+                  <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                    Tiền thế chân <span className="text-red-500">*</span>
+                  </label>
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={form.deposit_amount}
+                      onChange={handleChange("deposit_amount")}
+                      placeholder="VD: 800.000"
                       required
                       className="w-full pl-3.5 pr-8 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-bold text-brand"
                     />
