@@ -24,13 +24,14 @@ const emptyRoomStats = {
   occupied: 0,
   available: 0,
   maintenance: 0,
+  reserved: 0,
   occupancy_rate: 0,
   available_rate: 0,
   maintenance_rate: 0,
+  reserved_rate: 0,
   expected_monthly_revenue: 0,
   debt_rooms: 0,
   debt_rate: 0,
-  current_debt_amount: 0,
 };
 
 export default function RoomsPage() {

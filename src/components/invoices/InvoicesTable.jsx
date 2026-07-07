@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 // --- Helpers ---
 const formatCurrency = (amount) => {
@@ -54,6 +54,9 @@ export default function InvoicesTable({
   isLoading = false,
 
   // Filters
+  searchText = "",
+  onSearchTextChange,
+  onClearFilters,
   propertyId = "",
   onPropertyIdChange,
   roomId = "",
@@ -74,12 +77,94 @@ export default function InvoicesTable({
   onOpenDeleteModal,
   onOpenTemplateModal,
 }) {
+
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+
+  // Đếm số lượng bộ lọc đang áp dụng (bỏ qua searchText)
+  const activeFilterCount =
+    (propertyId ? 1 : 0) +
+    (roomId ? 1 : 0) +
+    (status ? 1 : 0) +
+    (invoiceType ? 1 : 0) +
+    (month ? 1 : 0);
+
+  const isFilterActive = searchText !== "" || activeFilterCount > 0;
+  // NỘI DUNG BỘ LỌC (Dùng chung cho Bottom Sheet Mobile)
+  const FilterContent = (
+    <>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[12px] font-semibold text-slate-700">Khu nhà</label>
+        <select
+          value={propertyId}
+          onChange={(e) => onPropertyIdChange?.(e.target.value)}
+          className="w-full border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 text-slate-600 outline-none focus:border-brand bg-slate-50 focus:bg-white transition-colors"
+        >
+          <option value="">Tất cả khu nhà</option>
+          {properties.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[12px] font-semibold text-slate-700">Phòng</label>
+        <select
+          value={roomId}
+          onChange={(e) => onRoomIdChange?.(e.target.value)}
+          disabled={!propertyId}
+          className="w-full border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 text-slate-600 outline-none focus:border-brand bg-slate-50 focus:bg-white disabled:opacity-60 transition-colors"
+        >
+          <option value="">Tất cả phòng</option>
+          {rooms.map((r) => (
+            <option key={r.id} value={r.id}>{r.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[12px] font-semibold text-slate-700">Trạng thái</label>
+        <select
+          value={status}
+          onChange={(e) => onStatusChange?.(e.target.value)}
+          className="w-full border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 text-slate-600 outline-none focus:border-brand bg-slate-50 focus:bg-white transition-colors"
+        >
+          <option value="">Tất cả trạng thái</option>
+          <option value="draft">Nháp (Chưa chốt)</option>
+          <option value="issued">Đã phát hành</option>
+          <option value="partially_paid">Trả một phần</option>
+          <option value="paid">Đã thu đủ</option>
+          <option value="overdue">Quá hạn</option>
+          <option value="cancelled">Đã hủy</option>
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[12px] font-semibold text-slate-700">Kỳ hóa đơn</label>
+        <input
+          type="month"
+          value={month}
+          onChange={(e) => onMonthChange?.(e.target.value)}
+          className="w-full border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 text-slate-600 outline-none focus:border-brand bg-slate-50 focus:bg-white transition-colors"
+        />
+      </div>
+    </>
+  );
   return (
     <>
       {/* THANH CÔNG CỤ (FILTERS & ACTIONS) */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
+      <div className="hidden xl:flex flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
         <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-
+          {/* Ô Tìm kiếm PC */}
+          <div className="relative w-[240px] shrink-0">
+            <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input
+              type="text"
+              value={searchText}
+              onChange={(e) => onSearchTextChange?.(e.target.value)}
+              placeholder="Tìm theo mã hóa đơn..."
+              className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+            />
+          </div>
           {/* Lọc Khu nhà */}
           <div className="relative w-full sm:w-auto min-w-[150px]">
             <select
@@ -159,6 +244,83 @@ export default function InvoicesTable({
           </button>
         </div>
       </div>
+
+      {/* THANH CÔNG CỤ: MOBILE */}
+      <div className="xl:hidden flex flex-col gap-3 mb-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-3 flex gap-3 items-center shadow-sm relative">
+          <div className="relative flex-1">
+            <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input
+              type="text"
+              value={searchText}
+              onChange={(e) => onSearchTextChange?.(e.target.value)}
+              placeholder="Tìm mã hóa đơn..."
+              className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-[13px] focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+            />
+          </div>
+          <button
+            onClick={() => setIsFilterMenuOpen(true)}
+            className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 border rounded-lg text-[13px] font-medium transition-colors ${activeFilterCount > 0 ? "border-brand text-brand bg-brand/5" : "border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"}`}
+          >
+            <i className="fa-solid fa-filter"></i>
+            <span className="hidden sm:inline">Lọc</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-brand text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full shrink-0">{activeFilterCount}</span>
+            )}
+          </button>
+        </div>
+
+        {/* Nút hành động Mobile đặt dưới ô tìm kiếm */}
+        <div className="flex gap-2">
+          <button onClick={onOpenTemplateModal} className="flex-1 bg-white border border-slate-200 text-slate-700 py-2.5 rounded-lg text-[13px] font-semibold shadow-sm flex items-center justify-center gap-2">
+            <i className="fa-solid fa-file-signature text-blue-600"></i> Mẫu in
+          </button>
+          <button onClick={onOpenCreateModal} className="flex-1 bg-brand text-white py-2.5 rounded-lg text-[13px] font-semibold shadow-sm flex items-center justify-center gap-2">
+            <i className="fa-solid fa-file-invoice-dollar"></i> Lập hóa đơn
+          </button>
+        </div>
+      </div>
+
+      {/* BOTTOM SHEET CHO MOBILE */}
+      {isFilterMenuOpen && (
+        <div className="fixed inset-0 z-[60] xl:hidden flex items-end">
+          {/* Lớp nền mờ (Backdrop) - Đặt tách biệt hoàn toàn để không bị xung đột sự kiện */}
+          <div
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+            onClick={() => setIsFilterMenuOpen(false)}
+          ></div>
+
+          {/* Khối nội dung chính (Đã gỡ bỏ stopPropagation) */}
+          <div className="w-full bg-white rounded-t-2xl shadow-2xl animate-[slideUp_0.2s_ease-out] relative z-10 flex flex-col max-h-[85vh]">
+            <div className="px-5 pt-3 pb-4 border-b border-slate-100 shrink-0">
+              <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-4"></div>
+              <div className="flex justify-between items-center">
+                <h3 className="text-[16px] font-bold text-slate-800">Bộ lọc hóa đơn</h3>
+                {activeFilterCount > 0 && (
+                  <button onClick={() => { onClearFilters?.(); setIsFilterMenuOpen(false); }} className="text-[13px] text-red-500 font-medium">Xóa lọc</button>
+                )}
+              </div>
+            </div>
+
+            <div className="p-5 overflow-y-auto flex flex-col gap-5 no-scrollbar">
+              {FilterContent}
+            </div>
+
+            <div className="px-5 pb-5 pt-3 border-t border-slate-100 shrink-0">
+              <button
+                onClick={() => {
+                  setIsFilterMenuOpen(false);
+                  // Thêm hiệu ứng cuộn mượt lên đầu danh sách để tạo phản hồi thị giác khi áp dụng xong
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="w-full py-3 bg-brand text-white rounded-xl text-[14px] font-semibold active:scale-[0.98] transition-transform shadow-sm shadow-brand/30"
+              >
+                Áp dụng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* BẢNG DỮ LIỆU */}
       <div className="bg-transparent lg:bg-white border-none lg:border lg:border-slate-200 lg:rounded-xl shadow-none lg:shadow-sm lg:overflow-hidden flex flex-col flex-1">

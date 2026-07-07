@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import invoiceService from "@/services/invoiceService";
 import bankAccountService from "@/services/bankAccountService";
-
+import sepayConfigService from "@/services/sepayConfigService";
 export default function PaymentInvoiceModal({
     open,
     invoice,
@@ -20,6 +20,10 @@ export default function PaymentInvoiceModal({
     const [isLoadingBanks, setIsLoadingBanks] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [clientError, setClientError] = useState("");
+
+    // state lưu cấu hình SePay
+    const [sepayConfig, setSepayConfig] = useState(null);
+    const [isPolling, setIsPolling] = useState(false);
 
     // Khóa cuộn background
     useEffect(() => {
@@ -40,8 +44,50 @@ export default function PaymentInvoiceModal({
             setNote("");
             setClientError("");
             fetchBankAccounts();
+
+            // Lấy cấu hình SePay để hiển thị QR Code nếu có
+            sepayConfigService.getConfig()
+                .then(res => setSepayConfig(res.data.data))
+                .catch(() => console.log("Không thể lấy cấu hình SePay"));
         }
     }, [open, invoice]);
+
+    // --- LOGIC POLLING SIÊU NHẸ ---
+    useEffect(() => {
+        let intervalId;
+        const isAutoConfirmEnabled = sepayConfig?.auto_confirm == true;
+
+        if (open && method === "bank_transfer" && bankAccountId && invoice && isAutoConfirmEnabled) {
+            setIsPolling(true);
+
+            intervalId = setInterval(async () => {
+                try {
+                    // Gọi API mini siêu nhẹ thay vì getById
+                    const res = await sepayConfigService.checkPaymentStatus(invoice.id);
+                    const statusData = res.data.data;
+
+                    // Ép kiểu về Number trước khi so sánh lớn hơn
+                    const currentPaid = Number(statusData.paid_amount);
+                    const oldPaid = Number(invoice.paid_amount);
+
+                    if (currentPaid > oldPaid || statusData.status === 'paid') {
+                        clearInterval(intervalId);
+                        setIsPolling(false);
+
+                        toast.success("Đã nhận được thanh toán chuyển khoản.");
+                        onSuccess?.();
+                        onClose();
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi polling trạng thái:", error);
+                }
+            }, 3000);
+        } else {
+            setIsPolling(false);
+        }
+
+        return () => { if (intervalId) clearInterval(intervalId); };
+    }, [open, method, bankAccountId, invoice, sepayConfig, onSuccess, onClose]);
 
     // ---  HÀM XỬ LÝ KHI GÕ NHẬP TIỀN ---
     const handleAmountChange = (e) => {
@@ -279,6 +325,23 @@ export default function PaymentInvoiceModal({
                                                 {/* Hiệu ứng tia quét xanh lá chạy ngang khi update */}
                                                 <div key={`scan-${amount}`} className="absolute top-0 left-0 w-full h-1 bg-green-400 shadow-[0_0_8px_2px_#4ade80] opacity-0 animate-[slideDown_1s_ease-in-out_1]"></div>
                                             </div>
+                                            {/* Thông báo trạng thái */}
+                                            {isPolling ? (
+                                                <div className="flex flex-col items-center gap-1 mb-2 text-brand text-[12px] font-semibold animate-pulse">
+                                                    <div className="flex items-center gap-2">
+                                                        <i className="fa-solid fa-circle-notch fa-spin"></i>
+                                                        <span>Hệ thống đang chờ quét mã...</span>
+                                                    </div>
+                                                    <span className="text-[11px] text-slate-500 font-normal">Sẽ tự động đóng khi nhận được tiền.</span>
+                                                </div>
+                                            ) : (
+                                                method === "bank_transfer" && sepayConfig && !sepayConfig.auto_confirm && (
+                                                    <div className="text-[11px] text-amber-600 bg-amber-50 p-2 rounded border border-amber-100 text-center mx-4 mb-3">
+                                                        <i className="fa-solid fa-triangle-exclamation mr-1"></i>
+                                                        Chế độ tự động duyệt đang <b>TẮT</b>.<br />Sau khi khách chuyển khoản, bạn cần tự xác nhận.
+                                                    </div>
+                                                )
+                                            )}
 
                                             {/* Thêm 2 nút Copy (Dành cho trường hợp khách không quét được QR) */}
                                             <div className="flex gap-2 w-full px-2 sm:px-6 mb-2">
@@ -301,8 +364,8 @@ export default function PaymentInvoiceModal({
                                                         // Rút trích tiền tố từ URL QR cho chính xác
                                                         const match = selectedBank?.sepay_qr_template?.match(/des=([^\{]+)/);
                                                         const prefix = match ? match[1] : "HD";
-
-                                                        navigator.clipboard.writeText(`${prefix}${invoice?.invoice_code}`);
+                                                        //navigator.clipboard.writeText(`${prefix}${invoice?.invoice_code}`); 
+                                                        navigator.clipboard.writeText(`${invoice?.invoice_code}`);// tạm bỏ tiền tố prefix
                                                         toast.info("Đã copy Nội dung CK!");
                                                     }}
                                                     className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[12px] font-semibold rounded transition-colors"

@@ -116,17 +116,19 @@ export default function SepayTransactionsTab() {
 
             {/* Table */}
             <div className="flex-1 min-h-0 border border-slate-200 rounded-xl overflow-hidden flex flex-col shadow-sm">
-                <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-1">
-                    <table className="w-full text-left border-collapse whitespace-nowrap min-w-[1100px]">
+                <div className="overflow-x-auto flex-1 pb-2">
+                    <table className="w-full text-left border-collapse whitespace-nowrap min-w-[1400px]">
                         <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                             <tr>
+                                <th className="py-3 px-4 text-[12px] font-bold text-slate-600 w-[100px]">ID</th>
                                 <th className="py-3 px-4 text-[12px] font-bold text-slate-600 w-[150px]">Thời gian & NH</th>
                                 <th className="py-3 px-4 text-[12px] font-bold text-slate-600 w-[180px]">Mã GD & Người gửi</th>
                                 <th className="py-3 px-4 text-[12px] font-bold text-slate-600 text-right w-[140px]">Số tiền (đ)</th>
                                 <th className="py-3 px-4 text-[12px] font-bold text-slate-600 max-w-[300px]">Nội dung chuyển </th>
+                                <th className="py-3 px-4 text-[12px] font-bold text-slate-600 w-[200px]">Mã thanh toán đã tách</th>
                                 <th className="py-3 px-4 text-[12px] font-bold text-slate-600 max-w-[300px]">Mô tả </th>
                                 <th className="py-3 px-4 text-[12px] font-bold text-slate-600 w-[200px]">Trạng thái </th>
-                                <th className="py-3 px-4 text-[12px] font-bold text-slate-600 w-[250px]">Ghi chú lỗi</th>
+                                <th className="py-3 px-4 text-[12px] font-bold text-slate-600 w-[300px]">Ghi chú lỗi</th>
                                 <th className="py-3 px-4 text-[12px] font-bold text-slate-600 text-center w-[160px]">Xử lý</th>
                             </tr>
                         </thead>
@@ -134,12 +136,12 @@ export default function SepayTransactionsTab() {
                             {isLoading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <tr key={i} className="border-b border-slate-100 animate-pulse">
-                                        <td colSpan={8} className="py-3 px-4"><div className="h-12 bg-slate-100 rounded"></div></td>
+                                        <td colSpan={10} className="py-3 px-4"><div className="h-12 bg-slate-100 rounded"></div></td>
                                     </tr>
                                 ))
                             ) : transactions.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="py-12 px-4 text-center text-slate-400 bg-slate-50/50">
+                                    <td colSpan={10} className="py-12 px-4 text-center text-slate-400 bg-slate-50/50">
                                         <i className="fa-solid fa-money-bill-transfer text-3xl mb-2 opacity-30"></i>
                                         <p className="text-[13px]">Không có giao dịch nào phù hợp.</p>
                                     </td>
@@ -148,8 +150,13 @@ export default function SepayTransactionsTab() {
                                 transactions.map((txn) => (
                                     <tr key={txn.id} className="hover:bg-slate-50 border-b border-slate-100 transition-colors group items-start">
 
+                                        {/* cột 0: ID giao dịch */}
+                                        < td className="py-3 px-4 align-top" >
+                                            <div className="font-mono text-[12px] text-slate-700">{txn.provider_transaction_id}</div>
+                                        </td>
+
                                         {/* Cột 1: Thời gian & NH */}
-                                        <td className="py-3 px-4 align-top">
+                                        < td className="py-3 px-4 align-top" >
                                             <div className="font-semibold text-slate-700">{formatDateTime(txn.transaction_time)}</div>
                                             <div className="text-[11px] text-slate-500 mt-0.5">
                                                 Tới NH: <span className="font-bold text-brand">{txn.bank_account?.bank_code || 'Không rõ'}</span>
@@ -157,7 +164,7 @@ export default function SepayTransactionsTab() {
                                         </td>
 
                                         {/* Cột 2: Mã GD & Người gửi (Mới thêm) */}
-                                        <td className="py-3 px-4 align-top">
+                                        < td td className="py-3 px-4 align-top" >
                                             <div className="font-mono text-slate-700 text-[12px]" title="Mã giao dịch / Mã tham chiếu">
                                                 {txn.reference_code || '---'}
                                             </div>
@@ -181,26 +188,35 @@ export default function SepayTransactionsTab() {
                                         </td>
 
                                         {/* Cột 4: Nội dung */}
-                                        <td className="py-3 px-4 align-top w-[200px]">
+                                        <td className="py-3 px-4 align-top w-[250px]">
                                             <textarea
                                                 readOnly
-                                                className="w-full text-[12px] p-2 bg-transparent border border-slate-200 rounded text-slate-800 resize-none font-mono"
+                                                // Thêm min-h để không bị kéo nhỏ xíu
+                                                className="w-[220px] min-h-[44px] text-[12px] p-2 bg-white border border-slate-200 rounded text-slate-800 font-mono resize-y focus:outline-brand shadow-sm"
                                                 rows={2}
                                                 value={txn.content || 'Không có nội dung'}
+                                                title="Kéo góc dưới bên phải để xem thêm"
                                             />
                                         </td>
-
-                                        {/* Cột 5: Mô tả */}
+                                        {/* Cột 5: Mã thanh toán đã tách */}
                                         <td className="py-3 px-4 align-top w-[200px]">
+                                            <div className="text-[12px] text-slate-600">
+                                                {txn.matched_payment_code || 'Chưa tách'}
+                                            </div>
+                                        </td>
+
+                                        {/* Cột 6: Mô tả */}
+                                        <td className="py-3 px-4 align-top w-[250px]">
                                             <textarea
                                                 readOnly
-                                                className="w-full text-[11px] p-2 bg-slate-50 border border-slate-200 rounded text-slate-500 italic resize-none"
+                                                className="w-[220px] min-h-[44px] text-[11px] p-2 bg-slate-50 border border-slate-200 rounded text-slate-500 italic resize-y focus:outline-brand shadow-sm"
                                                 rows={2}
                                                 value={txn.description || 'Không có mô tả'}
+                                                title="Kéo góc dưới bên phải để xem thêm"
                                             />
                                         </td>
 
-                                        {/* Cột 6: Trạng thái & Hóa đơn */}
+                                        {/* Cột 7: Trạng thái & Hóa đơn */}
                                         <td className="py-3 px-4 align-top w-[150px]">
                                             <div className="flex flex-col gap-2">
                                                 <div>{getStatusStyle(txn.match_status)}</div>
@@ -212,26 +228,29 @@ export default function SepayTransactionsTab() {
                                             </div>
                                         </td>
 
-                                        {/* Cột 7: Ghi chú lỗi (Tách riêng) */}
-                                        <td className="py-3 px-4 align-top w-[250px]">
+                                        {/* Cột 8: Ghi chú lỗi */}
+                                        <td className="py-3 px-4 align-top w-[250px] ">
                                             {txn.error_message ? (
-                                                <div className="text-[11px] text-red-600 bg-red-50 p-2 rounded border border-red-200 whitespace-pre-wrap break-words">
-                                                    <div className="font-bold mb-1 flex items-center">
-                                                        <i className="fa-solid fa-circle-exclamation mr-1"></i> Chi tiết lỗi:
+                                                <div
+                                                    className="w-[220px] text-[11px] text-red-600 bg-red-50 p-2 rounded border border-red-200"
+                                                    title={txn.error_message} // Vẫn giữ title để di chuột vào là xem được toàn bộ lỗi
+                                                >
+                                                    {/* Sử dụng line-clamp-2 để bẻ dòng tự nhiên và giới hạn tối đa 2 dòng */}
+                                                    <div className="line-clamp-2 whitespace-normal break-words ">
+                                                        <i className="fa-solid fa-circle-exclamation mr-1"></i>{txn.error_message}
                                                     </div>
-                                                    {txn.error_message}
                                                 </div>
                                             ) : (
-                                                <span className="text-slate-300 text-[11px] italic">Không có lỗi</span>
+                                                <span className="text-slate-300 text-[11px] italic whitespace-nowrap">Không có lỗi</span>
                                             )}
                                         </td>
 
-                                        {/* Cột 6: Nút Xử lý */}
+                                        {/* Cột 9: Nút Xử lý */}
                                         <td className="py-3 px-4 align-top text-center">
                                             <div className="flex items-center justify-center gap-1.5">
                                                 {['unmatched', 'need_review', 'partially_matched'].includes(txn.match_status) ? (
                                                     <>
-                                                    {/* Tạm thời bỏ chức năng ghép tay */}
+                                                        {/* Tạm thời bỏ chức năng ghép tay */}
                                                         {/* <button
                                                             onClick={() => handleOpenMatch(txn)}
                                                             className="px-2.5 py-1.5 bg-brand text-white hover:bg-green-700 rounded text-[11px] font-semibold shadow-sm transition-colors"
@@ -285,18 +304,19 @@ export default function SepayTransactionsTab() {
                         </button>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Modal */}
-            <MatchTransactionModal
+            < MatchTransactionModal
                 open={isMatchModalOpen}
                 transaction={selectedTransaction}
                 onClose={() => {
                     setIsMatchModalOpen(false);
                     setSelectedTransaction(null);
-                }}
+                }
+                }
                 onSuccess={fetchTransactions}
             />
-        </div>
+        </div >
     );
 }

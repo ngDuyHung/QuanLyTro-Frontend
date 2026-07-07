@@ -12,6 +12,9 @@ const sepayConfigService = {
 
   // Gọi API chạy thử kết nối Token lên SePay
   testConnection: () => api.post("/settings/sepay/test"),
+
+  // API lấy nhanh trạng thái để Polling realtime
+  checkPaymentStatus: (id) => api.get(`/invoices/${id}/payment-status`),
 };
 
 export default sepayConfigService;

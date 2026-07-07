@@ -24,6 +24,7 @@ export default function InvoicesPage() {
 
     // --- Trạng thái bộ lọc (Filters) ---
     const [page, setPage] = useState(1);
+    const [searchText, setSearchText] = useState(searchParams.get("search") || "");
     const [propertyId, setPropertyId] = useState(searchParams.get("property_id") || "");
     const [roomId, setRoomId] = useState(searchParams.get("room_id") || "");
     const [status, setStatus] = useState("");
@@ -96,6 +97,7 @@ export default function InvoicesPage() {
 
             const response = await invoiceService.getAll({
                 page,
+                search: searchText || undefined,
                 property_id: propertyId || undefined,
                 room_id: roomId || undefined,
                 status: status || undefined,
@@ -111,7 +113,7 @@ export default function InvoicesPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [page, propertyId, roomId, status, invoiceType, month]);
+    }, [page, propertyId, roomId, status, invoiceType, month, searchText]);
 
     // Kích hoạt nạp cấu hình ban đầu
     useEffect(() => {
@@ -205,6 +207,12 @@ export default function InvoicesPage() {
                     onOpenCancelModal={handleOpenCancelModal}
                     onOpenDeleteModal={handleOpenDeleteModal}
                     onOpenTemplateModal={handleOpenTemplateModal}
+                    searchText={searchText}
+                    onSearchTextChange={(val) => { setSearchText(val); setPage(1); }}
+                    onClearFilters={() => {
+                        setSearchText(""); setPropertyId(""); setRoomId("");
+                        setStatus(""); setInvoiceType(""); setMonth(""); setPage(1);
+                    }}
                 />
             </div>
 

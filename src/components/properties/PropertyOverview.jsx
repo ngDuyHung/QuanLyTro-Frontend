@@ -58,7 +58,7 @@ export default function PropertyOverview({ property }) {
   );
 
   return (
-    <div className="mb-2 lg:mb-0">
+    <div className="mb-2 lg:mb-0 hidden lg:block">
       {/* Tiêu đề */}
       <div className="hidden lg:flex items-center justify-between mb-3">
         <h3 className="text-[14px] font-bold text-slate-800">

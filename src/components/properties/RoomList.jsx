@@ -670,21 +670,19 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
               const statusConfig = getStatusConfig(room.status);
               const tenantName = getTenantName(room);
               const tenantPhone = getTenantPhone(room);
-              
+
               // Xác định trạng thái nợ từ API (Sử dụng dữ liệu mới thêm ở Backend)
               const hasDebt = room.has_unpaid_invoice && room.unpaid_amount > 0;
 
               return (
                 <div
                   key={room.id}
-                  className={`bg-white border rounded-xl shadow-sm overflow-visible transition-colors ${
-                    hasDebt ? "border-red-300 shadow-red-50" : "border-slate-200"
-                  }`}
+                  className={`bg-white border rounded-xl shadow-sm overflow-visible transition-colors ${hasDebt ? "border-red-300 shadow-red-50" : "border-slate-200"
+                    }`}
                 >
                   {/* Header */}
-                  <div className={`flex items-start justify-between gap-3 px-4 py-3 border-b ${
-                    hasDebt ? "border-red-100 bg-red-50/40 rounded-t-xl" : "border-slate-100"
-                  }`}>
+                  <div className={`flex items-start justify-between gap-3 px-4 py-3 border-b ${hasDebt ? "border-red-100 bg-red-50/40 rounded-t-xl" : "border-slate-100"
+                    }`}>
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${statusConfig.iconClass}`}
@@ -739,16 +737,24 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                       <div>
                         <p className="text-[11px] text-slate-500 mb-1">Thanh toán</p>
                         {hasDebt ? (
-                          <p className="text-[14px] font-bold text-red-600 leading-tight flex items-center gap-1.5">
+                          /* --- THIẾT KẾ NÚT BẤM TRÊN MOBILE CỰC MƯỢT --- */
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+                              navigate(`/landlord/invoices?property_id=${room.property_id}&room_id=${room.id}`);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-bold bg-red-50 text-red-600 border border-red-200 active:bg-red-100 active:scale-[0.96] transition-all cursor-pointer shadow-sm"
+                          >
                             <i className="fa-solid fa-circle-exclamation text-[12px]"></i>
-                            Nợ {formatCurrency(room.unpaid_amount)}
-                          </p>
+                            <span>Nợ {formatCurrency(room.unpaid_amount)}</span>
+                          </div>
                         ) : room.status === "occupied" ? (
-                          <p className="text-[13px] font-semibold text-emerald-600 leading-tight flex items-center gap-1">
-                            <i className="fa-solid fa-circle-check text-[12px]"></i> Đã thu đủ
-                          </p>
+                          <div className="flex items-center gap-1.5 text-emerald-600 font-semibold text-[13px] pt-0.5">
+                            <i className="fa-solid fa-circle-check text-[14px]"></i>
+                            <span>Đã thu đủ</span>
+                          </div>
                         ) : (
-                          <p className="text-[13px] font-semibold text-slate-400 leading-tight">
+                          <p className="text-[13px] font-semibold text-slate-400 leading-tight pt-0.5">
                             —
                           </p>
                         )}

@@ -11,17 +11,18 @@ const formatPercent = (value) => {
 };
 
 const emptyStats = {
-  total: 0,
-  occupied: 0,
-  available: 0,
-  maintenance: 0,
-  occupancy_rate: 0,
-  available_rate: 0,
-  maintenance_rate: 0,
-  expected_monthly_revenue: 0,
-  debt_rooms: 0,
-  debt_rate: 0,
-  current_debt_amount: 0,
+  total: 0, // tổng số phòng
+  occupied: 0, // số phòng đang thuê
+  available: 0, // số phòng trống
+  maintenance: 0, // số phòng đang bảo trì
+  reserved: 0,
+  occupancy_rate: 0, // tỷ lệ phòng đang thuê
+  available_rate: 0, // tỷ lệ phòng trống
+  maintenance_rate: 0, // tỷ lệ phòng đang bảo trì
+  reserved_rate: 0,
+  debt_rooms: 0, // số phòng nợ tiền
+  debt_rate: 0,// tỷ lệ phòng nợ tiền
+  current_debt_amount: 0,// tổng số tiền nợ hiện tại
 };
 
 function StatSkeleton() {
@@ -83,14 +84,14 @@ export default function RoomStats({ stats = emptyStats, isLoading = false }) {
       badgeColor: "text-red-600 bg-red-50",
     },
     {
-      label: "Doanh thu dự kiến",
-      value: formatCurrency(stats.expected_monthly_revenue),
-      icon: "fa-dollar-sign",
-      color: "text-brand",
-      bg: "bg-brand-50",
-      badge: "Tạm tính",
-      badgeColor: "text-brand bg-brand-50",
-      isCurrency: true,
+      label: "Đang cọc",
+      value: stats.reserved,
+      icon: "fa-hand-holding-dollar",
+      color: "text-purple-500",
+      bg: "bg-purple-50",
+      badge: formatPercent(stats.reserved_rate),
+      badgeColor: "text-purple-600 bg-purple-50",
+      isCurrency: false, // Xóa bỏ isCurrency: true vì đây là đếm số lượng
     },
   ];
 
