@@ -3,19 +3,17 @@ import React from "react";
 // Hàm helper map Icon và màu sắc tương ứng cho từng loại dịch vụ trọ
 const getServiceConfig = (type) => {
     switch (type) {
-        case "electricity":
-            return { label: "Tiền điện", icon: "fa-bolt", color: "text-amber-500 bg-amber-50 border-amber-200" };
-        case "water":
-            return { label: "Tiền nước", icon: "fa-droplet", color: "text-blue-500 bg-blue-50 border-blue-200" };
-        case "internet":
-            return { label: "Internet / Wifi", icon: "fa-wifi", color: "text-indigo-500 bg-indigo-50 border-indigo-200" };
-        case "garbage":
-            return { label: "Tiền rác", icon: "fa-trash-can", color: "text-emerald-500 bg-emerald-50 border-emerald-200" };
-        default:
-            return { label: "Khác", icon: "fa-gears", color: "text-slate-500 bg-slate-50 border-slate-200" };
+        case "electricity": return { label: "Tiền điện", icon: "fa-bolt", color: "text-amber-500 bg-amber-50 border-amber-200" };
+        case "water": return { label: "Tiền nước", icon: "fa-droplet", color: "text-blue-500 bg-blue-50 border-blue-200" };
+        case "internet": return { label: "Internet / Wifi", icon: "fa-wifi", color: "text-indigo-500 bg-indigo-50 border-indigo-200" };
+        case "garbage": return { label: "Tiền rác", icon: "fa-trash-can", color: "text-emerald-500 bg-emerald-50 border-emerald-200" };
+        case "parking": return { label: "Giữ xe", icon: "fa-motorcycle", color: "text-pink-500 bg-pink-50 border-pink-200" };
+        case "cleaning": return { label: "Vệ sinh", icon: "fa-broom", color: "text-teal-500 bg-teal-50 border-teal-200" };
+        case "elevator": return { label: "Thang máy", icon: "fa-elevator", color: "text-slate-700 bg-slate-100 border-slate-300" };
+        case "management": return { label: "Phí quản lý", icon: "fa-user-tie", color: "text-purple-500 bg-purple-50 border-purple-200" };
+        case "other": default: return { label: "Khác", icon: "fa-gears", color: "text-slate-500 bg-slate-50 border-slate-200" };
     }
 };
-
 export default function ServicePricesTable({
     prices = [],
     properties = [],
@@ -26,11 +24,12 @@ export default function ServicePricesTable({
     propertyId,
     onPropertyIdChange,
     onOpenAddModal,
+    onEditPrice,
     onDeletePrice,
 }) {
     return (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden">
-            
+
             {/* Thanh công cụ lọc & Nút thêm mới */}
             <div className="p-4 border-b border-slate-100 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shrink-0">
                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -100,8 +99,8 @@ export default function ServicePricesTable({
                                             {price.unit_price.toLocaleString()} đ
                                         </td>
                                         <td className="px-5 py-3.5 text-slate-500">
-                                            {price.free_units > 0 
-                                                ? `${price.free_units} (${price.free_unit_type_label})` 
+                                            {price.free_units > 0
+                                                ? `${price.free_units} (${price.free_unit_type_label})`
                                                 : "Không có"}
                                         </td>
                                         <td className="px-5 py-3.5 text-slate-600">
@@ -112,17 +111,34 @@ export default function ServicePricesTable({
                                         </td>
                                         <td className="px-5 py-3.5 text-center">
                                             <div className="flex items-center justify-center gap-1.5">
-                                                {price.property_id && (
-                                                    <button
-                                                        onClick={() => onDeletePrice(price.id)}
-                                                        className="w-8 h-8 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-colors"
-                                                        title="Xóa giá cấu hình riêng"
-                                                    >
-                                                        <i className="fa-solid fa-trash-can text-[14px]"></i>
-                                                    </button>
-                                                )}
-                                                {!price.property_id && (
-                                                    <span className="text-[11px] text-slate-400 font-normal italic">Hệ thống gốc</span>
+                                                {price.property_id ? (
+                                                    <>
+                                                        <button
+                                                            onClick={() => onEditPrice(price)}
+                                                            className="w-8 h-8 rounded-lg text-blue-500 hover:bg-blue-50 flex items-center justify-center transition-colors"
+                                                            title="Chỉnh sửa giá"
+                                                        >
+                                                            <i className="fa-solid fa-pen text-[13px]"></i>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => onDeletePrice(price.id)}
+                                                            className="w-8 h-8 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-colors"
+                                                            title="Xóa giá cấu hình riêng"
+                                                        >
+                                                            <i className="fa-solid fa-trash-can text-[14px]"></i>
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <button
+                                                            onClick={() => onEditPrice(price)}
+                                                            className="w-8 h-8 rounded-lg text-blue-500 hover:bg-blue-50 flex items-center justify-center transition-colors"
+                                                            title="Chỉnh sửa giá gốc"
+                                                        >
+                                                            <i className="fa-solid fa-pen text-[13px]"></i>
+                                                        </button>
+                                                        <span className="text-[11px] text-slate-400 font-normal italic ml-2 mt-1">Hệ thống gốc</span>
+                                                    </>
                                                 )}
                                             </div>
                                         </td>

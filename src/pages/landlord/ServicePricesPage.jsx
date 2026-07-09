@@ -4,6 +4,7 @@ import propertyService from "@/services/propertyService";
 import servicePriceService from "@/services/servicePriceService";
 import ServicePricesTable from "@/components/servicePrices/ServicePricesTable";
 import AddServicePriceModal from "@/components/servicePrices/AddServicePriceModal";
+import EditServicePriceModal from "@/components/servicePrices/EditServicePriceModal";
 
 export default function ServicePricesPage() {
     const [prices, setPrices] = useState([]);
@@ -17,6 +18,31 @@ export default function ServicePricesPage() {
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingPrice, setEditingPrice] = useState(null);
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    //Mở modal chỉnh sửa giá dịch vụ
+    const handleOpenEditModal = (price) => {
+        setEditingPrice(price);
+        setIsEditModalOpen(true);
+    }
+
+    //Gọi api cập nhật giá dịch vụ
+    const handleUpdateServicePrice = async (formData) => {
+        try {
+            setIsUpdating(true);
+            await servicePriceService.update(formData.id, formData);
+            toast.success("Cập nhật đơn giá dịch vụ thành công!");
+            setIsEditModalOpen(false);
+            fetchServicePrices(); // Load lại bảng
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Có lỗi xảy ra khi cập nhật đơn giá.");
+        } finally {
+            setIsUpdating(false);
+        }
+    };
 
     // Tải danh sách khu nhà trọ để đưa vào thẻ Select bộ lọc
     const fetchProperties = useCallback(async () => {
@@ -33,7 +59,7 @@ export default function ServicePricesPage() {
         try {
             setIsLoading(true);
             let response;
-            
+
             if (propertyId) {
                 // Lấy bảng giá áp dụng riêng của Khu nhà trọ cụ thể
                 response = await servicePriceService.getByProperty(propertyId, { page, per_page: 15 });
@@ -108,6 +134,7 @@ export default function ServicePricesPage() {
                     propertyId={propertyId}
                     onPropertyIdChange={(val) => { setPropertyId(val); setPage(1); }}
                     onOpenAddModal={() => setIsAddModalOpen(true)}
+                    onEditPrice={handleOpenEditModal} //truyền prop vào table để mở modal chỉnh sửa giá
                     onDeletePrice={handleDeletePrice}
                 />
             </div>
@@ -120,6 +147,14 @@ export default function ServicePricesPage() {
                 isSubmitting={isSubmitting}
                 properties={properties}
                 currentPropertyFilter={propertyId}
+            />
+            <EditServicePriceModal
+                open={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSubmit={handleUpdateServicePrice}
+                isSubmitting={isUpdating}
+                properties={properties}
+                initialData={editingPrice}
             />
         </div>
     );

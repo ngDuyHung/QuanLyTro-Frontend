@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import useAuthStore from "@/stores/authStore"; // Kiểm tra lại đường dẫn này cho đúng với dự án của bạn
 import { toast } from "react-toastify";
+import notificationService from "@/services/notificationService";
 
 export default function LandlordLayout() {
   const { user, clearAuth } = useAuthStore();
@@ -10,8 +11,34 @@ export default function LandlordLayout() {
 
   // 1. STATE ĐIỀU KHIỂN SIDEBAR TRÊN MOBILE
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const notifRef = useRef(null);
 
-  // --- THÊM 2 ĐOẠN CODE NÀY ---
+  useEffect(() => {
+    const fetchLatestNotifs = async () => {
+      try {
+        const response = await notificationService.getAll({ per_page: 5 });
+        setNotifications(response.data.data || []);
+      } catch (error) {
+        console.error("Không tải được thông báo trên header", error);
+      }
+    };
+    fetchLatestNotifs();
+  }, []);
+
+  // Xử lý click ra ngoài để đóng dropdown thông báo
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setIsNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+
   // Khởi tạo một Ref để trỏ vào khung cuộn nội dung
   const scrollContainerRef = useRef(null);
 
@@ -253,12 +280,91 @@ export default function LandlordLayout() {
               <span className="hidden lg:inline">Hướng dẫn sử dụng</span>
             </button>
 
-            <button className="relative text-slate-500 hover:text-slate-800 transition-colors mx-1">
-              <i className="fa-regular fa-bell text-[22px]"></i>
-              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full border-2 border-white">
-                3
-              </span>
-            </button>
+            {/* KHU VỰC NÚT VÀ MENU THÔNG BÁO */}
+            <div className="relative mx-1" ref={notifRef}>
+              <button
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className={`relative p-1.5 rounded-full transition-colors ${isNotifOpen ? "bg-slate-100 text-brand" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                  }`}
+              >
+                <i className="fa-regular fa-bell text-[22px]"></i>
+                {notifications.length > 0 && (
+                  <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full border-2 border-white">
+                    {notifications.length > 9 ? "9+" : notifications.length}
+                  </span>
+                )}
+              </button>
+
+              {/* DROPDOWN MENU */}
+              {isNotifOpen && (
+                <div className="fixed left-4 right-4 top-[70px] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-3 sm:w-[380px] bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 overflow-hidden z-[100] flex flex-col sm:origin-top-right animate-[fadeIn_0.2s_ease-out]">
+
+                  {/* Tiêu đề Dropdown */}
+                  <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 backdrop-blur-sm shrink-0">
+                    <h3 className="font-bold text-slate-800 text-[15px]">Thông báo hệ thống</h3>
+                    {/* Chức năng đánh dấu đã đọc (bạn có thể phát triển API sau) */}
+                    <button className="text-[12px] font-semibold text-brand hover:text-green-700 transition-colors">
+                      Đánh dấu đã đọc
+                    </button>
+                  </div>
+
+                  {/* Danh sách thông báo cuộn */}
+                  <div className="max-h-[60vh] sm:max-h-[360px] overflow-y-auto no-scrollbar flex flex-col bg-white">
+                    {notifications.length === 0 ? (
+                      <div className="py-10 text-center flex flex-col items-center justify-center gap-2 text-slate-400">
+                        <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
+                          <i className="fa-regular fa-bell-slash text-xl"></i>
+                        </div>
+                        <span className="text-[13px] font-medium mt-1">Không có thông báo mới nào</span>
+                      </div>
+                    ) : (
+                      notifications.map((item) => {
+                        // Tùy chỉnh icon theo type
+                        const getIcon = (type) => {
+                          if (type === 'billing') return { c: 'text-red-500 bg-red-50', i: 'fa-file-invoice-dollar' };
+                          if (type === 'warning') return { c: 'text-amber-500 bg-amber-50', i: 'fa-triangle-exclamation' };
+                          return { c: 'text-blue-500 bg-blue-50', i: 'fa-circle-info' };
+                        };
+                        const style = getIcon(item.type);
+
+                        return (
+                          <div key={item.id} className="p-4 border-b border-slate-50 hover:bg-slate-50/80 transition-colors cursor-pointer flex gap-3.5 group">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-transparent group-hover:border-current/10 ${style.c} transition-all`}>
+                              <i className={`fa-solid ${style.i} text-[14px]`}></i>
+                            </div>
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <p className="text-[13px] font-bold text-slate-800 leading-snug line-clamp-2 mb-1 group-hover:text-brand transition-colors">
+                                {item.title}
+                              </p>
+                              <div className="flex items-center justify-between mt-auto">
+                                <span className="text-[11px] font-medium text-slate-500 truncate pr-2">
+                                  {item.target_type_label}
+                                </span>
+                                <span className="text-[10px] font-semibold text-slate-400 shrink-0">
+                                  {new Date(item.created_at).toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit' })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Nút Xem tất cả */}
+                  <div className="p-3 border-t border-slate-100 text-center bg-slate-50 shrink-0">
+                    <NavLink
+                      to="/landlord/notifications"
+                      onClick={() => setIsNotifOpen(false)}
+                      className="text-[13px] font-bold text-brand hover:text-green-700 w-full block py-1.5 transition-colors"
+                    >
+                      Xem tất cả thông báo <i className="fa-solid fa-arrow-right text-[11px] ml-1"></i>
+                    </NavLink>
+                  </div>
+
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center gap-2 cursor-pointer pl-1 border-l border-slate-200 ml-1">
               <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 text-lg shrink-0 overflow-hidden">

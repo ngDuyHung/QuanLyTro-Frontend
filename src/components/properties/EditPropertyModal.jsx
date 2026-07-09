@@ -222,12 +222,17 @@ export default function EditPropertyModal({
     if (form.cover_image) formData.append("cover_image", form.cover_image);
 
     // Append mảng dịch vụ vào formData
-    services.forEach((service, index) => {
-      formData.append(`services[${index}][service_type]`, service.service_type);
-      formData.append(`services[${index}][unit_price]`, service.unit_price || 0);
-      formData.append(`services[${index}][free_units]`, service.free_units || 0);
-      formData.append(`services[${index}][free_unit_type]`, service.free_unit_type || "none");
-    });
+    if (services.length === 0) {
+      // Gửi cờ báo hiệu người dùng đã xóa sạch dịch vụ
+      formData.append("empty_services", "true");
+    } else {
+      services.forEach((service, index) => {
+        formData.append(`services[${index}][service_type]`, service.service_type);
+        formData.append(`services[${index}][unit_price]`, service.unit_price || 0);
+        formData.append(`services[${index}][free_units]`, service.free_units || 0);
+        formData.append(`services[${index}][free_unit_type]`, service.free_unit_type || "none");
+      });
+    }
 
     onSubmit(formData);
   };

@@ -53,7 +53,7 @@ export default function AddServicePriceModal({
     return (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
             <div className="bg-white w-full sm:max-w-[500px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out] max-h-[90vh]">
-                
+
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white shrink-0">
                     <div className="flex items-center gap-2.5">
@@ -69,7 +69,7 @@ export default function AddServicePriceModal({
 
                 {/* Form Body */}
                 <form onSubmit={handleFormSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
-                    
+
                     <div>
                         <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Phạm vi áp dụng</label>
                         <select
@@ -96,6 +96,11 @@ export default function AddServicePriceModal({
                                 <option value="water">Nước (m³)</option>
                                 <option value="internet">Internet / Wifi</option>
                                 <option value="garbage">Rác sinh hoạt</option>
+                                <option value="parking">Giữ xe</option>
+                                <option value="cleaning">Vệ sinh</option>
+                                <option value="elevator">Thang máy</option>
+                                <option value="management">Phí quản lý</option>
+                                <option value="other">Khác</option>
                             </select>
                         </div>
                         <div>
