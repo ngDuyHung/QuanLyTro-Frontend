@@ -15,6 +15,9 @@ const accountingLedgerService = {
 
   // Hủy/Xóa sổ đã chốt
   delete: (id) => api.delete(`/accounting-ledgers/${id}`),
+
+  //Xem trước dữ liệu chốt sổ (Dữ liệu HTML)
+  getPreviewHtml: (id) => api.get(`/accounting-ledgers/${id}/preview-html`),
 };
 
 export default accountingLedgerService;

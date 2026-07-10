@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import leasesService from "@/services/leasesService";
 import invoiceService from "@/services/invoiceService";
@@ -37,6 +37,16 @@ export default function CreateInvoiceModal({
     });
     const [dynamicItems, setDynamicItems] = useState([]);
     const [zoomImage, setZoomImage] = useState(null);
+    const scrollContainerRef = useRef(null);
+    // 2. Lắng nghe clientError, nếu có lỗi thì cuộn lên top
+    useEffect(() => {
+        if (clientError && scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({
+                top: 0,
+                behavior: "smooth" // Tạo hiệu ứng cuộn mượt mà
+            });
+        }
+    }, [clientError]);
 
     useEffect(() => {
         return () => {
@@ -147,50 +157,12 @@ export default function CreateInvoiceModal({
 
                 const data = res.data.data;
                 console.log("Prepare Data:", data);
-                let tempRent = 0;
-                let tempElec = { prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false };
-                let tempWater = { prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false };
-                let tempDynamics = [];
 
-                data.suggested_items.forEach((item, index) => {
-                    // 1. Ghi nhận tiền phòng
-                    if (item.charge_type === 'room') {
-                        tempRent = item.unit_price_snapshot;
-                    }
-                    // 2. Xử lý logic Điện (Đọc trực tiếp từ cấu trúc Backend, không dùng Regex)
-                    else if (item.charge_type === 'electricity') {
-                        tempElec.prev = item.previous_reading ?? "";
-                        tempElec.current = item.current_reading ?? "";
-                        tempElec.price = item.unit_price_snapshot;
-                        tempElec.free = item.free_quantity_snapshot || 0;
-                        tempElec.is_chot_roi = item.is_chot_roi;
-                    }
-                    // 3. Xử lý logic Nước
-                    else if (item.charge_type === 'water') {
-                        tempWater.prev = item.previous_reading ?? "";
-                        tempWater.current = item.current_reading ?? "";
-                        tempWater.price = item.unit_price_snapshot;
-                        tempWater.free = item.free_quantity_snapshot || 0;
-                        tempWater.is_chot_roi = item.is_chot_roi;
-                    }
-                    // 4. Các dịch vụ phụ trợ còn lại (rác, wifi...)
-                    else {
-                        tempDynamics.push({
-                            id: Date.now() + index,
-                            charge_type: item.charge_type,
-                            description: item.description,
-                            quantity: item.quantity,
-                            unit_price_snapshot: item.unit_price_snapshot,
-                            unit: item.unit || "Tháng/Lần"
-                        });
-                    }
-                });
-
-                // Cập nhật State 1 lần duy nhất
-                setRent({ price: tempRent });
-                setElectricity(tempElec);
-                setWater(tempWater);
-                setDynamicItems(tempDynamics);
+                // Gán thẳng data từ Backend vào State (Clean code)
+                setRent({ price: data.room.price });
+                setElectricity(data.electricity);
+                setWater(data.water);
+                setDynamicItems(data.dynamic_items);
 
             } catch (error) {
                 console.error("Lỗi Prepare:", error);
@@ -285,6 +257,12 @@ export default function CreateInvoiceModal({
 
         if (!form.lease_id) return setClientError("Vui lòng chọn Phòng (Hợp đồng).");
         if (new Date(form.period_to) <= new Date(form.period_from)) return setClientError("Ngày kết thúc kỳ phải sau ngày bắt đầu.");
+        if (electricity.current !== "" && Number(electricity.current) < Number(electricity.prev)) {
+            return setClientError("Số điện mới không được nhỏ hơn số cũ.");
+        }
+        if (water.current !== "" && Number(water.current) < Number(water.prev)) {
+            return setClientError("Số nước mới không được nhỏ hơn số cũ.");
+        }
 
         try {
             setSubmitAction(actionType); // Bật loading theo action (draft hoặc issue)
@@ -413,6 +391,17 @@ export default function CreateInvoiceModal({
 
     return (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
+            <style> {`
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  `}</style>
+
             <div className="bg-slate-50 w-full h-[95vh] sm:h-auto sm:max-h-[90vh] sm:max-w-[900px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out] relative">
 
                 {/* Header */}
@@ -433,7 +422,7 @@ export default function CreateInvoiceModal({
 
                 {/* Sửa form thành không onSubmit để xử lý click 2 nút riêng biệt */}
                 <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
-                    <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-1 pb-6 bg-slate-50">
+                    <div  ref={scrollContainerRef} className="overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-1 pb-6 bg-slate-50">
 
                         {clientError && (
                             <div className="mx-5 mt-4 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-[13px] flex items-center gap-2">
@@ -635,9 +624,29 @@ export default function CreateInvoiceModal({
                                                         </label>
                                                     )
                                                 ) : (
-                                                    <div className="flex-1 lg:w-9 lg:h-9 flex items-center justify-center lg:justify-end gap-2 text-slate-400 bg-slate-50 lg:bg-transparent rounded-lg py-1.5 lg:py-0">
-                                                        <i className="fa-solid fa-lock text-[12px]"></i>
-                                                        <span className="text-[11px] italic lg:hidden">Đã chốt số kỳ này</span>
+                                                    /* ĐÃ CHỐT SỐ: Hiển thị icon Lock + Ảnh (nếu có server trả về) */
+                                                    <div className="flex-1 lg:w-9 lg:h-9 flex items-center justify-center lg:justify-end gap-2 bg-slate-50 lg:bg-transparent rounded-lg py-1.5 lg:py-0">
+
+                                                        {item.state.preview ? (
+                                                            /* Có ảnh từ server -> Hiển thị ảnh thu nhỏ bấm phóng to được */
+                                                            <div
+                                                                onClick={() => setZoomImage(item.state.preview)}
+                                                                className="w-9 h-9 rounded-lg border border-slate-200 cursor-zoom-in relative group"
+                                                                title="Bấm xem ảnh đã chụp"
+                                                            >
+                                                                <img src={item.state.preview} alt="preview" className="w-full h-full object-cover rounded-lg shadow-sm" />
+                                                                {/* Icon khóa nhỏ báo hiệu không xóa được */}
+                                                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-slate-500 text-white rounded-full flex items-center justify-center text-[8px] shadow-sm">
+                                                                    <i className="fa-solid fa-lock"></i>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            /* Không có ảnh -> Chỉ hiện chữ Đã chốt số */
+                                                            <>
+                                                                <i className="fa-solid fa-lock text-[12px] text-slate-400"></i>
+                                                                <span className="text-[11px] italic lg:hidden text-slate-400">Đã chốt số kỳ này</span>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 )}
 
