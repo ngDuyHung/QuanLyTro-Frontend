@@ -18,6 +18,14 @@ const settingService = {
 
   // Lưu mẫu Hóa đơn
   saveInvoiceTemplate: (data) => api.post("/settings/invoice-template", data),
+
+  // Lấy mẫu Sổ kế toán
+  getLedgerTemplate: () => api.get("/ledgers/ledger-template"),
+  // Lưu mẫu Sổ kế toán
+  saveLedgerTemplate: (data) => api.post("/ledgers/ledger-template", data),
+  // Xuất file PDF Sổ kế toán
+  exportLedgerPdf: (id) =>
+    api.get(`/ledgers/${id}/export-pdf`, { responseType: "blob" }),
 };
 
 export default settingService;

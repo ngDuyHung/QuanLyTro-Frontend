@@ -177,6 +177,15 @@ export default function LandlordLayout() {
           </NavLink>
 
           <NavLink
+            to="/landlord/accounting-ledgers"
+            className={navLinkClasses}
+            onClick={closeSidebar}
+          >
+            <i className="fa-solid fa-book-open w-5 text-center"></i>
+            <span>Sổ kế toán</span>
+          </NavLink>
+
+          <NavLink
             to="/landlord/service-prices"
             className={navLinkClasses}
             onClick={closeSidebar}

@@ -15,6 +15,7 @@ import BankAccountsPage from "@/pages/landlord/BankAccountsPage";
 import FinancialTransactionsPage from "@/pages/landlord/FinancialTransactionsPage";
 import ServicePricesPage from "@/pages/landlord/ServicePricesPage";
 import NotificationsPage from "@/pages/landlord/NotificationsPage";
+import AccountingLedgersPage from "@/pages/landlord/AccountingLedgersPage";
 // Component bảo vệ Route: Chỉ cho vào nếu có Token và đúng Role
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = useAuthStore((state) => state.user);
@@ -60,6 +61,7 @@ export default function AppRouter() {
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="banks" element={<BankAccountsPage />} />
         <Route path="financial-transactions" element={<FinancialTransactionsPage />} />
+        <Route path="accounting-ledgers" element={<AccountingLedgersPage />} />
         <Route path="service-prices" element={<ServicePricesPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
       </Route>
