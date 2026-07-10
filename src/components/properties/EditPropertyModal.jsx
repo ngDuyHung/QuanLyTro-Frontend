@@ -231,6 +231,7 @@ export default function EditPropertyModal({
         formData.append(`services[${index}][unit_price]`, service.unit_price || 0);
         formData.append(`services[${index}][free_units]`, service.free_units || 0);
         formData.append(`services[${index}][free_unit_type]`, service.free_unit_type || "none");
+        formData.append(`services[${index}][effective_date]`,  ""); // để trống để pass request thôi chứ update property nó set ngày sẵn trong rồi 
       });
     }
 

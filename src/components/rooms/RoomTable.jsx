@@ -147,7 +147,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
   const tenantPhone = getTenantPhone(room);
 
   // Xác định trạng thái nợ từ API
-  const hasDebt = room.has_unpaid_invoice && room.unpaid_amount > 0;
+  const hasDebt = room.payment_status === "debt";
 
   return (
     <div className={`bg-white border rounded-xl shadow-sm overflow-visible transition-colors ${hasDebt ? "border-red-300 shadow-red-50" : "border-slate-200"
@@ -208,11 +208,11 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
           {/* Cột 2: Trạng thái thanh toán */}
           <div>
             <p className="text-[11px] text-slate-500 mb-1">Thanh toán</p>
-            {hasDebt ? (
-              /* --- THIẾT KẾ NÚT BẤM TRÊN MOBILE CỰC MƯỢT --- */
+            {room.payment_status === "debt" ? (
+              /* THIẾT KẾ NÚT BẤM KHI CÓ NỢ */
               <div
                 onClick={(e) => {
-                  e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+                  e.stopPropagation();
                   navigate(`/landlord/invoices?property_id=${room.property_id}&room_id=${room.id}`);
                 }}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-bold bg-red-50 text-red-600 border border-red-200 active:bg-red-100 active:scale-[0.96] transition-all cursor-pointer shadow-sm"
@@ -220,12 +220,20 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
                 <i className="fa-solid fa-circle-exclamation text-[12px]"></i>
                 <span>Nợ {formatCurrency(room.unpaid_amount)}</span>
               </div>
-            ) : room.status === "occupied" ? (
+            ) : room.payment_status === "paid" ? (
+              /* TRẠNG THÁI ĐÃ THU ĐỦ */
               <div className="flex items-center gap-1.5 text-emerald-600 font-semibold text-[13px] pt-0.5">
                 <i className="fa-solid fa-circle-check text-[14px]"></i>
                 <span>Đã thu đủ</span>
               </div>
+            ) : room.payment_status === "unbilled" ? (
+              /* TRẠNG THÁI CHƯA LẬP HÓA ĐƠN */
+              <div className="flex items-center gap-1.5 text-amber-500 font-semibold text-[13px] pt-0.5">
+                <i className="fa-solid fa-file-circle-plus text-[14px]"></i>
+                <span>Chưa lập HĐ</span>
+              </div>
             ) : (
+              /* TRẠNG THÁI TRỐNG HOẶC KHÁC */
               <p className="text-[13px] font-semibold text-slate-400 leading-tight pt-0.5">
                 —
               </p>
@@ -857,9 +865,9 @@ export default function RoomTable({
                       )}
                     </td>
 
+                    {/* CỘT THANH TOÁN DESKTOP */}
                     <td className="py-3 px-4">
-                      {room.has_unpaid_invoice && room.unpaid_amount > 0 ? (
-                        /* CHỈ CÓ TRẠNG THÁI NỢ MỚI LÀ BUTTON CÓ THỂ NHẤN */
+                      {room.payment_status === "debt" ? (
                         <div
                           onClick={() => navigate(`/landlord/invoices?property_id=${room.property_id}&room_id=${room.id}`)}
                           className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm"
@@ -868,11 +876,15 @@ export default function RoomTable({
                           <i className="fa-solid fa-circle-exclamation text-[11px]"></i>
                           <span>Nợ {formatCurrency(room.unpaid_amount)}</span>
                         </div>
-                      ) : room.status === "occupied" ? (
-                        /* ĐÃ THU ĐỦ CHỈ HIỂN THỊ TEXT + ICON THUẦN, KHÔNG CÓ KHUNG BỌC, KHÔNG CÓ CON TRỎ BẤM */
+                      ) : room.payment_status === "paid" ? (
                         <div className="flex items-center gap-1.5 text-emerald-600 font-semibold text-[13px] pl-1">
                           <i className="fa-solid fa-circle-check text-[14px]"></i>
                           <span>Đã thu đủ</span>
+                        </div>
+                      ) : room.payment_status === "unbilled" ? (
+                        <div className="flex items-center gap-1.5 text-amber-500 font-semibold text-[13px] pl-1" title="Chưa lập hóa đơn cho kỳ hiện tại">
+                          <i className="fa-solid fa-file-circle-plus text-[14px]"></i>
+                          <span>Chưa lập HĐ</span>
                         </div>
                       ) : (
                         <span className="text-slate-400 pl-4">—</span>
