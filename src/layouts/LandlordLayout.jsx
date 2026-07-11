@@ -140,6 +140,17 @@ export default function LandlordLayout() {
           </NavLink>
 
           <NavLink
+            to="/landlord/incidents"
+            className={navLinkClasses}
+            onClick={closeSidebar}
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <i className="fa-solid fa-screwdriver-wrench w-5 text-center"></i>
+              <span>Sự cố & Bảo trì</span>
+            </div>
+          </NavLink>
+
+          <NavLink
             to="/landlord/utilities"
             className={navLinkClasses}
             onClick={closeSidebar}
