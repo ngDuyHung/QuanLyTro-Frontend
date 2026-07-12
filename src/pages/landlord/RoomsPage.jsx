@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import RoomStats from "@/components/rooms/RoomStats";
@@ -35,13 +35,14 @@ const emptyRoomStats = {
 };
 
 export default function RoomsPage() {
+  const location = useLocation();
   const [rooms, setRooms] = useState([]);
   const [pagination, setPagination] = useState(null);
 
   const [page, setPage] = useState(1);
   const [searchText, setSearchText] = useState("");
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(location.state?.filterStatus || "");
   const [propertyId, setPropertyId] = useState("");
   const [sort, setSort] = useState("created_at_desc");
 
@@ -80,6 +81,17 @@ export default function RoomsPage() {
   // state for exporting excel
   const [isExportingExcel, setIsExportingExcel] = useState(false);
 
+  // Lắng nghe sự thay đổi của location.state để tự động cập nhật bộ lọc
+  useEffect(() => {
+    if (location.state?.filterStatus) {
+      setStatus(location.state.filterStatus);
+      setPage(1); // Reset về trang 1
+
+      // Xóa state trên URL để khi f5 không bị dính mãi bộ lọc này
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchText.trim());
