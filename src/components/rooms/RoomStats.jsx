@@ -97,7 +97,7 @@ export default function RoomStats({ stats = emptyStats, isLoading = false }) {
 
   if (isLoading) {
     return (
-      <div className="hidden sm:flex grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4 mb-4 lg:mb-6">
+      <div className="hidden md:grid  grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4 mb-4 lg:mb-6">
         {Array.from({ length: 6 }).map((_, index) => (
           <StatSkeleton key={index} />
         ))}
@@ -106,7 +106,7 @@ export default function RoomStats({ stats = emptyStats, isLoading = false }) {
   }
 
   return (
-    <div className="hidden sm:flex grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4 mb-4 lg:mb-6">
+    <div className="hidden md:grid  grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4 mb-4 lg:mb-6">
       {statItems.map((stat, index) => (
         <div
           key={index}
