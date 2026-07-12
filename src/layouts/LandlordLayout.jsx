@@ -274,7 +274,7 @@ export default function LandlordLayout() {
       {/* ================= MAIN CONTENT AREA ================= */}
       <main className="flex-1 flex flex-col h-dvh min-w-0 bg-slate-50">
         {/* HEADER */}
-        <header className="h-[66px] bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 shrink-0">
+        <header className="h-[65px] bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 shrink-0">
           <div className="flex items-center gap-3">
             {/* 4. NÚT MỞ SIDEBAR TRÊN MOBILE */}
             <button
