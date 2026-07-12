@@ -151,8 +151,8 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
 
   return (
     <div className={`bg-white border border-l-[2px] rounded-2xl shadow-sm overflow-visible transition-colors ${hasDebt
-        ? "border-slate-200 border-l-red-500 shadow-red-50"
-        : "border-slate-200 border-l-emerald-400"
+      ? "border-slate-200 border-l-red-500 shadow-red-50"
+      : "border-slate-200 border-l-emerald-400"
       }`}
     >
       {/* Header */}
@@ -486,11 +486,30 @@ export default function RoomTable({
   const isFilterActive =
     searchText !== "" || activeFilterCount > 0;
 
+
+  // Hàm xử lý chuyển trang kèm hiệu ứng cuộn lên đầu UX/UI
+  const handlePageChange = (newPage) => {
+    onPageChange?.(newPage);
+
+    setTimeout(() => {
+      // Tìm chính xác khối chứa danh sách thông qua ID
+      const tableContainer = document.getElementById('room-table-top');
+
+      if (tableContainer) {
+        // Lệnh này tự động tìm thanh cuộn (bất kể mobile hay PC) và trượt lên đầu khối đó
+        tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Dự phòng
+      }
+    }, 50);
+  };
+
   // HÀM TẠO TIÊU ĐỀ CỘT CÓ THỂ CLICK ĐỂ SẮP XẾP
   const renderSortableHeader = (label, sortAscKey, sortDescKey, widthClass = "") => {
     const isActive = sort === sortAscKey || sort === sortDescKey;
     const isAsc = sort === sortAscKey;
     const nextSort = isAsc ? sortDescKey : sortAscKey;
+
 
     return (
       <th
@@ -584,7 +603,7 @@ export default function RoomTable({
   );
 
   return (
-    <div className="mb-6 flex flex-col gap-3 lg:gap-0 lg:bg-white lg:border lg:border-slate-200 lg:rounded-xl lg:shadow-sm">
+    <div id="room-table-top" className="mb-6 flex flex-col gap-3 lg:gap-0 lg:bg-white lg:border lg:border-slate-200 lg:rounded-xl lg:shadow-sm">
 
       {/* ========================================================= */}
       {/* BỘ LỌC CHO DESKTOP (Hiển thị dàn trải, không bị giấu đi) */}
@@ -987,7 +1006,7 @@ export default function RoomTable({
             <button
               type="button"
               disabled={page <= 1}
-              onClick={() => onPageChange?.(Math.max(1, page - 1))}
+              onClick={() => handlePageChange(Math.max(1, page - 1))}
               className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
@@ -1009,7 +1028,7 @@ export default function RoomTable({
                   <button
                     key={pageNumber}
                     type="button"
-                    onClick={() => onPageChange?.(pageNumber)}
+                    onClick={() => handlePageChange(pageNumber)}
                     className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
                       ? "bg-brand text-white shadow-sm"
                       : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
@@ -1025,7 +1044,7 @@ export default function RoomTable({
             <button
               type="button"
               disabled={page >= pagination.last_page}
-              onClick={() => onPageChange?.(page + 1)}
+              onClick={() => handlePageChange(page + 1)}
               className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <i className="fa-solid fa-angle-right text-[12px] lg:text-[11px]"></i>

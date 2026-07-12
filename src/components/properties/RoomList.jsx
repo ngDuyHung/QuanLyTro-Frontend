@@ -231,6 +231,21 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
   const [sort, setSort] = useState("created_at_desc");
   const propertyId = property?.id || null;
 
+  // Hàm xử lý chuyển trang kèm hiệu ứng cuộn lên đầu UX/UI
+  const handlePageChange = (newPage) => {
+    setPage(newPage); // Sửa ở đây: Dùng setPage thay vì onPageChange
+
+    setTimeout(() => {
+      const tableContainer = document.getElementById('room-list-top');
+
+      if (tableContainer) {
+        tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 70);
+  };
+
   const fetchRooms = useCallback(async () => {
     if (!propertyId) {
       setRooms([]);
@@ -592,7 +607,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
   }
 
   return (
-    <div className="flex flex-col flex-1">
+    <div id="room-list-top" className="flex flex-col flex-1">
       {/* Header chung của danh sách phòng (Mobile & Desktop) */}
       <div className="flex justify-between items-center mb-3 lg:px-5 lg:py-4 lg:bg-white lg:border lg:border-slate-200 lg:rounded-t-xl lg:mb-0 lg:border-b-0">
         <div>
@@ -655,11 +670,22 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
       </div>
 
       {isLoadingRooms ? (
-        <div className="flex-1 bg-white border border-slate-200 rounded-xl lg:rounded-none lg:border-x lg:border-y-0 p-5">
-          <div className="animate-pulse space-y-3">
+        // Thêm min-h-[800px] để giữ khung màn hình Mobile không bị sụt xuống
+        <div className="flex-1 min-h-[800px] lg:min-h-0">
+          {/* Skeleton dành riêng cho Mobile (Card to, cao bằng card thật) */}
+          <div className="lg:hidden space-y-3 pb-4 pt-2">
             {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-14 bg-slate-100 rounded-lg"></div>
+              <div key={index} className="h-[180px] bg-white border border-slate-200 rounded-xl animate-pulse"></div>
             ))}
+          </div>
+
+          {/* Skeleton dành cho PC (Dạng bảng ngang) */}
+          <div className="hidden lg:block bg-white border-x border-slate-200 p-5">
+            <div className="animate-pulse space-y-3">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="h-14 bg-slate-100 rounded-lg"></div>
+              ))}
+            </div>
           </div>
         </div>
       ) : rooms.length === 0 ? (
@@ -1019,7 +1045,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
             <button
               type="button"
               disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => handlePageChange(Math.max(1, page - 1))}
               className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
@@ -1041,7 +1067,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                   <button
                     key={pageNumber}
                     type="button"
-                    onClick={() => setPage(pageNumber)}
+                    onClick={() => handlePageChange(pageNumber)}
                     className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
                       ? "bg-brand text-white shadow-sm"
                       : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
@@ -1057,7 +1083,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
             <button
               type="button"
               disabled={page >= pagination.last_page}
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => handlePageChange(page + 1)}
               className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <i className="fa-solid fa-angle-right text-[12px] lg:text-[11px]"></i>
