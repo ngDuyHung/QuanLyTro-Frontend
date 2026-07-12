@@ -157,7 +157,7 @@ export default function LandlordDashboard() {
   const yAxisMax = yAxisMaxM * 1000000; // Đổi ngược lại ra đơn vị VNĐ
 
   return (
-    <div className="p-4 md:p-6 lg:p-6 bg-slate-50 w-full flex flex-col overflow-x-hidden">
+    <div className="p-4 md:p-6 lg:p-6 bg-slate-50 w-full flex flex-col overflow-x-hidden pb-[calc(84px+env(safe-area-inset-bottom))] lg:pb-6">
       {/* Lời chào */}
       {showGreeting && (
         <div className="hidden sm:flex bg-[#fffdf2] border border-[#fef08a] rounded-xl px-5 py-3.5 mb-6 flex items-center justify-between shadow-sm transition-all">
@@ -220,52 +220,63 @@ export default function LandlordDashboard() {
       {/* ================================================= */}
       <div className={`lg:hidden ${activeMobileTab === 'manage' ? 'flex flex-col animate-slide-in-left' : 'hidden'}`}>
 
+        {/* 1. Thẻ "Số tiền khách đang nợ" */}
+        {isLoading ? (
+          // SKELETON TICKET CARD
+          <div className="relative flex bg-white rounded-xl shadow-sm border border-slate-100 mb-6 overflow-hidden h-[104px]">
+            <div className="absolute top-0 left-[100px] w-6 h-6 bg-slate-50 border border-slate-100 rounded-full -translate-x-1/2 -translate-y-1/2 z-10 box-border"></div>
+            <div className="absolute bottom-0 left-[100px] w-6 h-6 bg-slate-50 border border-slate-100 rounded-full -translate-x-1/2 translate-y-1/2 z-10 box-border"></div>
 
-        {/* 1. Thẻ "Số tiền khách đang nợ" (Thiết kế Stick/Ticket ) */}
-        <Link
-          to="/landlord/invoices"
-          className="relative flex bg-white rounded-xl shadow-[0_2px_8px_-3px_rgba(0,0,0,0.05)] border border-slate-100 mb-6 hover:shadow-md transition-shadow overflow-hidden"
-        >
-          {/* Vết cắt tròn (Ticket cut) - Nửa trên & Nửa dưới */}
-          {/* Đặt left-[100px] để khớp chuẩn xác với đường gạch đứt của cột trái */}
-          <div className="absolute top-0 left-[100px] w-6 h-6 bg-slate-50 border border-slate-100 rounded-full -translate-x-1/2 -translate-y-1/2 z-10 box-border"></div>
-          <div className="absolute bottom-0 left-[100px] w-6 h-6 bg-slate-50 border border-slate-100 rounded-full -translate-x-1/2 translate-y-1/2 z-10 box-border"></div>
-
-          {/* Cột Trái: Icon & Nhãn (Rộng 100px) */}
-          <div className="w-[100px] py-4 flex flex-col items-center justify-center shrink-0">
-            <div className="w-[52px] h-[52px] bg-[#eefcf2] rounded-full flex items-center justify-center mb-2.5">
-              <i className="fa-solid fa-file-invoice text-slate-700 text-2xl"></i>
-            </div>
-            <span className="bg-black text-white text-[10px] font-bold px-2.5 py-1 rounded">
-              Đang nợ
-            </span>
-          </div>
-
-          {/* Đường nét đứt (Dashed Divider) */}
-          <div className="w-px border-l-[2px] border-dashed border-slate-200 my-2"></div>
-
-          {/* Cột Phải: Thông tin nội dung (Giữ nguyên data cũ) */}
-          <div className="flex-1 py-4 pl-5 pr-4 flex items-center justify-between">
-            <div className="flex flex-col">
-              <p className="text-[14px] text-slate-800 font-bold mb-0.5">Số tiền khách đang nợ</p>
-              <p className="text-[12px] text-slate-500 mb-2">Tổng hợp từ hóa đơn phát hành</p>
-
-              <p className="text-[20px] font-bold text-[#f03e3e] leading-none mb-2.5">
-                {Number(pendingTasks.unpaid_invoices_total || 0).toLocaleString("vi-VN")} đ
-              </p>
-
-              <p className="text-[11px] text-[#e85d04] font-medium flex items-center gap-1.5">
-                <i className="fa-solid fa-triangle-exclamation text-[12px]"></i>
-                {pendingTasks.unpaid_invoices_count || 0} hóa đơn cần thu tiền
-              </p>
+            <div className="w-[100px] py-4 flex flex-col items-center justify-center shrink-0">
+              <div className="w-[52px] h-[52px] bg-slate-200 rounded-full animate-pulse mb-2.5"></div>
             </div>
 
-            {/* Mũi tên điều hướng bên phải */}
-            <i className="fa-solid fa-chevron-right text-slate-800 text-lg ml-2 stroke-2"></i>
-          </div>
-        </Link>
+            <div className="w-px border-l-[2px] border-dashed border-slate-200 my-2"></div>
 
-        {/* 2. Lưới "Thao tác thường dùng" (3 nút chính) */}
+            <div className="flex-1 py-4 pl-5 pr-4 flex flex-col justify-center gap-2">
+              <div className="w-32 h-4 bg-slate-200 rounded animate-pulse"></div>
+              <div className="w-24 h-3 bg-slate-200 rounded animate-pulse"></div>
+              <div className="w-20 h-5 bg-slate-200 rounded animate-pulse mt-1"></div>
+            </div>
+          </div>
+        ) : (
+          // REAL TICKET CARD
+          <Link
+            to="/landlord/invoices"
+            className="relative flex bg-white rounded-xl shadow-[0_2px_8px_-3px_rgba(0,0,0,0.05)] border border-slate-100 mb-6 hover:shadow-md transition-shadow overflow-hidden"
+          >
+            <div className="absolute top-0 left-[100px] w-6 h-6 bg-slate-50 border border-slate-100 rounded-full -translate-x-1/2 -translate-y-1/2 z-10 box-border"></div>
+            <div className="absolute bottom-0 left-[100px] w-6 h-6 bg-slate-50 border border-slate-100 rounded-full -translate-x-1/2 translate-y-1/2 z-10 box-border"></div>
+
+            <div className="w-[100px] py-4 flex flex-col items-center justify-center shrink-0">
+              <div className="w-[52px] h-[52px] bg-[#eefcf2] rounded-full flex items-center justify-center mb-2.5">
+                <i className="fa-solid fa-file-invoice text-slate-700 text-2xl"></i>
+              </div>
+              <span className="bg-black text-white text-[10px] font-bold px-2.5 py-1 rounded">
+                Đang nợ
+              </span>
+            </div>
+
+            <div className="w-px border-l-[2px] border-dashed border-slate-200 my-2"></div>
+
+            <div className="flex-1 py-4 pl-5 pr-4 flex items-center justify-between">
+              <div className="flex flex-col">
+                <p className="text-[14px] text-slate-800 font-bold mb-0.5">Số tiền khách đang nợ</p>
+                <p className="text-[12px] text-slate-500 mb-2">Tổng hợp từ hóa đơn phát hành</p>
+                <p className="text-[20px] font-bold text-[#f03e3e] leading-none mb-2.5">
+                  {Number(pendingTasks.unpaid_invoices_total || 0).toLocaleString("vi-VN")} đ
+                </p>
+                <p className="text-[11px] text-[#e85d04] font-medium flex items-center gap-1.5">
+                  <i className="fa-solid fa-triangle-exclamation text-[12px]"></i>
+                  {pendingTasks.unpaid_invoices_count || 0} hóa đơn cần thu tiền
+                </p>
+              </div>
+              <i className="fa-solid fa-chevron-right text-slate-800 text-lg ml-2 stroke-2"></i>
+            </div>
+          </Link>
+        )}
+
+        {/* 2. Lưới "Thao tác thường dùng" */}
         <div className="mb-6">
           <div className="mb-4 flex flex-col border-l-4 border-green-500 pl-2">
             <h3 className="text-[15px] font-bold text-slate-800 leading-tight">Thao tác thường dùng</h3>
@@ -273,39 +284,49 @@ export default function LandlordDashboard() {
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            {/* Nút 1: Cọc giữ chỗ -> Sang trang Phòng + Lọc phòng Trống */}
-            <Link to="/landlord/rooms" state={{ filterStatus: 'available' }} className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
-              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center relative">
-                <i className="fa-solid fa-hand-holding-dollar text-[22px]"></i>
-                {overview.available_rooms > 0 && (
-                  <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">
-                    {overview.available_rooms}
-                  </span>
-                )}
-              </div>
-              <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Cọc giữ chỗ</span>
-            </Link>
+            {isLoading ? (
+              // SKELETON 3 NÚT
+              [1, 2, 3].map((i) => (
+                <div key={i} className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 h-[100px]">
+                  <div className="w-10 h-10 rounded-full bg-slate-200 animate-pulse"></div>
+                  <div className="w-16 h-3 bg-slate-200 rounded animate-pulse mt-1"></div>
+                </div>
+              ))
+            ) : (
+              // REAL 3 NÚT
+              <>
+                <Link to="/landlord/rooms" state={{ filterStatus: 'available' }} className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
+                  <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center relative">
+                    <i className="fa-solid fa-hand-holding-dollar text-[22px]"></i>
+                    {overview.available_rooms > 0 && (
+                      <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">
+                        {overview.available_rooms}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Cọc giữ chỗ</span>
+                </Link>
 
-            {/* Nút 2: Lập hợp đồng mới -> Sang trang Phòng + Lọc phòng Trống */}
-            <Link to="/landlord/rooms" state={{ filterStatus: 'available' }} className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
-              <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center relative">
-                <i className="fa-solid fa-file-signature text-[22px]"></i>
-                {pendingTasks.expiring_leases_count > 0 && (
-                  <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">
-                    {pendingTasks.expiring_leases_count}
-                  </span>
-                )}
-              </div>
-              <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Lập hợp<br />đồng mới</span>
-            </Link>
+                <Link to="/landlord/rooms" state={{ filterStatus: 'available' }} className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
+                  <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center relative">
+                    <i className="fa-solid fa-file-signature text-[22px]"></i>
+                    {pendingTasks.expiring_leases_count > 0 && (
+                      <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">
+                        {pendingTasks.expiring_leases_count}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Lập hợp<br />đồng mới</span>
+                </Link>
 
-            {/* Nút 3: Lập hóa đơn -> Sang trang Phòng + Lọc phòng Đang thuê */}
-            <Link to="/landlord/rooms" state={{ filterStatus: 'occupied' }} className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
-              <div className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center relative">
-                <i className="fa-solid fa-file-invoice-dollar text-[22px]"></i>
-              </div>
-              <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Lập hóa đơn</span>
-            </Link>
+                <Link to="/landlord/rooms" state={{ filterStatus: 'occupied' }} className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
+                  <div className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center relative">
+                    <i className="fa-solid fa-file-invoice-dollar text-[22px]"></i>
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Lập hóa đơn</span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -317,58 +338,65 @@ export default function LandlordDashboard() {
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            {/* Khu nhà */}
-            <Link to="/landlord/properties" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
-              <div className="w-10 h-10 rounded-full bg-[#0e8b4d]/10 text-[#0e8b4d] flex items-center justify-center relative">
-                <i className="fa-solid fa-house-medical text-[22px]"></i>
-              </div>
-              <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Khu nhà</span>
-            </Link>
+            {isLoading ? (
+              // SKELETON 6 NÚT
+              [1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 h-[100px]">
+                  <div className="w-10 h-10 rounded-full bg-slate-200 animate-pulse"></div>
+                  <div className="w-16 h-3 bg-slate-200 rounded animate-pulse mt-1"></div>
+                </div>
+              ))
+            ) : (
+              // REAL 6 NÚT
+              <>
+                <Link to="/landlord/properties" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
+                  <div className="w-10 h-10 rounded-full bg-[#0e8b4d]/10 text-[#0e8b4d] flex items-center justify-center relative">
+                    <i className="fa-solid fa-house-medical text-[22px]"></i>
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Khu nhà</span>
+                </Link>
 
-            {/* Phòng trọ */}
-            <Link to="/landlord/rooms" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
-              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center relative">
-                <i className="fa-solid fa-door-open text-[22px]"></i>
-              </div>
-              <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Phòng trọ</span>
-            </Link>
+                <Link to="/landlord/rooms" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center relative">
+                    <i className="fa-solid fa-door-open text-[22px]"></i>
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Phòng trọ</span>
+                </Link>
 
-            {/* Khách thuê */}
-            <Link to="/landlord/tenants" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
-              <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center relative">
-                <i className="fa-solid fa-users text-[22px]"></i>
-              </div>
-              <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Khách thuê</span>
-            </Link>
+                <Link to="/landlord/tenants" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
+                  <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center relative">
+                    <i className="fa-solid fa-users text-[22px]"></i>
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Khách thuê</span>
+                </Link>
 
-            {/* Điện nước */}
-            <Link to="/landlord/utilities" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
-              <div className="w-10 h-10 rounded-full bg-yellow-50 text-yellow-500 flex items-center justify-center relative">
-                <i className="fa-solid fa-bolt text-[22px]"></i>
-              </div>
-              <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Điện nước</span>
-            </Link>
+                <Link to="/landlord/utilities" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
+                  <div className="w-10 h-10 rounded-full bg-yellow-50 text-yellow-500 flex items-center justify-center relative">
+                    <i className="fa-solid fa-bolt text-[22px]"></i>
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Điện nước</span>
+                </Link>
 
-            {/* Hóa đơn cần thu */}
-            <Link to="/landlord/invoices" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
-              <div className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center relative">
-                <i className="fa-solid fa-file-invoice-dollar text-[22px]"></i>
-                {pendingTasks.unpaid_invoices_count > 0 && (
-                  <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">
-                    {pendingTasks.unpaid_invoices_count}
-                  </span>
-                )}
-              </div>
-              <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Hóa đơn<br />cần thu</span>
-            </Link>
+                <Link to="/landlord/invoices" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
+                  <div className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center relative">
+                    <i className="fa-solid fa-file-invoice-dollar text-[22px]"></i>
+                    {pendingTasks.unpaid_invoices_count > 0 && (
+                      <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">
+                        {pendingTasks.unpaid_invoices_count}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Hóa đơn<br />cần thu</span>
+                </Link>
 
-            {/* Sự cố & Bảo trì */}
-            <Link to="/landlord/incidents" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
-              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center relative">
-                <i className="fa-solid fa-wrench text-[22px]"></i>
-              </div>
-              <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Sự cố &<br />Bảo trì</span>
-            </Link>
+                <Link to="/landlord/incidents" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center relative">
+                    <i className="fa-solid fa-wrench text-[22px]"></i>
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Sự cố &<br />Bảo trì</span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
