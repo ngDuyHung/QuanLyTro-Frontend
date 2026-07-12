@@ -340,8 +340,7 @@ export default function InvoicesTable({
               const statusConf = getStatusConfig(invoice.status);
 
               return (
-                <div key={invoice.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-
+                <div key={invoice.id} className="bg-white border border-slate-200 border-l-[2px] border-l-emerald-400 rounded-2xl shadow-sm overflow-hidden flex flex-col">
                   {/* Header: Tên phòng + Trạng thái */}
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                     <div className="flex flex-col">

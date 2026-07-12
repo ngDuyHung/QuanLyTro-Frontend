@@ -150,8 +150,11 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
   const hasDebt = room.payment_status === "debt";
 
   return (
-    <div className={`bg-white border rounded-xl shadow-sm overflow-visible transition-colors ${hasDebt ? "border-red-300 shadow-red-50" : "border-slate-200"
-      }`}>
+    <div className={`bg-white border border-l-[2px] rounded-2xl shadow-sm overflow-visible transition-colors ${hasDebt
+        ? "border-slate-200 border-l-red-500 shadow-red-50"
+        : "border-slate-200 border-l-emerald-400"
+      }`}
+    >
       {/* Header */}
       <div className={`flex items-start justify-between gap-3 px-3.5 py-3 border-b ${hasDebt ? "border-red-100 bg-red-50/40 rounded-t-xl" : "border-slate-100"
         }`}>
