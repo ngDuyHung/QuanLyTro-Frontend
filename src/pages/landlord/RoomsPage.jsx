@@ -296,7 +296,7 @@ export default function RoomsPage() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "Mau_Nhap_Lieu_Khu_Nha.xlsx");
+      link.setAttribute("download", "Du_Lieu_Khu_Nha.xlsx");
       document.body.appendChild(link);
       link.click();
       link.remove();
