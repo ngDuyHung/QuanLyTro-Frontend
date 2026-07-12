@@ -4,7 +4,7 @@
 /* 2. Hợp nhất cấu hình Theme */
 @theme {
   /* Ghi đè font mặc định của Tailwind */
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: "Inter", sans-serif;
 
   /* Bảng màu Primary (Từ code cũ của bạn) */
   --color-primary: #0d8a51;
@@ -23,20 +23,40 @@
      THÊM HIỆU ỨNG (ANIMATIONS) CHO TAILWIND V4
      ========================================= */
   @keyframes slideDown {
-    0% { top: -5%; opacity: 0; }
-    15% { opacity: 1; }
-    85% { opacity: 1; }
-    100% { top: 100%; opacity: 0; }
+    0% {
+      top: -5%;
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      top: 100%;
+      opacity: 0;
+    }
   }
 
   @keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 
   @keyframes slideUp {
-    0% { transform: translateY(100%); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
+    0% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 }
 
@@ -50,7 +70,7 @@
 @layer base {
   body {
     font-family: var(--font-sans);
-    background-color: #f4f7fe; 
+    background-color: #f4f7fe;
     @apply text-slate-800;
   }
 }
@@ -59,40 +79,71 @@
 @layer utilities {
   /* Scrollbar cho Sidebar */
   .sidebar-scroll::-webkit-scrollbar {
-      width: 4px;
+    width: 4px;
   }
   .sidebar-scroll::-webkit-scrollbar-thumb {
-      background-color: #e2e8f0;
-      border-radius: 4px;
+    background-color: #e2e8f0;
+    border-radius: 4px;
   }
   .sidebar-scroll:hover::-webkit-scrollbar-thumb {
-      background-color: #cbd5e1;
+    background-color: #cbd5e1;
   }
 
   /* Scrollbar tùy chỉnh chung */
   .custom-scroll::-webkit-scrollbar {
-      width: 6px;
+    width: 6px;
   }
   .custom-scroll::-webkit-scrollbar-thumb {
-      background-color: #cbd5e1;
-      border-radius: 6px;
+    background-color: #cbd5e1;
+    border-radius: 6px;
   }
 
   /* Ẩn Scrollbar nhưng vẫn cho cuộn */
   .no-scrollbar::-webkit-scrollbar {
-      display: none;
+    display: none;
   }
   .no-scrollbar {
-      -ms-overflow-style: none; /* IE and Edge */
-      scrollbar-width: none;    /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
-
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
-}
-.scrollbar-hide {
+  }
+  .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
-}
+  }
+
+  /* Lướt từ bên Trái vào (Dành cho tab Quản lý) */
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Lướt từ bên Phải vào (Dành cho tab Tổng quan) */
+  @keyframes slideInFromRight {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-slide-in-left {
+    animation: slideInFromLeft 0.3s ease-out forwards;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInFromRight 0.3s ease-out forwards;
+  }
 }

@@ -157,7 +157,7 @@ export default function LandlordDashboard() {
   const yAxisMax = yAxisMaxM * 1000000; // Đổi ngược lại ra đơn vị VNĐ
 
   return (
-    <div className="p-4 md:p-6 lg:p-6 bg-slate-50 w-full flex flex-col">
+    <div className="p-4 md:p-6 lg:p-6 bg-slate-50 w-full flex flex-col overflow-x-hidden">
       {/* Lời chào */}
       {showGreeting && (
         <div className="hidden sm:flex bg-[#fffdf2] border border-[#fef08a] rounded-xl px-5 py-3.5 mb-6 flex items-center justify-between shadow-sm transition-all">
@@ -182,21 +182,33 @@ export default function LandlordDashboard() {
       )}
 
       {/* 2. TAB SWITCHER DÀNH RIÊNG CHO MOBILE (Sẽ ẩn trên PC nhờ lg:hidden) */}
-      <div className="lg:hidden flex bg-slate-200/60 p-1 rounded-xl mb-6">
+      <div className="lg:hidden relative flex bg-white border border-[#0e8b4d] p-1 rounded-xl mb-6 z-0">
+
+        {/* Thanh trượt vật lý ảo (Sliding Segmented Indicator) */}
+        <div
+          className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-[#0e8b4d] rounded-lg shadow-sm transition-transform duration-300 ease-out -z-10"
+          style={{
+            transform: activeMobileTab === 'manage' ? 'translateX(0)' : 'translateX(100%)'
+          }}
+        ></div>
+
+        {/* Nút: Quản lý */}
         <button
           onClick={() => setActiveMobileTab('manage')}
-          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg text-[14px] font-bold transition-all duration-300 ${activeMobileTab === 'manage'
-            ? 'bg-blue-600 text-white shadow-md'
-            : 'text-slate-500 hover:text-slate-700'
+          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg text-[14px] font-bold transition-colors duration-300 ${activeMobileTab === 'manage'
+            ? 'text-white'
+            : 'text-[#0e8b4d] hover:text-green-800'
             }`}
         >
           <i className="fa-solid fa-cube text-[16px]"></i> Quản lý
         </button>
+
+        {/* Nút: Tổng quan */}
         <button
           onClick={() => setActiveMobileTab('overview')}
-          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg text-[14px] font-bold transition-all duration-300 ${activeMobileTab === 'overview'
-            ? 'bg-white text-slate-800 shadow-sm'
-            : 'text-slate-500 hover:text-slate-700'
+          className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg text-[14px] font-bold transition-colors duration-300 ${activeMobileTab === 'overview'
+            ? 'text-white'
+            : 'text-[#0e8b4d] hover:text-green-800'
             }`}
         >
           <i className="fa-solid fa-chart-line text-[16px]"></i> Tổng quan
@@ -206,7 +218,7 @@ export default function LandlordDashboard() {
       {/* ================================================= */}
       {/* VÙNG A: MÀN HÌNH QUẢN LÝ (CHỈ MOBILE)             */}
       {/* ================================================= */}
-      <div className={`lg:hidden ${activeMobileTab === 'manage' ? 'flex flex-col' : 'hidden'}`}>
+      <div className={`lg:hidden ${activeMobileTab === 'manage' ? 'flex flex-col animate-slide-in-left' : 'hidden'}`}>
 
 
         {/* 1. Thẻ "Số tiền khách đang nợ" (Thiết kế Stick/Ticket ) */}
@@ -364,7 +376,7 @@ export default function LandlordDashboard() {
       {/* ================================================= */}
       {/* VÙNG B: MÀN HÌNH TỔNG QUAN (MOBILE) HOẶC MẶC ĐỊNH (PC) */}
       {/* ================================================= */}
-      <div className={activeMobileTab === 'overview' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'}>
+      <div className={`${activeMobileTab === 'overview' ? 'flex flex-col animate-slide-in-right' : 'hidden lg:flex lg:flex-col'}`}>
         {/* Thẻ Thống kê nhanh - Responsive Tối ưu PC & Mobile */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 mb-6">
           {statCards.map((card, idx) => (
