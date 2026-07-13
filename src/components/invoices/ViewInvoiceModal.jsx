@@ -166,7 +166,17 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
             const blob = await toBlob(invoiceRef.current, {
                 cacheBust: true,
                 pixelRatio: 2,
-                backgroundColor: '#ffffff' // <--- ÉP NỀN TRẮNG TẠI ĐÂY
+                backgroundColor: '#ffffff',
+
+                // --- BỔ SUNG CÁC THÔNG SỐ ÉP KÍCH THƯỚC CHUẨN DƯỚI ĐÂY ---
+                width: 700, // Ép chiều rộng của ảnh đầu ra luôn là 700 pixel
+                style: {
+                    width: '700px',     // Ép phần tử DOM phình to ra 700px trong lúc chụp ngầm
+                    maxWidth: 'none',   // Vô hiệu hóa các class giới hạn chiều rộng (responsive) của Mobile
+                    padding: '30px',    // Thêm một chút lề trắng xung quanh cho giống tờ giấy in thật
+                    margin: '0',
+                    transform: 'none'   // Chống lỗi lệch tọa độ khi chụp
+                }
             });
             const fileName = `Ban_in_Hoa_don_${invoice?.invoice_code}.png`;
             const file = new File([blob], fileName, { type: "image/png" });
