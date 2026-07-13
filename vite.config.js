@@ -56,6 +56,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp}"],
         navigateFallback: "/index.html",
+        // THÊM DÒNG NÀY: Cấm PWA dùng index.html để fallback cho các file nằm trong thư mục assets (JS, CSS)
+        navigateFallbackDenylist: [/^\/assets\//],
         cleanupOutdatedCaches: true,
       },
 

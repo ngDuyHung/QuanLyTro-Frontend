@@ -1,38 +1,65 @@
 <!doctype html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
 
-    <link rel="icon" type="image/png" href="/icon-logo.png" />
+<head>
+  <script>
+    // Kịch bản tự giải cứu: Chạy độc lập không phụ thuộc vào React
+    (function () {
+      // Tránh lặp vô hạn (chỉ reload 1 lần duy nhất)
+      const IS_RESCUED = sessionStorage.getItem('pwa_rescued');
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      if (!IS_RESCUED && 'serviceWorker' in navigator) {
+        // 1. Xóa toàn bộ Cache Storage của PWA
+        if ('caches' in window) {
+          caches.keys().then(function (cacheNames) {
+            cacheNames.forEach(function (cacheName) {
+              caches.delete(cacheName);
+            });
+          });
+        }
 
-    <meta name="theme-color" content="#ffffff" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Kiêu Giang" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        // 2. Hủy đăng ký toàn bộ Service Worker đang bị lỗi
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          if (registrations.length > 0) {
+            let unregisterPromises = registrations.map(registration => registration.unregister());
 
-    <link rel="apple-touch-icon" href="/icon-logo.png" />
+            Promise.all(unregisterPromises).then(() => {
+              // 3. Đánh dấu đã giải cứu và Force Reload để nạp lại code sạch từ Server
+              sessionStorage.setItem('pwa_rescued', 'true');
+              window.location.reload(true);
+            });
+          }
+        });
+      }
+    })();
+  </script>
+  <meta charset="UTF-8" />
 
-    <title>Kiêu Giang - Quản lý nhà trọ</title>
+  <link rel="icon" type="image/png" href="/icon-logo.png" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Kiêu Giang" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-  </head>
+  <link rel="apple-touch-icon" href="/icon-logo.png" />
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+  <title>Kiêu Giang - Quản lý nhà trọ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>
