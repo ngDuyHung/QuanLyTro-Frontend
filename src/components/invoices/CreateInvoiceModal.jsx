@@ -404,10 +404,10 @@ export default function CreateInvoiceModal({
     }
   `}</style>
 
-            <div className="bg-slate-50 w-full h-[100vh] sm:h-auto sm:max-h-[90vh] sm:max-w-[1000px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out] relative">
+            <div className="bg-slate-50 w-full h-[100vh] sm:h-auto sm:max-h-[90vh] sm:max-w-[1000px]  sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out] relative">
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white shrink-0 sticky top-0 z-20">
+                <div className="flex items-center justify-between px-5 py-2 sm:py-4 border-b border-slate-200 bg-white shrink-0 sticky top-0 z-20">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand shrink-0">
                             <i className="fa-solid fa-file-invoice-dollar text-[18px]"></i>
@@ -530,9 +530,10 @@ export default function CreateInvoiceModal({
                                 </div>
                             )}
 
-                            <div className="flex justify-between items-end mb-4">
-                                <h3 className="text-[14px] font-bold text-slate-700 uppercase tracking-wider">
-                                    <i className="fa-solid fa-bolt text-brand mr-1"></i> 2. Chốt số & Tiền phòng
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="flex items-center gap-2 text-[15px] font-bold text-slate-800">
+                                    <i className="fa-solid fa-bolt text-brand text-[14px]"></i>
+                                    <span>2. Tiền phòng & Điện nước</span>
                                 </h3>
                             </div>
 
@@ -541,30 +542,58 @@ export default function CreateInvoiceModal({
                             {/* ========================================== */}
                             <div className="sm:hidden">
                                 {/* --- CARD TIỀN PHÒNG --- */}
-                                <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4 shadow-sm flex flex-col justify-between gap-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 shrink-0">
-                                            <i className="fa-solid fa-house-chimney text-[16px]"></i>
+                                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-4">
+
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 shrink-0">
+                                                <i className="fa-solid fa-house text-[15px]"></i>
+                                            </div>
+                                            <div>
+                                                <div className="text-[13px] font-bold text-slate-700">
+                                                    Tiền phòng
+                                                </div>
+                                                <div className="text-[11px] text-slate-500">
+                                                    Giá cố định theo tháng
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="text-[13px] font-bold text-slate-700">Tiền thuê phòng</div>
-                                            <div className="text-[11px] text-slate-500">Cố định theo tháng</div>
+                                        <div className="text-right">
+                                            <div className="text-[17px] font-black text-brand leading-none">
+                                                {Number(rent.price).toLocaleString("vi-VN")} đ
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="relative w-full">
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            value={rent.price === 0 ? "" : Number(rent.price).toLocaleString("vi-VN")}
-                                            placeholder="0"
-                                            onChange={(e) => {
-                                                const rawValue = e.target.value.replace(/[^\d]/g, "");
-                                                setRent({ price: rawValue ? Number(rawValue) : 0 });
-                                            }}
-                                            className="w-full pl-3 pr-8 py-2 border border-slate-200 rounded-lg text-[14px] font-bold text-slate-800 focus:border-brand outline-none text-right bg-slate-50 focus:bg-white transition-colors"
-                                        />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-slate-400 pointer-events-none">đ</span>
+                                    {/* Body */}
+                                    <div className="p-4">
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={
+                                                    rent.price === 0
+                                                        ? ""
+                                                        : Number(rent.price).toLocaleString("vi-VN")
+                                                }
+                                                placeholder="Nhập giá phòng..."
+                                                onChange={(e) => {
+                                                    const rawValue = e.target.value.replace(/[^\d]/g, "");
+                                                    setRent({
+                                                        price: rawValue ? Number(rawValue) : 0
+                                                    });
+                                                }}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-4 pr-12 py-3 text-[14px] font-semibold text-slate-800 outline-none transition-all focus:border-brand focus:bg-white"
+                                            />
+
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-medium text-slate-400">
+                                                VNĐ
+                                            </span>
+
+                                        </div>
+
                                     </div>
+
                                 </div>
 
                                 {/* --- CARD ĐIỆN / NƯỚC --- */}
@@ -864,8 +893,8 @@ export default function CreateInvoiceModal({
                         {/* SECTION 3: Dịch vụ khác & Giảm trừ */}
                         <div className="bg-white px-4 py-5 sm:px-5 border-b border-slate-200 mt-2">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-[14px] font-bold text-brand flex items-center gap-2">
-                                    <i className="fa-solid fa-layer-group text-[13px]"></i> 3. Dịch vụ khác & Khấu trừ
+                                <h3 className="flex items-center gap-2 text-[15px] font-bold text-slate-800">
+                                    <i className="fa-solid fa-layer-group text-brand text-[14px]"></i> 3. Dịch vụ khác
                                 </h3>
                                 <button
                                     type="button"
@@ -1002,30 +1031,35 @@ export default function CreateInvoiceModal({
                             )}
                         </div>
 
-                        {/* SECTION 4: Ghi chú */}
-                        <div className="px-4 sm:px-5 py-5 mt-2">
-                            <div className="w-full bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                <label className="block text-[12px] font-semibold text-slate-700 mb-2">
-                                    Ghi chú hóa đơn (Tùy chọn)
-                                </label>
-                                <textarea
-                                    value={form.note}
-                                    onChange={handleChange("note")}
-                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-[13px] outline-none focus:border-brand min-h-[90px] resize-none transition-colors focus:bg-white"
-                                    placeholder="Nhập ghi chú hoặc lời nhắn cho khách thuê..."
-                                ></textarea>
-                            </div>
-                        </div>
+                        {/* SECTION 4: Lời nhắn tới khách thuê */}
+                        <div className="bg-white px-4 sm:px-5 py-5 border-t border-slate-200">
+                            {/* Header */}
+                            <div className="flex items-start gap-3 mb-3">
+                                <h3 className="flex items-center gap-2 text-[15px] font-bold text-slate-800">
 
+                                    <i className="fa-solid fa-note-sticky text-brand text-[14px]"></i>
+
+                                    <span>4. Lời nhắn tới khách thuê</span>
+
+                                </h3>
+                            </div>
+                            {/* Textarea */}
+                            <textarea
+                                value={form.note}
+                                onChange={handleChange("note")}
+                                placeholder="Ví dụ: Vui lòng thanh toán trước ngày 05 hàng tháng. Nếu có sai sót vui lòng liên hệ chủ nhà."
+                                className="w-full min-h-[72px] rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[13px] text-slate-700 placeholder:text-slate-400 outline-none resize-none transition-all focus:bg-white focus:border-brand"
+                            />
+                        </div>
                     </div>
 
                     {/* Footer với Tổng tiền & Nút Bấm tối ưu Mobile/PC */}
                     <div className="border-t border-slate-200 p-4 sm:px-5 sm:py-3.5 bg-white shrink-0 sticky bottom-0 z-20 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
 
                         {/* 1. HIỂN THỊ TỔNG TIỀN (Mobile: nằm trên / PC: nằm trái) */}
-                        <div className="flex items-center justify-between sm:justify-start sm:gap-4 w-full sm:w-auto bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-lg sm:rounded-none border border-slate-100 sm:border-none">
+                        <div className="flex items-center justify-between sm:justify-start sm:gap-4 w-full sm:w-auto  sm:bg-transparent p-1 sm:p-0 rounded-lg sm:rounded-none  sm:border-none">
                             <span className="text-[13px] text-slate-600 font-medium hidden sm:block">Tổng cộng:</span>
-                            <span className="text-[13px] text-slate-600 font-semibold sm:hidden">Tổng thanh toán:</span>
+                            <span className="text-[13px]  font-semibold sm:hidden">Tổng thanh toán:</span>
 
                             <span className="text-[18px] sm:text-[22px] font-black text-brand">
                                 {totalAmount.toLocaleString()} đ
