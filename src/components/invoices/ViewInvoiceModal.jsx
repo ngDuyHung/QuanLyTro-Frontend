@@ -11,6 +11,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
     const [exportingAction, setExportingAction] = useState(null); // null, 'download_pdf', 'share_pdf', 'share_image', 'share_pdf_image'
     // Khai báo ref để đánh dấu vùng giao diện thô cần chụp ảnh
     const invoiceRef = useRef(null);
+    const receiptMobileRef = useRef(null);
     // Thêm state này để quản lý Tab trên Mobile
     const [mobileTab, setMobileTab] = useState("details");
 
@@ -38,7 +39,8 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                 invoiceService.getById(id),
                 invoiceService.getPreviewHtml(id) // <--- Thêm hàm gọi API này vào invoiceService
             ]);
-
+            console.log("Chi tiết hóa đơn:", invoiceRes.data.data);
+            console.log("Mẫu HTML hóa đơn:", previewRes.data.html);
             setInvoice(invoiceRes.data.data);
             setPreviewHtml(previewRes.data.html); // Gán thẳng cục HTML backend trả về
         } catch (error) {
@@ -194,6 +196,52 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
         }
     };
 
+
+    // 4. HÀM CHIA SẺ BIÊN LAI ĐIỆN TỬ (GIAO DIỆN MOBILE)
+    const handleShareMobileReceipt = async () => {
+        setExportingAction('share_mobile_receipt');
+        try {
+            if (!receiptMobileRef.current) return;
+
+            // Chụp vùng giao diện cột trái. 
+            // Tiêm thêm style nền xám và padding để biên lai bo góc lọt thỏm giữa tấm ảnh cho đẹp mắt
+            const blob = await toBlob(receiptMobileRef.current, {
+                cacheBust: true,
+                pixelRatio: 2,
+                backgroundColor: '#f8fafc', // Màu nền xám nhạt Tailwind (slate-50)
+                style: {
+                    padding: '24px',
+                    margin: '0'
+                }
+            });
+
+            const fileName = `Bien_lai_${invoice?.invoice_code}.png`;
+            const file = new File([blob], fileName, { type: "image/png" });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: `Biên lai phòng ${invoice?.room?.name}`,
+                    text: `Gửi bạn biên lai điện tử phòng ${invoice?.room?.name}.`,
+                    files: [file],
+                });
+                toast.success("Đã mở bảng chia sẻ thành công!");
+            } else {
+                // Tải xuống nếu dùng trên máy tính hoặc không hỗ trợ share
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = fileName;
+                link.click();
+                window.URL.revokeObjectURL(url);
+            }
+        } catch (error) {
+            console.error("Lỗi tạo ảnh biên lai mobile:", error);
+            toast.error("Có lỗi xảy ra khi tạo ảnh biên lai.");
+        } finally {
+            setExportingAction(null);
+        }
+    };
+
     if (!open) return null;
 
     return (
@@ -249,19 +297,19 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                             </div>
                         ) : (
                             <>
-                                <div className="space-y-5 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+                                <div ref={receiptMobileRef} className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm relative">
 
                                     {/* 1. Tiêu đề Phòng & Tên khu trọ */}
-                                    <div className="text-center py-1">
-                                        <h3 className="text-[20px] font-bold text-slate-800">Phòng {invoice.room?.name || "—"}</h3>
-                                        <p className="text-[13px] text-slate-400 font-medium mt-0.5">{invoice.property?.name || "—"}</p>
+                                    <div className="text-center pb-4">
+                                        <h3 className="text-[22px] font-bold text-slate-800">Phòng {invoice.room?.name || "—"}</h3>
+                                        <p className="text-[14px] text-slate-500 mt-0.5">{invoice.property?.name || "—"}</p>
                                     </div>
 
-                                    {/* 2. Khối thông tin Kỳ hạn, Ngày lập, Hạn nộp chia 3 cột có vạch dọc */}
-                                    <div className="grid grid-cols-3 border border-slate-200 rounded-xl p-3 text-center bg-white text-[12px]">
+                                    {/* 2. Khối thông tin Kỳ hạn, Ngày lập, Hạn nộp chia 3 cột */}
+                                    <div className="grid grid-cols-3 border border-slate-200 rounded-xl p-3 text-center bg-white text-[13px] mb-5">
                                         <div>
-                                            <span className="text-slate-400 font-medium block">Kỳ hóa đơn</span>
-                                            <span className="font-bold text-slate-700 block mt-1">
+                                            <span className="text-slate-500 block mb-0.5">Hóa đơn tháng</span>
+                                            <span className="font-medium text-slate-800 block">
                                                 {(() => {
                                                     if (!invoice.period_to) return "—";
                                                     const d = new Date(invoice.period_to);
@@ -270,81 +318,97 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                             </span>
                                         </div>
                                         <div className="border-x border-slate-200">
-                                            <span className="text-slate-400 font-medium block">Ngày lập</span>
-                                            <span className="font-bold text-slate-700 block mt-1">
+                                            <span className="text-slate-500 block mb-0.5">Ngày lập h.đơn</span>
+                                            <span className="font-medium text-slate-800 block">
                                                 {invoice.issue_date ? new Date(invoice.issue_date).toLocaleDateString("vi-VN") : "—"}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-slate-400 font-medium block">Hạn thanh toán</span>
-                                            <span className="font-bold text-slate-700 block mt-1">
+                                            <span className="text-slate-500 block mb-0.5">Hạn nạp tiền</span>
+                                            <span className="font-medium text-slate-800 block">
                                                 {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString("vi-VN") : "—"}
                                             </span>
                                         </div>
                                     </div>
 
                                     {/* 3. Khối Kính gửi khách hàng */}
-                                    <div className="flex justify-between items-start text-[13px] border-b border-slate-100 pb-3">
-                                        <span className="text-slate-400 font-medium">Kính gửi</span>
-                                        <div className="text-right font-bold text-slate-800">
-                                            <div>{invoice.lease?.tenant?.full_name || "—"}</div>
-                                            <div className="text-[11px] text-slate-400 font-normal mt-0.5">SĐT: {invoice.lease?.tenant?.phone || "—"}</div>
+                                    <div className="flex justify-between items-start text-[14px] border-b border-slate-200 pb-4 mb-4">
+                                        <span className="text-slate-600">Kính gửi</span>
+                                        <div className="text-right">
+                                            <div className="font-bold text-slate-800">{invoice.lease?.tenant?.full_name || "—"}</div>
+                                            <div className="text-[13px] text-slate-600 mt-1">SĐT: {invoice.lease?.tenant?.phone || "—"}</div>
                                         </div>
                                     </div>
 
                                     {/* 4. Khối Lý do thu & Badge trạng thái thu tiền */}
-                                    <div className="flex justify-between items-center text-[13px] border-b border-slate-100 pb-3">
+                                    <div className="flex justify-between items-start text-[14px] border-b border-slate-200 pb-4 mb-2">
                                         <div>
-                                            <span className="text-slate-400 font-medium block text-[11px]">Lý do thu</span>
-                                            <span className="font-bold text-slate-800 mt-0.5 block">
+                                            <span className="text-slate-600 block mb-1">Lý do thu</span>
+                                            <span className="font-bold text-slate-800 block">
                                                 {invoice.invoice_type === "monthly" ? "Thu tiền hàng tháng" : "Thu chi phát sinh"}
                                             </span>
                                         </div>
-                                        <div>
+                                        <div className="mt-1">
                                             {Number(invoice.remaining_amount) <= 0 || invoice.status === "paid" ? (
-                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full text-[11px] font-bold border border-green-200">
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-slate-700 rounded-full text-[12px] font-medium border border-green-100">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Đã thu xong
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[11px] font-bold border border-amber-200">
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-slate-700 rounded-full text-[12px] font-medium border border-amber-100">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> {invoice.status_label || "Chưa thu đủ"}
                                                 </span>
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* 5. Vùng Danh sách các khoản tiền chi tiết (Đã gộp toàn bộ mô tả) */}
+                                    {/* 5. Vùng Danh sách các khoản tiền chi tiết */}
                                     <div className="divide-y divide-slate-100">
                                         {invoice.items?.map((item) => {
                                             const isUtility = ["electricity", "water"].includes(item.charge_type);
                                             const meter = invoice.meter_readings?.find((m) => m.type === item.charge_type);
                                             const free = parseFloat(item.free_quantity_snapshot) || 0;
+                                            const quantity = parseFloat(item.quantity) || 0;
+                                            const price = Number(item.unit_price_snapshot) || 0;
 
-                                            // Xây dựng chuỗi mô tả gộp đầy đủ thông tin (Thay thế hoàn toàn cho các badge)
-                                            let itemSubtitle = "";
-                                            if (isUtility && meter) {
-                                                itemSubtitle = `Số mới: ${meter.current_reading}, Số cũ: ${meter.previous_reading}`;
-                                                if (free > 0) itemSubtitle += ` (Miễn phí: ${free})`;
-                                                itemSubtitle += ` • ${item.quantity} ${item.unit} x ${Number(item.unit_price_snapshot).toLocaleString()}đ`;
-                                            } else if (item.charge_type === "deposit") {
-                                                itemSubtitle = "Hoàn trả khi trả phòng (nếu không phát sinh nợ/hư hỏng)";
+                                            let subtitle = null;
+                                            let calcBadge = null;
+
+                                            // Xử lý text phụ và badge theo đúng mockup
+                                            if (item.charge_type === 'room') {
+                                                subtitle = `${quantity} ${item.unit}, giá: ${price.toLocaleString()} đ`;
+                                            } else if (isUtility && meter) {
+                                                subtitle = `Số mới: ${meter.current_reading}, Số cũ: ${meter.previous_reading}`;
+                                                if (free > 0) subtitle += ` - Miễn phí: ${free}`;
+                                                calcBadge = `${quantity} ${item.unit} x ${price.toLocaleString()}đ`;
+                                            } else if (item.charge_type === 'deposit') {
+                                                subtitle = "Hoàn trả khi trả phòng nếu không phát sinh nợ/hư hỏng";
                                             } else {
-                                                itemSubtitle = `${item.quantity} ${item.unit || "Lần"} x ${Number(item.unit_price_snapshot).toLocaleString()}đ`;
-                                                if (free > 0) itemSubtitle += ` (Miễn phí: ${free})`;
+                                                subtitle = quantity > 1 ? `${quantity} ${item.unit} x ${price.toLocaleString()}đ` : null;
                                             }
 
                                             return (
-                                                <div key={item.id} className="py-3.5 first:pt-0 last:pb-0">
-                                                    <div className="flex justify-between items-start gap-3">
+                                                <div key={item.id} className="py-4 first:pt-2 last:pb-4">
+                                                    <div className="flex justify-between items-start gap-4">
                                                         <div className="flex-1">
-                                                            <h4 className="font-bold text-slate-800 text-[13.5px]">{item.description}</h4>
-                                                            <p className="text-[11.5px] text-slate-500 mt-0.5 font-medium leading-relaxed">
-                                                                {itemSubtitle}
-                                                            </p>
+                                                            <h4 className="font-bold text-slate-800 text-[15px]">{item.description}</h4>
+
+                                                            {subtitle && (
+                                                                <p className="text-[14px] text-slate-600 mt-1">
+                                                                    {subtitle}
+                                                                </p>
+                                                            )}
+
+                                                            {calcBadge && (
+                                                                <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50/80 rounded-full text-[13px] text-slate-700">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-300"></span>
+                                                                    {calcBadge}
+                                                                </div>
+                                                            )}
                                                         </div>
+
                                                         <div className="text-right shrink-0">
-                                                            <span className="text-[10px] text-slate-400 block">Thành tiền</span>
-                                                            <span className="font-bold text-slate-800 text-[14px] mt-0.5 block">
+                                                            <span className="text-[13px] text-slate-600 block mb-1">Thành tiền</span>
+                                                            <span className="font-bold text-slate-800 text-[15px] block">
                                                                 {Number(item.amount).toLocaleString()} đ
                                                             </span>
                                                         </div>
@@ -354,30 +418,30 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         })}
                                     </div>
 
-                                    {/* 6. Khối tóm tắt dòng tiền */}
-                                    <div className="pt-2 border-t border-slate-100 space-y-2 text-[12px]">
-                                        <div className="flex justify-between text-slate-400 font-medium">
-                                            <span>Tổng tiền dịch vụ</span>
-                                            <span className="font-bold text-slate-700">{Number(invoice.total_amount).toLocaleString()} đ</span>
+                                    {/* 6. Khối tóm tắt dòng tiền (Căn sát lề phải giống mẫu) */}
+                                    <div className="pt-4 mt-2 border-t border-slate-100 flex flex-col items-end gap-3 text-[14px]">
+                                        <div className="flex items-center justify-between w-full sm:w-[220px]">
+                                            <span className="text-slate-600">Tổng tiền dịch vụ</span>
+                                            <span className="font-bold text-slate-800">{Number(invoice.total_amount).toLocaleString()} đ</span>
                                         </div>
-                                        <div className="flex justify-between text-slate-400 font-medium">
-                                            <span>Đã trả</span>
+                                        <div className="flex items-center justify-between w-full sm:w-[220px]">
+                                            <span className="text-slate-600">Đã trả</span>
                                             <span className="font-bold text-green-600">{Number(invoice.paid_amount).toLocaleString()} đ</span>
                                         </div>
                                     </div>
 
-                                    {/* 7. Hộp bo góc nổi bật cuối biên lai (Số lần thanh toán & Tổng phải trả thực tế) */}
-                                    <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3.5 flex justify-between items-center text-[12.5px]">
+                                    {/* 7. Hộp bo góc nổi bật cuối biên lai */}
+                                    <div className="mt-6 bg-[#f5fbf7] border border-green-500 rounded-xl p-4 flex justify-between items-center text-[14px]">
                                         <div>
-                                            <span className="text-slate-400 block font-medium">Số lần thanh toán</span>
-                                            <span className="font-bold text-slate-700 block mt-0.5">{invoice.allocations?.length || 0} lần</span>
+                                            <span className="text-slate-600 block mb-1">Số lần thanh toán</span>
+                                            <span className="font-bold text-slate-800 block">{invoice.allocations?.length || 0} lần</span>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-slate-400 block font-medium">Tổng phải trả</span>
+                                            <span className="text-slate-600 block mb-1">Tổng phải trả</span>
                                             {Number(invoice.remaining_amount) <= 0 ? (
-                                                <span className="font-bold text-emerald-600 block mt-0.5 text-[13.5px]">Đã trả xong</span>
+                                                <span className="font-bold text-green-600 block text-[15px]">Đã trả xong</span>
                                             ) : (
-                                                <span className="font-bold text-red-500 block mt-0.5 text-[13.5px]">
+                                                <span className="font-bold text-green-600 block text-[15px]">
                                                     {Number(invoice.remaining_amount).toLocaleString()} đ
                                                 </span>
                                             )}
@@ -385,15 +449,29 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                     </div>
 
                                     {/* 8. Lời chú ý cuối trang */}
-                                    <p className="text-[11px] text-slate-400 italic text-center font-medium">
-                                        * Chú ý: Vui lòng thanh toán đúng hạn và trước ngày {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString("vi-VN") : "—"}
+                                    <p className="mt-5 text-[14px] text-slate-800">
+                                        <strong>* Chú ý:</strong> Vui lòng thanh toán đúng hạn và trước ngày {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString("vi-VN") : "—"}
                                     </p>
                                 </div>
 
                                 {/* HỘP NÚT BẤM CHỨC NĂNG (NẰM NGOÀI VÙNG CHỤP ẢNH ĐỂ KHÔNG BỊ PHÁT SINH TRONG BIÊN LAI) */}
                                 <div className="mt-5 pt-4 border-t border-slate-200 flex flex-col gap-2">
 
-                                    {/* Nút Thu Tiền Nhanh liên kết động từ trang quản lý chính */}
+                                    {/* NÚT MỚI THÊM: CHIA SẺ BIÊN LAI ĐIỆN TỬ */}
+                                    <button
+                                        type="button"
+                                        onClick={handleShareMobileReceipt}
+                                        disabled={!!exportingAction}
+                                        className="w-full py-3 bg-indigo-50 text-indigo-700 rounded-xl text-[14px] font-bold hover:bg-indigo-100 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                                    >
+                                        {exportingAction === 'share_mobile_receipt' ? (
+                                            <><i className="fa-solid fa-spinner animate-spin text-[15px]"></i> Đang tạo ảnh...</>
+                                        ) : (
+                                            <><i className="fa-solid fa-receipt text-[15px]"></i> Chia sẻ Biên lai điện tử</>
+                                        )}
+                                    </button>
+
+                                    {/* Nút Thu Tiền Nhanh liên kết động từ trang quản lý chính (GIỮ NGUYÊN) */}
                                     {["issued", "partially_paid", "overdue"].includes(invoice.status) && Number(invoice.remaining_amount) > 0 && (
                                         <button
                                             type="button"
@@ -403,7 +481,6 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                             <i className="fa-solid fa-sack-dollar text-[15px]"></i> Ghi nhận Thu tiền nhanh
                                         </button>
                                     )}
-
 
                                 </div>
                             </>
