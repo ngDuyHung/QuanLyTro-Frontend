@@ -257,6 +257,11 @@ export default function InvoicesPage() {
                     setIsViewModalOpen(false);
                     setSelectedInvoice(null);
                 }}
+                // BỔ SUNG THÊM DÒNG NÀY:
+                onOpenPaymentModal={() => {
+                    setIsViewModalOpen(false);     // Bước 1: Ẩn modal xem chi tiết đi cho đỡ rối màn hình
+                    setIsPaymentModalOpen(true);   // Bước 2: Bật ngay modal thu tiền lên (selectedInvoice đã có sẵn rồi)
+                }}
             />
 
             <InvoiceTemplateModal

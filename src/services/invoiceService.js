@@ -35,9 +35,19 @@ const invoiceService = {
   exportPdf: (id) =>
     api.get(`/invoices/${id}/export-pdf`, { responseType: "blob" }),
 
+  exportImage: (id) =>
+    api.get(`/invoices/${id}/export-image`, {
+      responseType: "blob", // Rất quan trọng để nhận file ảnh
+    }),
+
+  // Xuất ảnh từ bản in PDF
+  exportPdfImage: (id) =>
+    api.get(`/invoices/${id}/export-pdf-image`, {
+      responseType: "blob",
+    }),
+
   // Xem trước hóa đơn (trước khi phát hành)
   getPreviewHtml: (id) => api.get(`/invoices/${id}/preview`),
-
 };
 
 export default invoiceService;
