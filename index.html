@@ -2,37 +2,6 @@
 <html lang="vi">
 
 <head>
-  <script>
-    // Kịch bản tự giải cứu: Chạy độc lập không phụ thuộc vào React
-    (function () {
-      // Tránh lặp vô hạn (chỉ reload 1 lần duy nhất)
-      const IS_RESCUED = sessionStorage.getItem('pwa_rescued');
-
-      if (!IS_RESCUED && 'serviceWorker' in navigator) {
-        // 1. Xóa toàn bộ Cache Storage của PWA
-        if ('caches' in window) {
-          caches.keys().then(function (cacheNames) {
-            cacheNames.forEach(function (cacheName) {
-              caches.delete(cacheName);
-            });
-          });
-        }
-
-        // 2. Hủy đăng ký toàn bộ Service Worker đang bị lỗi
-        navigator.serviceWorker.getRegistrations().then(function (registrations) {
-          if (registrations.length > 0) {
-            let unregisterPromises = registrations.map(registration => registration.unregister());
-
-            Promise.all(unregisterPromises).then(() => {
-              // 3. Đánh dấu đã giải cứu và Force Reload để nạp lại code sạch từ Server
-              sessionStorage.setItem('pwa_rescued', 'true');
-              window.location.reload(true);
-            });
-          }
-        });
-      }
-    })();
-  </script>
   <meta charset="UTF-8" />
 
   <link rel="icon" type="image/png" href="/icon-logo.png" />
