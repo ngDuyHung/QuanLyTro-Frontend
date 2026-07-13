@@ -113,141 +113,81 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
     };
 
 
-    // 3. HÀM CHỤP ẢNH DOM VÀ CHIA SẺ (Dùng html-to-image)
-    const handleShareImage = async () => {
-        if (!invoiceRef.current) return;
 
-        setExportingAction('share_image');
-        try {
-            // Dùng toBlob của html-to-image, an toàn và xịn hơn html2canvas rất nhiều
-            const blob = await toBlob(invoiceRef.current, {
-                quality: 1,
-                backgroundColor: "#ffffff", // Nền trắng
-                pixelRatio: 2, // Tăng độ nét gấp đôi cho Mobile
-            });
 
-            if (!blob) {
-                toast.error("Không thể tạo ảnh, vui lòng thử lại.");
-                setExportingAction(null);
-                return;
-            }
-
-            const fileName = `Chi_tiet_hoa_don_${invoice?.invoice_code || 'phong'}.png`;
-            const file = new File([blob], fileName, { type: "image/png" });
-
-            // Gọi Web Share API của thiết bị
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                try {
-                    await navigator.share({
-                        title: `Chi tiết hóa đơn ${invoice?.room?.name}`,
-                        text: `Gửi bạn chi tiết hóa đơn phòng ${invoice?.room?.name}.`,
-                        files: [file],
-                    });
-                    toast.success("Đã mở bảng chia sẻ thành công!");
-                } catch (shareError) {
-                    if (shareError.name !== 'AbortError') {
-                        toast.error("Lỗi khi mở bảng chia sẻ hệ thống.");
-                    }
-                }
-            } else {
-                // FALLBACK cho PC hoặc trình duyệt cũ
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = fileName;
-                link.click();
-                window.URL.revokeObjectURL(url);
-                toast.warning("Trình duyệt không hỗ trợ chia sẻ trực tiếp, đã tải ảnh xuống máy.");
-            }
-
-            setExportingAction(null);
-        } catch (error) {
-            console.error("Lỗi chụp ảnh:", error);
-            toast.error("Có lỗi xảy ra khi chụp ảnh màn hình.");
-            setExportingAction(null);
-        }
-    };
-
-    //  // 3. HÀM GỌI BACKEND XUẤT ẢNH VÀ CHIA SẺ ZALO
-    // const handleShareImage = async () => {
-    //     setIsExporting(true);
+    // 3. HÀM CHIA SẺ ẢNH BẢN IN (PDF STYLE) QUA ZALO
+    // const handleSharePdfImage = async () => {
+    //     setExportingAction('share_pdf_image');
     //     try {
-    //         // Gọi API Backend để nhận file ảnh UI đã được render
-    //         const response = await invoiceService.exportImage(invoice.id);
-
+    //         const response = await invoiceService.exportPdfImage(invoice.id);
     //         const blob = new Blob([response.data], { type: 'image/png' });
-    //         const fileName = `Chi_tiet_hoa_don_${invoice?.invoice_code || 'phong'}.png`;
+
+    //         const fileName = `Ban_in_Hoa_don_${invoice?.invoice_code}.png`;
     //         const file = new File([blob], fileName, { type: "image/png" });
 
-    //         // Mở bảng chia sẻ của hệ điều hành (Điện thoại)
     //         if (navigator.canShare && navigator.canShare({ files: [file] })) {
     //             try {
     //                 await navigator.share({
-    //                     title: `Chi tiết hóa đơn ${invoice?.room?.name}`,
-    //                     text: `Gửi bạn chi tiết hóa đơn phòng ${invoice?.room?.name}.`,
+    //                     title: `Hóa đơn phòng ${invoice?.room?.name}`,
+    //                     text: `Gửi bạn bản in hóa đơn phòng ${invoice?.room?.name}.`,
     //                     files: [file],
     //                 });
     //                 toast.success("Đã mở bảng chia sẻ thành công!");
     //             } catch (shareError) {
+    //                 // Bỏ qua lỗi nếu người dùng chủ động tắt bảng chia sẻ
     //                 if (shareError.name !== 'AbortError') {
     //                     toast.error("Lỗi khi mở bảng chia sẻ hệ thống.");
+    //                     console.error("Lỗi chia sẻ:", shareError);
     //                 }
     //             }
     //         } else {
-    //             // FALLBACK: Nếu dùng PC, tự động tải file ảnh xuống máy
     //             const url = window.URL.createObjectURL(blob);
     //             const link = document.createElement("a");
     //             link.href = url;
     //             link.download = fileName;
     //             link.click();
     //             window.URL.revokeObjectURL(url);
-    //             toast.warning("Thiết bị chưa hỗ trợ chia sẻ ảnh trực tiếp, đã tải ảnh xuống máy.");
+    //             toast.warning("Đã tải ảnh bản in xuống máy.");
     //         }
     //     } catch (error) {
-    //         console.error("Lỗi tải ảnh từ server:", error);
-    //         toast.error("Có lỗi xảy ra khi tạo ảnh chia sẻ từ hệ thống.");
+    //         console.error("Lỗi tải ảnh PDF:", error);
+    //         toast.error("Có lỗi xảy ra khi tạo ảnh bản in.");
     //     } finally {
-    //         setIsExporting(false);
+    //         setExportingAction(null);
     //     }
     // };
 
-
-    // 4. HÀM CHIA SẺ ẢNH BẢN IN (PDF STYLE) QUA ZALO
     const handleSharePdfImage = async () => {
         setExportingAction('share_pdf_image');
         try {
-            const response = await invoiceService.exportPdfImage(invoice.id);
-            const blob = new Blob([response.data], { type: 'image/png' });
+            if (!invoiceRef.current) return;
 
+            // Chụp trực tiếp giao diện đang hiển thị thành file ảnh (cực nhanh)
+            const blob = await toBlob(invoiceRef.current, {
+                cacheBust: true,
+                pixelRatio: 2,
+                backgroundColor: '#ffffff' // <--- ÉP NỀN TRẮNG TẠI ĐÂY
+            });
             const fileName = `Ban_in_Hoa_don_${invoice?.invoice_code}.png`;
             const file = new File([blob], fileName, { type: "image/png" });
 
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                try {
-                    await navigator.share({
-                        title: `Hóa đơn phòng ${invoice?.room?.name}`,
-                        text: `Gửi bạn bản in hóa đơn phòng ${invoice?.room?.name}.`,
-                        files: [file],
-                    });
-                    toast.success("Đã mở bảng chia sẻ thành công!");
-                } catch (shareError) {
-                    // Bỏ qua lỗi nếu người dùng chủ động tắt bảng chia sẻ
-                    if (shareError.name !== 'AbortError') {
-                        toast.error("Lỗi khi mở bảng chia sẻ hệ thống.");
-                        console.error("Lỗi chia sẻ:", shareError);
-                    }
-                }
+                await navigator.share({
+                    title: `Hóa đơn phòng ${invoice?.room?.name}`,
+                    text: `Gửi bạn bản in hóa đơn phòng ${invoice?.room?.name}.`,
+                    files: [file],
+                });
+                toast.success("Đã mở bảng chia sẻ thành công!");
             } else {
+                // Tải xuống nếu không share được
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.href = url;
                 link.download = fileName;
                 link.click();
                 window.URL.revokeObjectURL(url);
-                toast.warning("Đã tải ảnh bản in xuống máy.");
             }
         } catch (error) {
-            console.error("Lỗi tải ảnh PDF:", error);
             toast.error("Có lỗi xảy ra khi tạo ảnh bản in.");
         } finally {
             setExportingAction(null);
@@ -309,8 +249,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                             </div>
                         ) : (
                             <>
-                                {/* VÙNG CHỤP ẢNH SẼ ĐƯỢC BAO BỌC TRONG ĐÂY (NỀN TRẮNG SẠCH SẼ NHƯ TỜ BIÊN LAI) */}
-                                <div ref={invoiceRef} className="space-y-5 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+                                <div className="space-y-5 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
 
                                     {/* 1. Tiêu đề Phòng & Tên khu trọ */}
                                     <div className="text-center py-1">
@@ -465,18 +404,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         </button>
                                     )}
 
-                                    {/* Nút Chụp và chia sẻ ảnh chụp màn hình */}
-                                    <button
-                                        onClick={handleShareImage}
-                                        disabled={!!exportingAction}
-                                        className="w-full py-3 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl text-[14px] font-bold hover:bg-indigo-100 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
-                                    >
-                                        {exportingAction === 'share_image' ? (
-                                            <><i className="fa-solid fa-spinner animate-spin"></i> Đang xử lý ảnh...</>
-                                        ) : (
-                                            <><i className="fa-brands fa-telegram text-[16px]"></i> Chụp & chia sẻ ảnh</>
-                                        )}
-                                    </button>
+
                                 </div>
                             </>
                         )}
@@ -535,7 +463,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                 </div>
                             ) : (
                                 // Render mã HTML thô từ template đã map dữ liệu thực
-                                <div
+                                <div ref={invoiceRef}
                                     className="preview-document-content-target"
                                     dangerouslySetInnerHTML={{ __html: previewHtml }}
                                 />
