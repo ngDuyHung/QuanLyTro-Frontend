@@ -166,17 +166,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
             const blob = await toBlob(invoiceRef.current, {
                 cacheBust: true,
                 pixelRatio: 2,
-                backgroundColor: '#ffffff',
-
-                // --- BỔ SUNG CÁC THÔNG SỐ ÉP KÍCH THƯỚC CHUẨN DƯỚI ĐÂY ---
-                width: 700, // Ép chiều rộng của ảnh đầu ra luôn là 700 pixel
-                style: {
-                    width: '700px',     // Ép phần tử DOM phình to ra 700px trong lúc chụp ngầm
-                    maxWidth: 'none',   // Vô hiệu hóa các class giới hạn chiều rộng (responsive) của Mobile
-                    padding: '30px',    // Thêm một chút lề trắng xung quanh cho giống tờ giấy in thật
-                    margin: '0',
-                    transform: 'none'   // Chống lỗi lệch tọa độ khi chụp
-                }
+                backgroundColor: '#ffffff' // <--- ÉP NỀN TRẮNG TẠI ĐÂY
             });
             const fileName = `Ban_in_Hoa_don_${invoice?.invoice_code}.png`;
             const file = new File([blob], fileName, { type: "image/png" });
@@ -465,16 +455,19 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                         </div>
 
                         {/* Vùng mô phỏng khổ giấy in thực tế */}
-                        <div className="flex-1 w-full max-w-[700px] bg-white rounded-xl shadow-2xl overflow-y-auto p-6 sm:p-8 border border-slate-300 border-t-4 border-t-brand/80 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-300">
+                        {/* Đổi overflow-y-auto thành overflow-auto để hỗ trợ cuộn ngang trên mobile */}
+                        <div className="flex-1 w-full max-w-[700px] bg-slate-100 rounded-xl shadow-2xl overflow-auto p-4 sm:p-8 border border-slate-300 border-t-4 border-t-brand/80 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-300">
                             {isLoading ? (
-                                <div className="flex flex-col justify-center items-center h-full gap-3 text-white">
+                                <div className="flex flex-col justify-center items-center h-full gap-3 text-slate-500">
                                     <i className="fa-solid fa-circle-notch animate-spin text-3xl text-brand"></i>
-                                    <p className="text-[13px] font-medium text-slate-400">Đang đồng bộ mẫu phiếu...</p>
+                                    <p className="text-[13px] font-medium">Đang đồng bộ mẫu phiếu...</p>
                                 </div>
                             ) : (
-                                // Render mã HTML thô từ template đã map dữ liệu thực
-                                <div ref={invoiceRef}
-                                    className="preview-document-content-target"
+                                // Ép cứng width 700px tại đây để form không bao giờ bị bóp méo
+                                <div
+                                    ref={invoiceRef}
+                                    className="preview-document-content-target bg-white mx-auto shadow-sm"
+                                    style={{ width: '700px', minWidth: '700px', padding: '20px' }}
                                     dangerouslySetInnerHTML={{ __html: previewHtml }}
                                 />
                             )}
