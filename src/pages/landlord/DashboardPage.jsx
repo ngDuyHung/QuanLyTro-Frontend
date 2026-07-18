@@ -14,14 +14,34 @@ export default function LandlordDashboard() {
 
   const [animateChart, setAnimateChart] = useState(false);
   const [showGreeting, setShowGreeting] = useState(true);
+  // Thêm state này để chạy hiệu ứng vòng tròn (từ 0 đến 1)
+  const [circleProgress, setCircleProgress] = useState(0);
 
   const [activeMobileTab, setActiveMobileTab] = useState('manage'); // 'manage' hoặc 'overview'
 
   useEffect(() => {
-    // Khi isLoading chuyển sang false (đã có data), ta đợi khoảng 50ms 
-    // rồi mới bật animateChart = true để kích hoạt CSS Transition mọc cột.
     if (!isLoading) {
+      // 1. Hiệu ứng mọc cột (giữ nguyên của bạn)
       const timer = setTimeout(() => setAnimateChart(true), 50);
+
+      // 2. Hiệu ứng vẽ vòng tròn (Thêm mới)
+      let start = null;
+      const duration = 1000; // Thời gian chạy hiệu ứng: 1 giây (1000ms)
+
+      const animateCircle = (timestamp) => {
+        if (!start) start = timestamp;
+        // Tính toán tiến trình từ 0 đến 1
+        const progress = Math.min((timestamp - start) / duration, 1);
+        setCircleProgress(progress);
+
+        // Nếu chưa đạt 1 (100%), tiếp tục gọi frame tiếp theo
+        if (progress < 1) {
+          window.requestAnimationFrame(animateCircle);
+        }
+      };
+
+      window.requestAnimationFrame(animateCircle);
+
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
@@ -125,15 +145,26 @@ export default function LandlordDashboard() {
     }
   };
 
-  // Tính toán dynamic CSS Conic Gradient cho biểu đồ vòng tròn
-  const p1 = collection.statuses.paid.percent;
-  const p2 = p1 + collection.statuses.partially_paid.percent;
-  const p3 = p2 + collection.statuses.issued.percent;
-  // Vùng 1: Đã thu đủ (#10b981), Vùng 2: Thu 1 phần (#f97316), Vùng 3: Chưa thu (#ef4444), Vùng 4: Hủy (#cbd5e1)
-  const conicGradient = collection.total_expected > 0
-    ? `conic-gradient(#10b981 0% ${p1}%, #f97316 ${p1}% ${p2}%, #ef4444 ${p2}% ${p3}%, #cbd5e1 ${p3}% 100%)`
-    : `conic-gradient(#f8fafc 0% 100%)`; // Nếu chưa có hóa đơn nào thì hiển thị xám trơn
+  // --- LOGIC HIỆU ỨNG BIỂU ĐỒ VÒNG TRÒN ---
 
+  // 1. Lấy phần trăm gốc
+  const baseP1 = collection.statuses.paid.percent;
+  const baseP2 = baseP1 + collection.statuses.partially_paid.percent;
+  const baseP3 = baseP2 + collection.statuses.issued.percent;
+  const baseP4 = 100; // Tổng vòng tròn
+
+  // 2. Nhân với tiến trình (circleProgress chạy từ 0 -> 1)
+  const p1 = baseP1 * circleProgress;
+  const p2 = baseP2 * circleProgress;
+  const p3 = baseP3 * circleProgress;
+  const p4 = baseP4 * circleProgress;
+
+  // 3. Render CSS Conic Gradient
+  // Vùng cuối cùng (#f8fafc) chiếm từ p4 đến 100% để giả làm phần nền tĩnh chưa vẽ tới
+  const conicGradient = collection.total_expected > 0
+    ? `conic-gradient(#10b981 0% ${p1}%, #f97316 ${p1}% ${p2}%, #ef4444 ${p2}% ${p3}%, #cbd5e1 ${p3}% ${p4}%, #f8fafc ${p4}% 100%)`
+    : `conic-gradient(#f8fafc 0% 100%)`;
+    
 
   // --- LOGIC BIỂU ĐỒ DOANH THU 6 THÁNG ---
   const financialChart = dashboardData?.financial_chart || [];
