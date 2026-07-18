@@ -246,7 +246,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
 
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm transition-all">
-            <div className="bg-slate-100 w-full max-w-7xl h-[95vh] sm:h-[90vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+            <div className="bg-slate-100 w-full max-w-6xl h-[95vh] sm:h-[90vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.2s_ease-out]">
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-slate-200 shrink-0">
@@ -290,7 +290,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                 <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
 
                     {/* CỘT TRÁI: Giao diện thiết kế chuẩn phong cách App Mobile di động */}
-                    <div className={`w-full flex-1 lg:w-[380px] lg:flex-none min-h-0 overflow-y-auto p-4 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 [&::-webkit-scrollbar]:hidden ${mobileTab === "details" ? "block" : "hidden"} lg:block`}>
+                    <div className={`w-full flex-1 lg:w-[390px] lg:flex-none min-h-0 overflow-y-auto p-4 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 [&::-webkit-scrollbar]:hidden ${mobileTab === "details" ? "block" : "hidden"} lg:block`}>
                         {isLoading || !invoice ? (
                             <div className="flex justify-center items-center h-48 text-brand">
                                 <i className="fa-solid fa-spinner animate-spin text-xl"></i>
