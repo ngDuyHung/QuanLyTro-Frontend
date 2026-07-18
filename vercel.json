@@ -1,9 +1,7 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/((?!assets/|favicon.ico|pwa-.*|icon-logo.png).*)" ,
-      "destination": "/index.html"
-    }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/assets/(.*)", "status": 404 },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
