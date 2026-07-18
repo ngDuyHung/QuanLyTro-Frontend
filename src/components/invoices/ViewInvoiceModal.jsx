@@ -246,7 +246,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
 
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm transition-all">
-            <div className="bg-slate-100 w-full max-w-6xl h-[95vh] sm:h-[90vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+            <div className="bg-slate-100 w-full max-w-7xl h-[95vh] sm:h-[90vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.2s_ease-out]">
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-slate-200 shrink-0">
