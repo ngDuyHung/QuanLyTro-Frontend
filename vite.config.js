@@ -58,6 +58,8 @@ export default defineConfig({
         navigateFallback: "/index.html",
         // THÊM DÒNG NÀY: Cấm PWA dùng index.html để fallback cho các file nằm trong thư mục assets (JS, CSS)
         navigateFallbackDenylist: [/^\/assets\//],
+        // THÊM DÒNG NÀY: Giúp tối ưu hóa việc băm tài nguyên tĩnh của Vite, tránh lỗi tải cache cũ
+        dontCacheBustURLsMatching: new RegExp(".+[.-][a-f0-9]{8}\\..+"),
         cleanupOutdatedCaches: true,
       },
 

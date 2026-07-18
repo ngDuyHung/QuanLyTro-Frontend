@@ -26,7 +26,7 @@ export default function LandlordDashboard() {
 
       // 2. Hiệu ứng vẽ vòng tròn (Thêm mới)
       let start = null;
-      const duration = 1000; // Thời gian chạy hiệu ứng: 1 giây (1000ms)
+      const duration = 500; // Thời gian chạy hiệu ứng: 1 giây (1000ms)
 
       const animateCircle = (timestamp) => {
         if (!start) start = timestamp;
@@ -164,7 +164,7 @@ export default function LandlordDashboard() {
   const conicGradient = collection.total_expected > 0
     ? `conic-gradient(#10b981 0% ${p1}%, #f97316 ${p1}% ${p2}%, #ef4444 ${p2}% ${p3}%, #cbd5e1 ${p3}% ${p4}%, #f8fafc ${p4}% 100%)`
     : `conic-gradient(#f8fafc 0% 100%)`;
-    
+
 
   // --- LOGIC BIỂU ĐỒ DOANH THU 6 THÁNG ---
   const financialChart = dashboardData?.financial_chart || [];
