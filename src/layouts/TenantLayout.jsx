@@ -16,7 +16,6 @@ export default function TenantLayout() {
           <Link to="/tenant/contracts">Hợp đồng</Link>
           <Link to="/tenant/incidents">Yêu cầu sửa chữa</Link>
           <Link to="/tenant/notifications">Thông báo</Link>
-          <Link to="/tenant/payment-history">Lịch sử thanh toán</Link>
           <Link to="/tenant/account">Tài khoản</Link>
         </nav>
         

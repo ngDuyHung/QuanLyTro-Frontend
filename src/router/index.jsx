@@ -21,6 +21,8 @@ import IncidentsPage from "@/pages/landlord/IncidentsPage";
 import TenantLayout from "@/layouts/TenantLayout";
 import TenantDashboard from "@/pages/tenant/TenantDashboardPage";
 import TenantInvoices from  "@/pages/tenant/TenantInvoicesPage.jsx";
+import TenantUtilitiesPage from "@/pages/tenant/TenantUtilitiesPage.jsx";
+import TenantContractPage from "@/pages/tenant/TenantContractPage.jsx";
 
 // Component bảo vệ Route: Chỉ cho vào nếu có Token và đúng Role
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -85,6 +87,8 @@ export default function AppRouter() {
       >
         <Route path="dashboard" element={<TenantDashboard />} />
         <Route path="invoices" element={<TenantInvoices />} />
+        <Route path="utilities" element={<TenantUtilitiesPage />} />
+        <Route path="contracts" element={<TenantContractPage />} />
       </Route>
 
       {/* Tuyến đường của Admin */}
