@@ -13,7 +13,7 @@ export default function SepayConfigTab() {
     const [isTesting, setIsTesting] = useState(false);
     const [isDisconnecting, setIsDisconnecting] = useState(false);
 
-    const webhookUrl = `${window.location.origin}/api/v1/sepay-webhook`;
+    const webhookUrl = `${import.meta.env.VITE_API_BASE_URL}/sepay-webhook`;
 
     const fetchConfig = useCallback(async () => {
         try {
