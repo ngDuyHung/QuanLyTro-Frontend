@@ -421,21 +421,42 @@ export default function InvoicesTable({
                     {/* HIỂN THỊ DÀNH CHO HÓA ĐƠN ĐÃ PHÁT HÀNH/CÒN NỢ */}
                     {['issued', 'partially_paid', 'overdue'].includes(invoice.status) && (
                       <>
-                        <button
-                          type="button"
-                          onClick={() => onOpenPaymentModal?.(invoice)}
-                          className="flex-1 py-2 border border-green-200 rounded-lg bg-green-50 text-[12px] font-medium text-green-700 active:bg-green-100 flex items-center justify-center gap-1.5 shadow-sm"
-                        >
-                          <i className="fa-solid fa-sack-dollar"></i> Thu tiền
-                        </button>
+                        {(() => {
+                          const isPending = invoice.allocations?.some(
+                            (a) => a.financial_transaction?.status === 'pending'
+                          );
 
+                          if (isPending) {
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => onOpenPaymentModal?.(invoice)}
+                                className="flex-1 py-2 border border-amber-300 rounded-lg bg-amber-50 text-[12px] font-bold text-amber-600 hover:bg-amber-100 flex items-center justify-center gap-1.5 shadow-sm animate-pulse"
+                              >
+                                <i className="fa-solid fa-bell"></i> Duyệt tiền
+                              </button>
+                            );
+                          }
+
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => onOpenPaymentModal?.(invoice)}
+                              className="flex-1 py-2 border border-green-200 rounded-lg bg-green-50 text-[12px] font-medium text-green-700 active:bg-green-100 flex items-center justify-center gap-1.5 shadow-sm"
+                            >
+                              <i className="fa-solid fa-sack-dollar"></i> Thu tiền
+                            </button>
+                          );
+                        })()}
+
+                        {/* Chỉ cho Hủy khi chưa thu đồng nào */}
                         {Number(invoice.paid_amount) === 0 && (
                           <button
                             type="button"
                             onClick={() => onOpenCancelModal?.(invoice)}
                             className="w-10 flex shrink-0 items-center justify-center border border-slate-200 rounded-lg bg-white text-[12px] text-slate-400 active:bg-slate-50 shadow-sm"
                           >
-                            <i className="fa-solid fa-ban"></i>
+                            <i className="fa-solid fa-ban text-[12px]"></i>
                           </button>
                         )}
                       </>
@@ -581,16 +602,37 @@ export default function InvoicesTable({
                           {/* HIỂN THỊ DÀNH CHO HÓA ĐƠN ĐÃ PHÁT HÀNH/CÒN NỢ */}
                           {['issued', 'partially_paid', 'overdue'].includes(invoice.status) && (
                             <>
-                              <button
-                                type="button"
-                                onClick={() => onOpenPaymentModal?.(invoice)}
-                                className="px-2 h-8 rounded border border-green-200 text-green-700 font-semibold hover:bg-green-600 hover:text-white flex items-center justify-center bg-green-50 transition-colors text-[11px]"
-                                title="Ghi nhận khách nộp tiền"
-                              >
-                                <i className="fa-solid fa-sack-dollar mr-1"></i> Thu tiền
-                              </button>
+                              {(() => {
+                                const isPending = invoice.allocations?.some(
+                                  (a) => a.financial_transaction?.status === 'pending'
+                                );
 
-                              {/* Chỉ cho Hủy khi chưa thu đồng nào (paid_amount == 0) */}
+                                if (isPending) {
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => onOpenPaymentModal?.(invoice)}
+                                      className="px-2 h-8 rounded border border-amber-300 text-amber-700 font-bold hover:bg-amber-500 hover:text-white flex items-center justify-center bg-amber-50 transition-colors text-[11px] animate-pulse"
+                                      title="Khách vừa gửi minh chứng"
+                                    >
+                                      <i className="fa-solid fa-bell mr-1"></i> Duyệt tiền
+                                    </button>
+                                  );
+                                }
+
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => onOpenPaymentModal?.(invoice)}
+                                    className="px-2 h-8 rounded border border-green-200 text-green-700 font-semibold hover:bg-green-600 hover:text-white flex items-center justify-center bg-green-50 transition-colors text-[11px]"
+                                    title="Ghi nhận khách nộp tiền"
+                                  >
+                                    <i className="fa-solid fa-sack-dollar mr-1"></i> Thu tiền
+                                  </button>
+                                );
+                              })()}
+
+                              {/* Chỉ cho Hủy khi chưa thu đồng nào */}
                               {Number(invoice.paid_amount) === 0 && (
                                 <button
                                   type="button"
@@ -603,7 +645,6 @@ export default function InvoicesTable({
                               )}
                             </>
                           )}
-
                         </div>
                       </td>
                     </tr>

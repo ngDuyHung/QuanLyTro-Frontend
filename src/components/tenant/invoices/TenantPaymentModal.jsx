@@ -10,6 +10,35 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
     // Đã thêm: State quản lý trạng thái Polling
     const [isPolling, setIsPolling] = useState(false);
 
+    // === BỔ SUNG STATE & HÀM UPLOAD ẢNH ===
+    const [proofFile, setProofFile] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmitProof = async () => {
+        if (!proofFile) {
+            return toast.warning("Vui lòng đính kèm hình ảnh giao dịch thành công!");
+        }
+
+        try {
+            setIsSubmitting(true);
+            const formData = new FormData();
+            formData.append("amount", invoiceDetail.remaining_amount); // Gửi mặc định toàn bộ nợ
+            formData.append("transaction_date", new Date().toISOString().slice(0, 10)); // Ngày hôm nay
+            formData.append("proof_image", proofFile);
+            console.log("Submitting proof for invoice:", invoiceDetail.id, "with file:", proofFile);
+            await tenantInvoiceService.submitProof(invoiceDetail.id, formData);
+
+            toast.success("Đã gửi minh chứng thành công! Vui lòng chờ chủ trọ duyệt.");
+            onSuccess?.(); // Refresh lại bảng danh sách
+            onClose();     // Đóng modal
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Có lỗi xảy ra khi gửi minh chứng.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+    // === KẾT THÚC  ===
+
     // 1. Fetch dữ liệu hóa đơn và cấu hình thanh toán
     useEffect(() => {
         if (!open || !initialInvoice?.id) {
@@ -38,6 +67,9 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
 
         fetchPaymentData();
     }, [open, initialInvoice, onClose]);
+
+
+
 
     // 2. Logic Polling kiểm tra trạng thái thanh toán tự động
     useEffect(() => {
@@ -177,16 +209,39 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                                             <p className="text-red-500 mt-4">Chủ trọ chưa cấu hình mẫu QR SePay.</p>
                                         )}
 
-                                        {/* Trạng thái Polling/Chờ */}
+                                        {/* Trạng thái Polling HOẶC Form Upload Minh chứng */}
                                         {isPolling ? (
                                             <div className="mt-6 flex items-center justify-center gap-2 text-green-600 font-medium animate-pulse">
                                                 <i className="fa-solid fa-circle-notch fa-spin"></i>
                                                 <p>Hệ thống đang chờ nhận tiền tự động...</p>
                                             </div>
                                         ) : (
-                                            // Trường hợp chủ trọ tắt Auto Confirm
-                                            <div className="mt-6 text-sm text-yellow-600 bg-yellow-50 p-2 rounded border border-yellow-200">
-                                                <p><i className="fa-solid fa-info-circle mr-1"></i> Sau khi chuyển khoản, vui lòng đợi chủ trọ xác nhận thủ công.</p>
+                                            // FORM UPLOAD MINH CHỨNG KHI CHỦ TRỌ TẮT AUTO CONFIRM
+                                            <div className="mt-5 w-full bg-white p-4 rounded-lg border border-slate-200 shadow-sm animate-[fadeIn_0.3s_ease-out]">
+                                                <label className="block text-[13px] font-semibold text-slate-700 mb-2">
+                                                    Tải ảnh minh chứng chuyển khoản <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="file"
+                                                    accept="image/png, image/jpeg, image/jpg"
+                                                    onChange={(e) => setProofFile(e.target.files[0])}
+                                                    className="w-full text-[12px] text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[12px] file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer border border-slate-200 rounded-lg p-1"
+                                                />
+
+                                                <button
+                                                    onClick={handleSubmitProof}
+                                                    disabled={isSubmitting}
+                                                    className="mt-4 w-full py-2.5 bg-brand text-white rounded-lg text-[13px] font-bold hover:bg-green-700 transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                                                >
+                                                    {isSubmitting ? (
+                                                        <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Đang gửi...</>
+                                                    ) : (
+                                                        <><i className="fa-solid fa-paper-plane"></i> Gửi minh chứng</>
+                                                    )}
+                                                </button>
+                                                <p className="text-[11px] text-slate-500 text-center mt-3">
+                                                    Chủ trọ sẽ kiểm tra và gạch nợ hóa đơn của bạn.
+                                                </p>
                                             </div>
                                         )}
                                     </div>

@@ -19,6 +19,7 @@ const getDirectionConfig = (direction) => {
 
 const getStatusConfig = (status) => {
   if (status === "cancelled") return { label: "Đã hủy", className: "bg-slate-100 text-slate-400 border-slate-200 line-through" };
+  if (status === "pending") return { label: "Chờ duyệt", className: "bg-amber-50 text-amber-600 border-amber-200 animate-pulse" }; // THÊM DÒNG NÀY
   return { label: "Thành công", className: "bg-green-50 text-green-600 border-green-200" };
 };
 
@@ -200,102 +201,102 @@ export default function FinancialTransactionsTable({
                   </td>
                 </tr>
               ) : (
-              transactions.map((item) => {
-                const dir = getDirectionConfig(item.direction);
-                return (
-                  <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                transactions.map((item) => {
+                  const dir = getDirectionConfig(item.direction);
+                  return (
+                    <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
 
-                    {/* Ngày / Mã GD */}
-                    <td className="py-4 px-4">
-                      <div className="flex flex-col font-medium">
-                        <span className="text-slate-800">{formatDate(item.transaction_date)}</span>
-                        <span className="text-[11px] text-slate-400 mt-0.5 font-mono">{item.transaction_code}</span>
-                      </div>
-                    </td>
+                      {/* Ngày / Mã GD */}
+                      <td className="py-4 px-4">
+                        <div className="flex flex-col font-medium">
+                          <span className="text-slate-800">{formatDate(item.transaction_date)}</span>
+                          <span className="text-[11px] text-slate-400 mt-0.5 font-mono">{item.transaction_code}</span>
+                        </div>
+                      </td>
 
-                    {/* 3. Loại dòng tiền (Thu / Chi) */}
-                    <td className="py-4 px-3">
-                      <span className={`px-2 py-0.5 border text-[11px] font-bold rounded flex items-center gap-1.5 w-fit ${dir.className}`}>
-                        <i className={`fa-solid ${dir.icon} text-[10px]`}></i> {dir.label}
-                      </span>
-                    </td>
-
-                    {/* 4. Danh mục nghiệp vụ */}
-                    <td className="py-4 px-3 text-slate-800 font-semibold">
-                      {item.category_label}
-                    </td>
-
-                    {/* 5. Phòng / Khu nhà */}
-                    <td className="py-4 px-3">
-                      <div className="flex flex-col">
-                        <span className="text-slate-700 font-medium">
-                          {item.room?.name || "Chi phí chung"}
+                      {/* 3. Loại dòng tiền (Thu / Chi) */}
+                      <td className="py-4 px-3">
+                        <span className={`px-2 py-0.5 border text-[11px] font-bold rounded flex items-center gap-1.5 w-fit ${dir.className}`}>
+                          <i className={`fa-solid ${dir.icon} text-[10px]`}></i> {dir.label}
                         </span>
-                        <span className="text-[11px] text-slate-400 mt-0.5">
-                          {item.property?.name}
+                      </td>
+
+                      {/* 4. Danh mục nghiệp vụ */}
+                      <td className="py-4 px-3 text-slate-800 font-semibold">
+                        {item.category_label}
+                      </td>
+
+                      {/* 5. Phòng / Khu nhà */}
+                      <td className="py-4 px-3">
+                        <div className="flex flex-col">
+                          <span className="text-slate-700 font-medium">
+                            {item.room?.name || "Chi phí chung"}
+                          </span>
+                          <span className="text-[11px] text-slate-400 mt-0.5">
+                            {item.property?.name}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 6. Người giao dịch (Khách thuê) */}
+                      <td className="py-4 px-3 text-slate-600 font-medium">
+                        {item.tenant?.full_name || "—"}
+                      </td>
+
+                      {/* 7. Nội dung diễn giải */}
+                      <td className="py-4 px-3 text-slate-600 max-w-[220px] truncate" title={item.description}>
+                        {item.description || "—"}
+                      </td>
+
+                      {/* 8. Số tiền dòng tiền */}
+                      <td className={`py-4 px-3 text-right font-black text-[15px] ${item.direction === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                        {item.direction === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
+                      </td>
+
+                      {/* 9. Phương thức thanh toán độc lập */}
+                      <td className="py-4 px-3 text-center">
+                        <span className="text-[11px] text-slate-600 font-semibold bg-slate-100 border border-slate-200 px-2 py-0.5 rounded inline-flex items-center gap-1">
+                          {item.method === 'sepay' ? (
+                            <><i className="fa-solid fa-robot text-blue-500"></i> SePay</>
+                          ) : item.method === 'bank_transfer' ? (
+                            <><i className="fa-solid fa-building-columns text-amber-500"></i> Chuyển khoản</>
+                          ) : (
+                            <><i className="fa-solid fa-money-bill-1-wave text-green-500"></i> Tiền mặt</>
+                          )}
                         </span>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* 6. Người giao dịch (Khách thuê) */}
-                    <td className="py-4 px-3 text-slate-600 font-medium">
-                      {item.tenant?.full_name || "—"}
-                    </td>
+                      {/* 10. Trạng thái phiếu */}
+                      <td className="py-4 px-3 text-center">
+                        <span className={`px-2 py-0.5 border rounded text-[11px] font-bold ${getStatusConfig(item.status).className}`}>
+                          {getStatusConfig(item.status).label}
+                        </span>
+                      </td>
 
-                    {/* 7. Nội dung diễn giải */}
-                    <td className="py-4 px-3 text-slate-600 max-w-[220px] truncate" title={item.description}>
-                      {item.description || "—"}
-                    </td>
-
-                    {/* 8. Số tiền dòng tiền */}
-                    <td className={`py-4 px-3 text-right font-black text-[15px] ${item.direction === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                      {item.direction === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
-                    </td>
-
-                    {/* 9. Phương thức thanh toán độc lập */}
-                    <td className="py-4 px-3 text-center">
-                      <span className="text-[11px] text-slate-600 font-semibold bg-slate-100 border border-slate-200 px-2 py-0.5 rounded inline-flex items-center gap-1">
-                        {item.method === 'sepay' ? (
-                          <><i className="fa-solid fa-robot text-blue-500"></i> SePay</>
-                        ) : item.method === 'bank_transfer' ? (
-                          <><i className="fa-solid fa-building-columns text-amber-500"></i> Chuyển khoản</>
-                        ) : (
-                          <><i className="fa-solid fa-money-bill-1-wave text-green-500"></i> Tiền mặt</>
-                        )}
-                      </span>
-                    </td>
-
-                    {/* 10. Trạng thái phiếu */}
-                    <td className="py-4 px-3 text-center">
-                      <span className={`px-2 py-0.5 border rounded text-[11px] font-bold ${getStatusConfig(item.status).className}`}>
-                        {getStatusConfig(item.status).label}
-                      </span>
-                    </td>
-
-                    {/* 11. Các nút Thao tác nhanh */}
-                    <td className="py-4 px-3">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          onClick={() => onOpenViewModal(item)}
-                          className="w-7 h-7 rounded border border-slate-200 text-slate-500 hover:text-brand hover:border-brand hover:bg-green-50 transition-colors flex items-center justify-center"
-                          title="Xem chi tiết"
-                        >
-                          <i className="fa-regular fa-eye text-[12px]"></i>
-                        </button>
-                        {item.status !== 'cancelled' && (
+                      {/* 11. Các nút Thao tác nhanh */}
+                      <td className="py-4 px-3">
+                        <div className="flex items-center justify-center gap-1.5">
                           <button
-                            onClick={() => onOpenCancelModal(item)}
-                            className="w-7 h-7 rounded border border-slate-200 text-slate-500 hover:text-red-500 hover:border-red-500 hover:bg-red-50 transition-colors flex items-center justify-center"
-                            title="Hủy bỏ phiếu"
+                            onClick={() => onOpenViewModal(item)}
+                            className="w-7 h-7 rounded border border-slate-200 text-slate-500 hover:text-brand hover:border-brand hover:bg-green-50 transition-colors flex items-center justify-center"
+                            title="Xem chi tiết"
                           >
-                            <i className="fa-solid fa-ban text-[12px]"></i>
+                            <i className="fa-regular fa-eye text-[12px]"></i>
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+                          {item.status !== 'cancelled' && (
+                            <button
+                              onClick={() => onOpenCancelModal(item)}
+                              className="w-7 h-7 rounded border border-slate-200 text-slate-500 hover:text-red-500 hover:border-red-500 hover:bg-red-50 transition-colors flex items-center justify-center"
+                              title="Hủy bỏ phiếu"
+                            >
+                              <i className="fa-solid fa-ban text-[12px]"></i>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

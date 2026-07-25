@@ -20,7 +20,7 @@ export default function PaymentInvoiceModal({
     const [isLoadingBanks, setIsLoadingBanks] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [clientError, setClientError] = useState("");
-
+    const [fullScreenImage, setFullScreenImage] = useState(null);
     // state lưu cấu hình SePay
     const [sepayConfig, setSepayConfig] = useState(null);
     const [isPolling, setIsPolling] = useState(false);
@@ -31,6 +31,44 @@ export default function PaymentInvoiceModal({
         else document.body.style.overflow = "";
         return () => { document.body.style.overflow = ""; };
     }, [open]);
+
+    // === BỔ SUNG LOGIC TÌM GIAO DỊCH PENDING & HÀM DUYỆT ===
+    const pendingAllocation = invoice?.allocations?.find(
+        (a) => a.financial_transaction?.status === 'pending'
+    );
+    const pendingTx = pendingAllocation?.financial_transaction;
+
+    const handleApprovePending = async () => {
+        try {
+            setIsSubmitting(true);
+            await invoiceService.approveTransaction(pendingTx.id);
+            toast.success("Đã xác nhận nhận tiền thành công!");
+            onSuccess?.();
+            onClose();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Lỗi khi duyệt giao dịch.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleRejectPending = async () => {
+        const reason = window.prompt("Nhập lý do từ chối (Ví dụ: Ảnh mờ, chưa nhận được tiền):");
+        if (reason === null) return; // Bấm Cancel ở hộp thoại prompt
+
+        try {
+            setIsSubmitting(true);
+            await invoiceService.cancelTransaction(pendingTx.id, { cancel_reason: reason || "Từ chối xác nhận" });
+            toast.info("Đã từ chối minh chứng của khách.");
+            onSuccess?.();
+            onClose();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Lỗi khi từ chối giao dịch.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+    // === KẾT THÚC ===
 
     // ---  useEffect KHI MỞ MODAL ---
     useEffect(() => {
@@ -201,109 +239,159 @@ export default function PaymentInvoiceModal({
                 <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
                     <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-1 p-5 bg-slate-50 flex flex-col sm:flex-row gap-6">
 
-                        {/* Cột trái: Form nhập liệu */}
+                        {/* Cột trái: Form nhập liệu HOẶC Giao diện duyệt */}
                         <div className="w-full sm:w-1/2 flex flex-col gap-4">
+                            {pendingTx ? (
+                                // --- NẾU CÓ PENDING -> HIỆN GIAO DIỆN DUYỆT ẢNH ---
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col h-full animate-[fadeIn_0.3s_ease-out]">
+                                    <h3 className="font-bold text-amber-800 text-[15px] mb-3 flex items-center gap-2">
+                                        <i className="fa-solid fa-clock-rotate-left"></i> Khách báo đã chuyển khoản
+                                    </h3>
 
-                            {/* Bảng tóm tắt số tiền */}
-                            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-                                <div>
-                                    <p className="text-[12px] text-slate-500 font-semibold mb-1">CẦN THANH TOÁN</p>
-                                    <p className="text-[22px] font-black text-red-500 leading-none">
-                                        {Number(invoice.remaining_amount).toLocaleString()} đ
-                                    </p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[11px] text-slate-400 mb-1">Tổng HĐ: {Number(invoice.total_amount).toLocaleString()} đ</p>
-                                    <p className="text-[11px] text-slate-400">Đã trả: {Number(invoice.paid_amount).toLocaleString()} đ</p>
-                                </div>
-                            </div>
+                                    <div className="bg-white p-3 rounded-lg shadow-sm border border-amber-100 text-[13px] text-slate-700 space-y-2 mb-4">
+                                        <p>Số tiền báo cáo: <strong className="text-red-500 text-[15px]">{Number(pendingTx.amount).toLocaleString()} đ</strong></p>
+                                        <p>Thời gian: <strong>{new Date(pendingTx.transaction_date).toLocaleString('vi-VN')}</strong></p>
+                                        {pendingTx.note && <p>Ghi chú của khách: <span className="italic">"{pendingTx.note}"</span></p>}
+                                    </div>
 
-                            {clientError && (
-                                <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-lg text-[13px] flex items-center gap-2">
-                                    <i className="fa-solid fa-circle-exclamation"></i> {clientError}
+                                    <div className="flex-1 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center bg-slate-100 relative min-h-[250px]">
+                                        {pendingTx.proof_image ? (
+                                            <img
+                                                src={pendingTx.proof_image}
+                                                alt="Minh chứng"
+                                                className="max-w-full max-h-[300px] object-contain cursor-pointer hover:scale-105 transition-transform"
+                                                onClick={() => setFullScreenImage(pendingTx.proof_image)}
+                                            />
+                                        ) : (
+                                            <span className="text-slate-400 text-[12px]"><i className="fa-solid fa-image text-3xl block mb-2 text-center"></i> Không đính kèm ảnh</span>
+                                        )}
+                                    </div>
+
+                                    <div className="flex gap-2 mt-4 pt-4 border-t border-amber-200/50 shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={handleRejectPending}
+                                            disabled={isSubmitting}
+                                            className="flex-1 py-2.5 bg-white border border-red-200 text-red-600 rounded-lg text-[13px] font-bold hover:bg-red-50 disabled:opacity-50"
+                                        >
+                                            Từ chối
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleApprovePending}
+                                            disabled={isSubmitting}
+                                            className="flex-[2] py-2.5 bg-brand text-white rounded-lg text-[13px] font-bold shadow-sm shadow-green-600/30 hover:bg-green-700 flex justify-center items-center gap-2 disabled:opacity-50"
+                                        >
+                                            {isSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : <i className="fa-solid fa-check-double"></i>}
+                                            Đã nhận được tiền
+                                        </button>
+                                    </div>
                                 </div>
+                            ) : (
+                                // --- NẾU KHÔNG CÓ PENDING -> HIỆN FORM NHẬP TIỀN THỦ CÔNG NHƯ CŨ ---
+                                <>
+                                    {/* Bảng tóm tắt số tiền */}
+                                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
+                                        <div>
+                                            <p className="text-[12px] text-slate-500 font-semibold mb-1">CẦN THANH TOÁN</p>
+                                            <p className="text-[22px] font-black text-red-500 leading-none">
+                                                {Number(invoice.remaining_amount).toLocaleString()} đ
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[11px] text-slate-400 mb-1">Tổng HĐ: {Number(invoice.total_amount).toLocaleString()} đ</p>
+                                            <p className="text-[11px] text-slate-400">Đã trả: {Number(invoice.paid_amount).toLocaleString()} đ</p>
+                                        </div>
+                                    </div>
+
+                                    {clientError && (
+                                        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-lg text-[13px] flex items-center gap-2">
+                                            <i className="fa-solid fa-circle-exclamation"></i> {clientError}
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <div className="flex justify-between items-end mb-1.5">
+                                            <label className="block text-[12px] font-semibold text-slate-700">
+                                                Số tiền khách trả <span className="text-red-500">*</span>
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setAmount(invoice.remaining_amount);
+                                                    setDisplayAmount(Number(invoice.remaining_amount).toLocaleString("vi-VN"));
+                                                }}
+                                                className="text-[11px] font-semibold text-brand hover:underline"
+                                            >
+                                                Điền toàn bộ nợ
+                                            </button>
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={displayAmount}
+                                                onChange={handleAmountChange}
+                                                onFocus={(e) => e.target.select()}
+                                                className="w-full pl-4 pr-12 py-2.5 bg-white border border-slate-300 rounded-lg text-[16px] font-bold text-slate-800 outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-[13px]">VNĐ</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">Ngày thu <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="date"
+                                            value={transactionDate}
+                                            onChange={(e) => setTransactionDate(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-[13px] outline-none focus:border-brand"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-slate-700 mb-2">Phương thức <span className="text-red-500">*</span></label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <label className={`cursor-pointer border rounded-lg p-3 flex flex-col items-center gap-2 transition-all ${method === 'bank_transfer' ? 'border-brand bg-brand/5' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+                                                <input type="radio" name="pay_method" value="bank_transfer" checked={method === 'bank_transfer'} onChange={() => setMethod('bank_transfer')} className="hidden" />
+                                                <i className={`fa-solid fa-building-columns text-[20px] ${method === 'bank_transfer' ? 'text-brand' : 'text-slate-400'}`}></i>
+                                                <span className={`text-[12px] font-semibold ${method === 'bank_transfer' ? 'text-brand' : 'text-slate-600'}`}>Chuyển khoản</span>
+                                            </label>
+                                            <label className={`cursor-pointer border rounded-lg p-3 flex flex-col items-center gap-2 transition-all ${method === 'cash' ? 'border-brand bg-brand/5' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+                                                <input type="radio" name="pay_method" value="cash" checked={method === 'cash'} onChange={() => setMethod('cash')} className="hidden" />
+                                                <i className={`fa-solid fa-money-bill-wave text-[20px] ${method === 'cash' ? 'text-brand' : 'text-slate-400'}`}></i>
+                                                <span className={`text-[12px] font-semibold ${method === 'cash' ? 'text-brand' : 'text-slate-600'}`}>Tiền mặt</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {method === "bank_transfer" && (
+                                        <div className="animate-[fadeIn_0.3s_ease-out]">
+                                            <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">Ngân hàng nhận <span className="text-red-500">*</span></label>
+                                            <select
+                                                value={bankAccountId}
+                                                onChange={(e) => setBankAccountId(e.target.value)}
+                                                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-[13px] outline-none focus:border-brand"
+                                            >
+                                                <option value="">{isLoadingBanks ? "Đang tải..." : "Chọn ngân hàng"}</option>
+                                                {bankAccounts.map(b => (
+                                                    <option key={b.id} value={b.id}>{b.bank_code} - {b.account_number} ({b.account_name})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">Ghi chú (Tùy chọn)</label>
+                                        <input
+                                            type="text"
+                                            value={note}
+                                            onChange={(e) => setNote(e.target.value)}
+                                            placeholder="Ví dụ: Khách thanh toán tháng 6"
+                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-[13px] outline-none focus:border-brand"
+                                        />
+                                    </div>
+                                </>
                             )}
-
-                            <div>
-                                <div className="flex justify-between items-end mb-1.5">
-                                    <label className="block text-[12px] font-semibold text-slate-700">
-                                        Số tiền khách trả <span className="text-red-500">*</span>
-                                    </label>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setAmount(invoice.remaining_amount);
-                                            setDisplayAmount(Number(invoice.remaining_amount).toLocaleString("vi-VN"));
-                                        }}
-                                        className="text-[11px] font-semibold text-brand hover:underline"
-                                    >
-                                        Điền toàn bộ nợ
-                                    </button>
-                                </div>
-                                <div className="relative">
-                                    <input
-                                        type="text" // Chuyển type="number" thành "text" để hiện dấu chấm
-                                        value={displayAmount}
-                                        onChange={handleAmountChange}
-                                        onFocus={(e) => e.target.select()} // Magic UX: Click vào là bôi đen toàn bộ số
-                                        className="w-full pl-4 pr-12 py-2.5 bg-white border border-slate-300 rounded-lg text-[16px] font-bold text-slate-800 outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-                                    />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-[13px]">VNĐ</span>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">Ngày thu <span className="text-red-500">*</span></label>
-                                <input
-                                    type="date"
-                                    value={transactionDate}
-                                    onChange={(e) => setTransactionDate(e.target.value)}
-                                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-[13px] outline-none focus:border-brand"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[12px] font-semibold text-slate-700 mb-2">Phương thức <span className="text-red-500">*</span></label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <label className={`cursor-pointer border rounded-lg p-3 flex flex-col items-center gap-2 transition-all ${method === 'bank_transfer' ? 'border-brand bg-brand/5' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
-                                        <input type="radio" name="pay_method" value="bank_transfer" checked={method === 'bank_transfer'} onChange={() => setMethod('bank_transfer')} className="hidden" />
-                                        <i className={`fa-solid fa-building-columns text-[20px] ${method === 'bank_transfer' ? 'text-brand' : 'text-slate-400'}`}></i>
-                                        <span className={`text-[12px] font-semibold ${method === 'bank_transfer' ? 'text-brand' : 'text-slate-600'}`}>Chuyển khoản</span>
-                                    </label>
-                                    <label className={`cursor-pointer border rounded-lg p-3 flex flex-col items-center gap-2 transition-all ${method === 'cash' ? 'border-brand bg-brand/5' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
-                                        <input type="radio" name="pay_method" value="cash" checked={method === 'cash'} onChange={() => setMethod('cash')} className="hidden" />
-                                        <i className={`fa-solid fa-money-bill-wave text-[20px] ${method === 'cash' ? 'text-brand' : 'text-slate-400'}`}></i>
-                                        <span className={`text-[12px] font-semibold ${method === 'cash' ? 'text-brand' : 'text-slate-600'}`}>Tiền mặt</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            {method === "bank_transfer" && (
-                                <div className="animate-[fadeIn_0.3s_ease-out]">
-                                    <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">Ngân hàng nhận <span className="text-red-500">*</span></label>
-                                    <select
-                                        value={bankAccountId}
-                                        onChange={(e) => setBankAccountId(e.target.value)}
-                                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-[13px] outline-none focus:border-brand"
-                                    >
-                                        <option value="">{isLoadingBanks ? "Đang tải..." : "Chọn ngân hàng"}</option>
-                                        {bankAccounts.map(b => (
-                                            <option key={b.id} value={b.id}>{b.bank_code} - {b.account_number} ({b.account_name})</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">Ghi chú (Tùy chọn)</label>
-                                <input
-                                    type="text"
-                                    value={note}
-                                    onChange={(e) => setNote(e.target.value)}
-                                    placeholder="Ví dụ: Khách thanh toán tháng 6"
-                                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-[13px] outline-none focus:border-brand"
-                                />
-                            </div>
                         </div>
 
                         {/* Cột phải: Vùng hiển thị QR Code */}
@@ -398,19 +486,39 @@ export default function PaymentInvoiceModal({
                     {/* Footer */}
                     <div className="border-t border-slate-200 px-5 py-3.5 bg-white shrink-0 flex items-center justify-end gap-3">
                         <button type="button" onClick={onClose} disabled={isSubmitting} className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-lg text-[13px] font-semibold hover:bg-slate-200 transition-colors disabled:opacity-70">
-                            Hủy
+                            Đóng cửa sổ
                         </button>
-                        <button type="submit" disabled={isSubmitting} className="px-8 py-2.5 bg-brand text-white rounded-lg text-[13px] font-semibold hover:bg-green-700 flex items-center justify-center gap-2 transition-colors disabled:opacity-70">
-                            {isSubmitting ? (
-                                <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Đang lưu...</>
-                            ) : (
-                                <><i className="fa-solid fa-check"></i> Xác nhận thu</>
-                            )}
-                        </button>
+
+                        {/* Ẩn nút submit form đi nếu đang ở giao diện Duyệt ảnh */}
+                        {!pendingTx && (
+                            <button type="submit" disabled={isSubmitting} className="px-8 py-2.5 bg-brand text-white rounded-lg text-[13px] font-semibold hover:bg-green-700 flex items-center justify-center gap-2 transition-colors disabled:opacity-70">
+                                {isSubmitting ? (
+                                    <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Đang lưu...</>
+                                ) : (
+                                    <><i className="fa-solid fa-check"></i> Xác nhận thu</>
+                                )}
+                            </button>
+                        )}
                     </div>
                 </form>
 
             </div>
+            {/* BỔ SUNG OVERLAY ZOOM ẢNH TOÀN MÀN HÌNH */}
+            {fullScreenImage && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 sm:p-10 cursor-zoom-out animate-[fadeIn_0.2s_ease-out]"
+                    onClick={() => setFullScreenImage(null)}
+                >
+                    <button className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white text-3xl sm:text-4xl hover:text-gray-300 transition-colors w-12 h-12 flex items-center justify-center">
+                        <i className="fa-solid fa-xmark"></i>
+                    </button>
+                    <img
+                        src={fullScreenImage}
+                        alt="Phóng to"
+                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-[zoomIn_0.2s_ease-out]"
+                    />
+                </div>
+            )}
         </div>
     );
 }

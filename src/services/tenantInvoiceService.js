@@ -12,7 +12,17 @@ const tenantInvoiceService = {
 
   // Xem trước bản in điện tử HTML (chỉ gọi khi hóa đơn đã paid)
   getPreviewHtml: (id) => api.get(`/tenant/invoices/${id}/preview-html`),
+  
+  // Polling check trạng thái thanh toán
   checkPaymentStatus: (id) => api.get(`/tenant/invoices/${id}/payment-status`),
+
+  // BỔ SUNG: Upload ảnh minh chứng (Multipart Form Data)
+  submitProof: (id, formData) =>
+    api.post(`/tenant/invoices/${id}/submit-proof`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }),
 };
 
 export default tenantInvoiceService;

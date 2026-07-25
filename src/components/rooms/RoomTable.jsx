@@ -233,7 +233,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
               /* TRẠNG THÁI CHƯA LẬP HÓA ĐƠN */
               <div className="flex items-center gap-1.5 text-amber-500 font-semibold text-[13px] pt-0.5">
                 <i className="fa-solid fa-file-circle-plus text-[14px]"></i>
-                <span>Chưa lập HĐ</span>
+                <span>Chưa lập hóa đơn</span>
               </div>
             ) : (
               /* TRẠNG THÁI TRỐNG HOẶC KHÁC */
@@ -906,7 +906,7 @@ export default function RoomTable({
                       ) : room.payment_status === "unbilled" ? (
                         <div className="flex items-center gap-1.5 text-amber-500 font-semibold text-[13px] pl-1" title="Chưa lập hóa đơn cho kỳ hiện tại">
                           <i className="fa-solid fa-file-circle-plus text-[14px]"></i>
-                          <span>Chưa lập HĐ</span>
+                          <span>Chưa lập hóa đơn</span>
                         </div>
                       ) : (
                         <span className="text-slate-400 pl-4">—</span>

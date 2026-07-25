@@ -72,7 +72,7 @@ export default function ViewFinancialTransactionModal({ open, transaction, onClo
               {transaction.transaction_code}
             </span>
             <span className={`px-2 py-0.5 border text-[10px] font-bold rounded ${getStatusStyle(transaction.status)}`}>
-              {transaction.status_label || (transaction.status === "cancelled" ? "Đã hủy" : "Thành công")}
+              {transaction.status_label || (transaction.status === "cancelled" ? "Đã hủy" : transaction.status === "pending" ? "Đang chờ duyệt" : "Thành công")}
             </span>
           </div>
           <button 

@@ -48,6 +48,14 @@ const invoiceService = {
 
   // Xem trước hóa đơn (trước khi phát hành)
   getPreviewHtml: (id) => api.get(`/invoices/${id}/preview`),
+
+  // Chủ trọ duyệt giao dịch pending
+  approveTransaction: (transactionId) =>
+    api.post(`/financial-transactions/${transactionId}/approve`),
+
+  // Chủ trọ từ chối giao dịch (truyền { cancel_reason: "Lý do..." })
+  cancelTransaction: (transactionId, data) =>
+    api.post(`/financial-transactions/${transactionId}/cancel`, data),
 };
 
 export default invoiceService;

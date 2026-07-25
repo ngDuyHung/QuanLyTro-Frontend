@@ -26,7 +26,7 @@ export default function TenantInvoicesTable({
                     <option value="paid">Đã thu đủ</option>
                     <option value="overdue">Quá hạn</option>
                 </select>
-                <input type="month" value={month} onChange={(e) => onMonthChange(e.target.value)} className="border p-2"/>
+                <input type="month" value={month} onChange={(e) => onMonthChange(e.target.value)} className="border p-2" />
             </div>
 
             {/* Vùng Table */}
@@ -54,22 +54,42 @@ export default function TenantInvoicesTable({
                                     <td className="p-2 text-red-500 font-bold">{Number(invoice.remaining_amount).toLocaleString()} đ</td>
                                     <td className="p-2">{invoice.status}</td>
                                     <td className="p-2">
-                                        {/* Logic tách Modal: Nếu paid thì gọi View, ngược lại gọi Payment */}
-                                        {invoice.status === 'paid' ? (
-                                            <button 
-                                                onClick={() => onOpenViewModal(invoice)}
-                                                className="px-3 py-1 bg-gray-100 border rounded"
-                                            >
-                                                Xem Biên Lai
-                                            </button>
-                                        ) : (
-                                            <button 
-                                                onClick={() => onOpenPaymentModal(invoice)}
-                                                className="px-3 py-1 bg-brand text-white rounded"
-                                            >
-                                                Thanh toán
-                                            </button>
-                                        )}
+                                        {(() => {
+                                            // Kiểm tra xem hóa đơn có giao dịch nào đang chờ duyệt không
+                                            const isPending = invoice.allocations?.some(
+                                                (a) => a.financial_transaction?.status === 'pending'
+                                            );
+
+                                            if (invoice.status === 'paid') {
+                                                return (
+                                                    <button
+                                                        onClick={() => onOpenViewModal(invoice)}
+                                                        className="px-3 py-1 bg-slate-100 border border-slate-300 text-slate-700 font-semibold rounded hover:bg-slate-200 transition-colors"
+                                                    >
+                                                        <i className="fa-solid fa-print mr-1"></i> Xem Biên Lai
+                                                    </button>
+                                                );
+                                            }
+
+                                            // Nếu có giao dịch đang chờ duyệt thì hiện chữ Chờ duyệt và disable
+                                            if (isPending) {
+                                                return (
+                                                    <span className="px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-600 text-[12px] font-semibold rounded inline-block cursor-not-allowed">
+                                                        <i className="fa-solid fa-clock-rotate-left mr-1"></i> Đang chờ duyệt
+                                                    </span>
+                                                );
+                                            }
+
+                                            // Trạng thái bình thường: Nút Thanh toán
+                                            return (
+                                                <button
+                                                    onClick={() => onOpenPaymentModal(invoice)}
+                                                    className="px-3 py-1 bg-brand text-white font-semibold rounded shadow-sm hover:bg-green-700 transition-colors"
+                                                >
+                                                    <i className="fa-solid fa-qrcode mr-1"></i> Thanh toán
+                                                </button>
+                                            );
+                                        })()}
                                     </td>
                                 </tr>
                             ))}
