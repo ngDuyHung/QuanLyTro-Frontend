@@ -56,11 +56,13 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp}"],
         navigateFallback: "/index.html",
-        // THÊM DÒNG NÀY: Cấm PWA dùng index.html để fallback cho các file nằm trong thư mục assets (JS, CSS)
+        // Cấm PWA dùng index.html để fallback cho các file nằm trong thư mục assets (JS, CSS)
         navigateFallbackDenylist: [/^\/assets\//],
-        // THÊM DÒNG NÀY: Giúp tối ưu hóa việc băm tài nguyên tĩnh của Vite, tránh lỗi tải cache cũ
+        // Giúp tối ưu hóa việc băm tài nguyên tĩnh của Vite, tránh lỗi tải cache cũ
         dontCacheBustURLsMatching: new RegExp(".+[.-][a-f0-9]{8}\\..+"),
         cleanupOutdatedCaches: true,
+        // Tăng giới hạn dung lượng cache lên 5MB (Fix lỗi build trên Vercel)
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
 
       devOptions: {
@@ -72,6 +74,20 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+
+  // Tách code (Code Splitting) để tránh cảnh báo file bundle quá lớn
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Tách các thư viện (như React, UI framework) vào một file 'vendor.js'
+            return 'vendor';
+          }
+        },
+      },
     },
   },
 });
