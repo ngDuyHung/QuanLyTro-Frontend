@@ -22,7 +22,7 @@ import TenantLayout from "@/layouts/TenantLayout";
 import TenantDashboard from "@/pages/tenant/TenantDashboardPage";
 import TenantInvoices from  "@/pages/tenant/TenantInvoicesPage.jsx";
 import TenantUtilitiesPage from "@/pages/tenant/TenantUtilitiesPage.jsx";
-import TenantContractPage from "@/pages/tenant/TenantContractPage.jsx";
+import TenantContractPage from "@/pages/tenant/TenantLeasesPage.jsx";
 
 // Component bảo vệ Route: Chỉ cho vào nếu có Token và đúng Role
 const ProtectedRoute = ({ children, allowedRoles }) => {
