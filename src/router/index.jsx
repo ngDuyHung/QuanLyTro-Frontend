@@ -17,6 +17,11 @@ import ServicePricesPage from "@/pages/landlord/ServicePricesPage";
 import NotificationsPage from "@/pages/landlord/NotificationsPage";
 import AccountingLedgersPage from "@/pages/landlord/AccountingLedgersPage";
 import IncidentsPage from "@/pages/landlord/IncidentsPage";
+
+import TenantLayout from "@/layouts/TenantLayout";
+import TenantDashboard from "@/pages/tenant/TenantDashboardPage";
+import TenantInvoices from  "@/pages/tenant/TenantInvoicesPage.jsx";
+
 // Component bảo vệ Route: Chỉ cho vào nếu có Token và đúng Role
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = useAuthStore((state) => state.user);
@@ -67,6 +72,19 @@ export default function AppRouter() {
         <Route path="service-prices" element={<ServicePricesPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
 
+      </Route>
+
+      {/* Tuyến đường của Người Thuê (Tenant) */}
+      <Route
+        path="/tenant/*"
+        element={
+          <ProtectedRoute allowedRoles={["tenant"]}>
+            <TenantLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="dashboard" element={<TenantDashboard />} />
+        <Route path="invoices" element={<TenantInvoices />} />
       </Route>
 
       {/* Tuyến đường của Admin */}
