@@ -20,9 +20,13 @@ import IncidentsPage from "@/pages/landlord/IncidentsPage";
 
 import TenantLayout from "@/layouts/TenantLayout";
 import TenantDashboard from "@/pages/tenant/TenantDashboardPage";
-import TenantInvoices from  "@/pages/tenant/TenantInvoicesPage.jsx";
+import TenantInvoices from "@/pages/tenant/TenantInvoicesPage.jsx";
 import TenantUtilitiesPage from "@/pages/tenant/TenantUtilitiesPage.jsx";
 import TenantContractPage from "@/pages/tenant/TenantLeasesPage.jsx";
+import TenantIncidentsPage from "@/pages/tenant/TenantIncidentsPage.jsx";
+import TenantNotificationsPage from "@/pages/tenant/TenantNotificationsPage.jsx";
+import TenantAccountPage from "@/pages/tenant/TenantAccountPage.jsx";
+import TenantMembersPage from "@/pages/tenant/TenantMembersPage.jsx";
 
 // Component bảo vệ Route: Chỉ cho vào nếu có Token và đúng Role
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -89,7 +93,11 @@ export default function AppRouter() {
         <Route path="invoices" element={<TenantInvoices />} />
         <Route path="utilities" element={<TenantUtilitiesPage />} />
         <Route path="contracts" element={<TenantContractPage />} />
-      </Route>
+        <Route path="incidents" element={<TenantIncidentsPage />} />
+        <Route path="notifications" element={<TenantNotificationsPage />} />
+        <Route path="account" element={<TenantAccountPage />} />
+        <Route path="members" element={<TenantMembersPage />} />
+      </Route>  
 
       {/* Tuyến đường của Admin */}
       <Route

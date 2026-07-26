@@ -17,10 +17,11 @@ export default function TenantLayout() {
           <Link to="/tenant/incidents">Yêu cầu sửa chữa</Link>
           <Link to="/tenant/notifications">Thông báo</Link>
           <Link to="/tenant/account">Tài khoản</Link>
+          <Link to="/tenant/members">Thành viên</Link>
         </nav>
-        
-        <button 
-          onClick={logout} 
+
+        <button
+          onClick={logout}
           style={{ marginTop: "30px", color: "red", cursor: "pointer" }}
         >
           Đăng xuất
@@ -30,7 +31,7 @@ export default function TenantLayout() {
       {/* Nội dung chính bên phải */}
       <main style={{ flex: 1, padding: "24px" }}>
         {/* Outlet sẽ render các component con (Dashboard, Invoices,...) dựa vào URL */}
-        <Outlet /> 
+        <Outlet />
       </main>
     </div>
   );
