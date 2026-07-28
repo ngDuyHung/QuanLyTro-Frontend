@@ -4,15 +4,18 @@ import tenantNotificationService from "@/services/tenantNotificationService";
 
 const formatDate = (dateString) => {
     if (!dateString) return "—";
-    return new Date(dateString).toLocaleDateString("vi-VN", { hour: '2-digit', minute: '2-digit' });
+    return new Date(dateString).toLocaleDateString("vi-VN", { 
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit' 
+    });
 };
 
 const getTypeConfig = (type) => {
     switch (type) {
-        case 'info': return { icon: 'fa-circle-info', color: 'text-blue-500', bg: 'bg-blue-50', label: 'Thông tin' };
-        case 'warning': return { icon: 'fa-triangle-exclamation', color: 'text-amber-500', bg: 'bg-amber-50', label: 'Cảnh báo' };
-        case 'billing': return { icon: 'fa-file-invoice-dollar', color: 'text-green-500', bg: 'bg-green-50', label: 'Tài chính' };
-        default: return { icon: 'fa-bell', color: 'text-slate-500', bg: 'bg-slate-100', label: 'Thông báo' };
+        case 'info': return { icon: 'fa-circle-info', color: 'text-blue-500', bg: 'bg-blue-50 border-blue-100', label: 'Thông tin' };
+        case 'warning': return { icon: 'fa-triangle-exclamation', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100', label: 'Cảnh báo' };
+        case 'billing': return { icon: 'fa-file-invoice-dollar', color: 'text-green-600', bg: 'bg-green-50 border-green-100', label: 'Tài chính' };
+        default: return { icon: 'fa-bell', color: 'text-slate-500', bg: 'bg-slate-100 border-slate-200', label: 'Thông báo' };
     }
 };
 
@@ -51,72 +54,77 @@ export default function TenantViewNotificationModal({ open, notificationId, onCl
     if (!open) return null;
 
     return (
-        <>
+        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
             <style>{`
-                @keyframes slideUp {
-                    from { transform: translateY(100%); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-                @keyframes fadeIn {
-                    from { transform: scale(0.95); opacity: 0; }
-                    to { transform: scale(1); opacity: 1; }
-                }
-                .animate-slide-up {
-                    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                }
-                @media (min-width: 640px) {
-                    .sm\\:animate-fade-in {
-                        animation: fadeIn 0.2s ease-out forwards;
-                    }
-                }
+                @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+                @keyframes fadeIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
             `}</style>
 
-            <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm transition-all animate-[fadeIn_0.2s_ease-out]">
-                <div className="bg-white w-full h-[90vh] sm:h-auto sm:max-h-[85vh] sm:max-w-2xl sm:rounded-2xl rounded-t-2xl flex flex-col shadow-2xl overflow-hidden animate-slide-up sm:animate-fade-in relative">
+            <div className="bg-white w-full sm:max-w-[700px] h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-3xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out]">
 
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50 shrink-0">
-                        <h2 className="text-[16px] font-bold text-slate-700 uppercase tracking-wider">Chi tiết thông báo</h2>
-                        <button
-                            onClick={onClose}
-                            className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-red-500 flex justify-center items-center transition-colors shadow-sm"
-                        >
-                            <i className="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
+                {/* Header (Mô phỏng giống ViewNotificationModal bên Chủ trọ) */}
+                <div className="relative p-6 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                    {/* Nút đóng */}
+                    <button type="button" onClick={onClose} className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm text-slate-400 z-10 hover:bg-slate-100 transition-colors">
+                        <i className="fa-solid fa-xmark text-[14px]"></i>
+                    </button>
 
-                    {/* Body */}
-                    <div className="flex-1 overflow-y-auto p-5 sm:p-7 custom-scrollbar bg-white">
-                        {isLoading || !detail ? (
-                            <div className="h-40 flex flex-col justify-center items-center text-slate-400">
-                                <i className="fa-solid fa-spinner animate-spin text-2xl text-brand mb-2"></i>
-                                <p className="text-[13px]">Đang tải nội dung...</p>
-                            </div>
-                        ) : (
-                            <div>
-                                <div className="flex gap-2 items-center mb-3">
-                                    <span className={`px-2.5 py-1 text-[10px] font-bold uppercase rounded ${getTypeConfig(detail.type).bg} ${getTypeConfig(detail.type).color}`}>
-                                        <i className={`fa-solid ${getTypeConfig(detail.type).icon} mr-1`}></i>
-                                        {detail.type_label || getTypeConfig(detail.type).label}
+                    {isLoading || !detail ? (
+                         <div className="h-[50px] w-full bg-slate-200 animate-pulse rounded-lg"></div>
+                    ) : (
+                        <>
+                            {/* Hàng Badge & Ngày */}
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-3 pr-8 sm:pr-0">
+                                <span className={`px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wider ${getTypeConfig(detail.type).bg} ${getTypeConfig(detail.type).color}`}>
+                                    <i className={`fa-solid ${getTypeConfig(detail.type).icon} mr-1`}></i>
+                                    {detail.type_label || getTypeConfig(detail.type).label}
+                                </span>
+                                {detail.is_pinned && (
+                                    <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-red-50 text-red-500 border border-red-100 uppercase tracking-wider">
+                                        <i className="fa-solid fa-thumbtack mr-1"></i> Đã ghim
                                     </span>
-                                    <span className="text-[12px] text-slate-400 font-medium">
-                                        <i className="fa-regular fa-clock mr-1"></i> {formatDate(detail.created_at)}
-                                    </span>
-                                </div>
-
-                                <h1 className="text-[20px] sm:text-[22px] font-black text-slate-800 leading-snug mb-5">
-                                    {detail.is_pinned && <i className="fa-solid fa-thumbtack text-red-500 mr-2 rotate-45"></i>}
-                                    {detail.title}
-                                </h1>
-
-                                <div className="text-[14px] sm:text-[15px] text-slate-700 leading-relaxed whitespace-pre-wrap p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                    {detail.content}
-                                </div>
+                                )}
+                                <span className="text-[12px] text-slate-400 font-medium sm:ml-auto">
+                                    <i className="fa-regular fa-clock mr-1"></i> {formatDate(detail.created_at)}
+                                </span>
                             </div>
-                        )}
-                    </div>
+
+                            {/* Tiêu đề thông báo */}
+                            <h2 className="text-[20px] sm:text-[22px] font-extrabold text-slate-800 leading-tight pr-6 sm:pr-0">
+                                {detail.title}
+                            </h2>
+                        </>
+                    )}
                 </div>
+
+                {/* Body Content Render HTML (Áp dụng Typography chuẩn) */}
+                <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-white no-scrollbar">
+                    {isLoading || !detail ? (
+                        <div className="flex flex-col items-center justify-center h-full text-brand opacity-50">
+                            <i className="fa-solid fa-spinner fa-spin text-3xl mb-3"></i>
+                            <p className="text-sm font-medium">Đang tải nội dung...</p>
+                        </div>
+                    ) : (
+                        // QUAN TRỌNG: Sử dụng dangerouslySetInnerHTML và prose của Tailwind
+                        <div
+                            className="prose prose-slate max-w-none 
+                                       prose-p:text-[15px] prose-p:leading-relaxed prose-p:text-slate-700
+                                       prose-headings:text-slate-800 prose-headings:font-bold
+                                       prose-img:rounded-xl prose-img:shadow-sm prose-img:mx-auto
+                                       prose-strong:text-slate-800 prose-a:text-brand"
+                            dangerouslySetInnerHTML={{ __html: detail.content }}
+                        />
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="border-t border-slate-100 p-4 bg-slate-50 flex justify-center sm:justify-end shrink-0">
+                    <button type="button" onClick={onClose} className="w-full sm:w-auto px-8 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-bold active:bg-slate-100 hover:bg-slate-50 transition-colors shadow-sm">
+                        Đã hiểu
+                    </button>
+                </div>
+
             </div>
-        </>
+        </div>
     );
 }

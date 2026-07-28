@@ -360,7 +360,12 @@ export default function TenantDashboard() {
                     </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-bold text-gray-900">{noti.title}</h4>
-                      <p className="text-xs text-gray-500 mt-0.5">{noti.content || "Vui lòng kiểm tra chi tiết"}</p>
+                      {/* Xóa thẻ HTML và fix lỗi entity (&nbsp;) để tạo đoạn xem trước gọn gàng */}
+                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                        {noti.content
+                          ? noti.content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim()
+                          : "Vui lòng kiểm tra chi tiết"}
+                      </p>
                     </div>
                     <div className="text-[11px] text-gray-400 flex items-center gap-1.5 shrink-0">
                       {new Date(noti.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}

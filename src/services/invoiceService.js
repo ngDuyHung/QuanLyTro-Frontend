@@ -56,6 +56,8 @@ const invoiceService = {
   // Chủ trọ từ chối giao dịch (truyền { cancel_reason: "Lý do..." })
   cancelTransaction: (transactionId, data) =>
     api.post(`/financial-transactions/${transactionId}/cancel`, data),
+
+  countActive: () => api.get("/invoices/count-active"), // Lấy số lượng hóa đơn chưa thanh toán
 };
 
 export default invoiceService;

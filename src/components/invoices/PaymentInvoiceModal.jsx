@@ -3,6 +3,15 @@ import { toast } from "react-toastify";
 import invoiceService from "@/services/invoiceService";
 import bankAccountService from "@/services/bankAccountService";
 import sepayConfigService from "@/services/sepayConfigService";
+
+// Hàm lấy thời gian hiện tại theo định dạng YYYY-MM-DDThh:mm:ss (local time)
+const getCurrentDateTimeLocal = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 19); // Lấy đến giây: YYYY-MM-DDThh:mm:ss
+};
+
+
 export default function PaymentInvoiceModal({
     open,
     invoice,
@@ -11,7 +20,7 @@ export default function PaymentInvoiceModal({
 }) {
     const [amount, setAmount] = useState("");
     const [displayAmount, setDisplayAmount] = useState("");
-    const [transactionDate, setTransactionDate] = useState(new Date().toISOString().slice(0, 10));
+    const [transactionDate, setTransactionDate] = useState(getCurrentDateTimeLocal());
     const [method, setMethod] = useState("bank_transfer"); // Mặc định là chuyển khoản để show QR
     const [bankAccountId, setBankAccountId] = useState("");
     const [note, setNote] = useState("");
@@ -77,7 +86,7 @@ export default function PaymentInvoiceModal({
             setAmount(defaultAmount);
             setDisplayAmount(Number(defaultAmount).toLocaleString("vi-VN")); // Format có dấu chấm
 
-            setTransactionDate(new Date().toISOString().slice(0, 10));
+            setTransactionDate(getCurrentDateTimeLocal());
             setMethod("bank_transfer");
             setNote("");
             setClientError("");
@@ -193,7 +202,7 @@ export default function PaymentInvoiceModal({
             setIsSubmitting(true);
             const payload = {
                 amount: payAmount,
-                transaction_date: transactionDate,
+                transaction_date: transactionDate.replace('T', ' '),
                 method: method,
                 bank_account_id: method === "bank_transfer" ? bankAccountId : null,
                 note: note
@@ -341,9 +350,11 @@ export default function PaymentInvoiceModal({
                                     <div>
                                         <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">Ngày thu <span className="text-red-500">*</span></label>
                                         <input
-                                            type="date"
+                                            type="datetime-local"
+                                            step="1"
                                             value={transactionDate}
                                             onChange={(e) => setTransactionDate(e.target.value)}
+                                            readOnly
                                             className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-[13px] outline-none focus:border-brand"
                                         />
                                     </div>

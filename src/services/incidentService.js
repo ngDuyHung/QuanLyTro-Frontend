@@ -24,6 +24,8 @@ const incidentService = {
 
   // Xóa cứng sự cố (Chỉ cho phép khi ở trạng thái pending)
   delete: (id) => api.delete(`/incidents/${id}`),
+
+  countActive: () => api.get("/incidents/count-active"),
 };
 
 export default incidentService;

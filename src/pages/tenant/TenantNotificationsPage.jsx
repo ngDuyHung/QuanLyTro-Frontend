@@ -7,7 +7,7 @@ const formatDate = (dateString) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
     const today = new Date();
-    
+
     // Nếu là hôm nay thì hiện giờ phút, nếu khác ngày thì hiện ngày tháng
     if (date.toDateString() === today.toDateString()) {
         return "Hôm nay, " + date.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' });
@@ -64,7 +64,7 @@ export default function TenantNotificationsPage() {
 
     return (
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 md:p-6 lg:p-8 flex flex-col h-full bg-slate-50">
-            
+
             {/* Header */}
             <div className="mb-6 shrink-0 flex items-center justify-between">
                 <div>
@@ -92,8 +92,8 @@ export default function TenantNotificationsPage() {
                         {notifications.map((item) => {
                             const conf = getTypeConfig(item.type);
                             return (
-                                <div 
-                                    key={item.id} 
+                                <div
+                                    key={item.id}
                                     onClick={() => handleOpenViewModal(item.id)}
                                     className="group flex gap-4 p-4 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 cursor-pointer transition-all"
                                 >
@@ -108,7 +108,7 @@ export default function TenantNotificationsPage() {
                                             </h3>
                                             <span className="shrink-0 text-[11px] text-slate-400 font-medium">{formatDate(item.created_at)}</span>
                                         </div>
-                                        <p className="text-[13px] text-slate-500 line-clamp-2 leading-relaxed pr-4">{item.content}</p>
+                                        <p className="text-[13px] text-slate-500 line-clamp-2 leading-relaxed pr-4">{item.content ? item.content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim() : "Vui lòng kiểm tra chi tiết"}</p>
                                     </div>
                                 </div>
                             );
@@ -121,16 +121,16 @@ export default function TenantNotificationsPage() {
                     <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center text-[12px] text-slate-500">
                         <span>Trang {page} / {pagination.last_page}</span>
                         <div className="flex gap-2">
-                            <button 
-                                disabled={page <= 1} 
-                                onClick={() => setPage(page - 1)} 
+                            <button
+                                disabled={page <= 1}
+                                onClick={() => setPage(page - 1)}
                                 className="px-3 py-1.5 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors"
                             >
                                 Trước
                             </button>
-                            <button 
-                                disabled={!pagination.next_page_url} 
-                                onClick={() => setPage(page + 1)} 
+                            <button
+                                disabled={!pagination.next_page_url}
+                                onClick={() => setPage(page + 1)}
                                 className="px-3 py-1.5 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors"
                             >
                                 Sau

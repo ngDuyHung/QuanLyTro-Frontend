@@ -23,6 +23,32 @@ const getStatusConfig = (status) => {
   return { label: "Thành công", className: "bg-green-50 text-green-600 border-green-200" };
 };
 
+const getBadgeConfig = (item, index, page) => {
+  // Vì API đã sắp xếp mới nhất lên đầu, dòng đầu tiên của trang 1 luôn là mới nhất
+  const isNewest = page === 1 && index === 0;
+
+  // Ưu tiên dùng created_at để lấy giờ/phút chính xác
+  const dateStr = item.created_at || item.transaction_date;
+  if (!dateStr) return null;
+
+  const dateObj = new Date(dateStr);
+  const today = new Date();
+  const isToday = dateObj.getDate() === today.getDate() &&
+    dateObj.getMonth() === today.getMonth() &&
+    dateObj.getFullYear() === today.getFullYear();
+
+  if (isNewest) {
+    return { label: "MỚI", className: "bg-red-500 text-white animate-pulse shadow-sm" };
+  }
+
+  if (isToday) {
+    const time = dateObj.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' });
+    return { label: time, className: "bg-blue-50 text-blue-600 border border-blue-200" };
+  }
+
+  return null;
+};
+
 export default function FinancialTransactionsTable({
   transactions = [],
   properties = [],
@@ -99,9 +125,10 @@ export default function FinancialTransactionsTable({
           ) : transactions.length === 0 ? (
             <div className="py-10 text-center bg-white rounded-xl border border-slate-200 text-slate-400 text-[13px]">Chưa có dữ liệu thu chi.</div>
           ) : (
-            transactions.map((item) => {
+            transactions.map((item, index) => {
               const dir = getDirectionConfig(item.direction);
               const status = getStatusConfig(item.status);
+              const badge = getBadgeConfig(item, index, page);
               return (
                 <div key={item.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                   <div className="flex justify-between items-start mb-3">
@@ -110,6 +137,15 @@ export default function FinancialTransactionsTable({
                         <i className={`fa-solid ${dir.icon}`}></i>
                       </div>
                       <div className="flex flex-col">
+                        {/* HIỂN THỊ MÃ GD VÀ LABEL */}
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-800 text-[14px]">{item.transaction_code}</span>
+                          {badge && (
+                            <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${badge.className}`}>
+                              {badge.label}
+                            </span>
+                          )}
+                        </div>
                         <span className="font-bold text-slate-800 text-[14px]">{item.transaction_code}</span>
                         <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-500">
                           <span>{formatDate(item.transaction_date)}</span>
@@ -201,15 +237,24 @@ export default function FinancialTransactionsTable({
                   </td>
                 </tr>
               ) : (
-                transactions.map((item) => {
+                transactions.map((item, index) => {
                   const dir = getDirectionConfig(item.direction);
+                  const badge = getBadgeConfig(item, index, page);
                   return (
                     <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
 
                       {/* Ngày / Mã GD */}
                       <td className="py-4 px-4">
                         <div className="flex flex-col font-medium">
-                          <span className="text-slate-800">{formatDate(item.transaction_date)}</span>
+                          {/* HIỂN THỊ NGÀY VÀ LABEL */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-800">{formatDate(item.transaction_date)}</span>
+                            {badge && (
+                              <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded leading-none ${badge.className}`}>
+                                {badge.label}
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[11px] text-slate-400 mt-0.5 font-mono">{item.transaction_code}</span>
                         </div>
                       </td>

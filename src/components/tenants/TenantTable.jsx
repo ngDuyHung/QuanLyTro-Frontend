@@ -98,17 +98,13 @@ export default function TenantTable({
             <i className="fa-solid fa-angle-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[11px] pointer-events-none"></i>
           </div>
 
-          {/* Nút Bộ lọc nâng cao */}
-          <button className="bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-lg text-[13px] font-medium hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm">
-            <i className="fa-solid fa-filter text-slate-400"></i> Bộ lọc
-          </button>
         </div>
 
         {/* Cụm Nút chức năng phải */}
         <div className="flex items-center gap-3 w-full lg:w-auto ml-auto">
           {/* Nút Quét CCCD mẫu tối ưu */}
 
-          <button
+          {/* <button
             className="bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-slate-50 transition-colors flex items-center gap-2.5 shadow-sm relative">
             <div className="relative flex items-center justify-center">
               <i className="fa-solid fa-expand text-slate-500 text-[16px]"></i>
@@ -118,7 +114,7 @@ export default function TenantTable({
                 className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-[#0e8b4d] rounded-full animate-ping opacity-75"></span>
             </div>
             Quét CCCD
-          </button>
+          </button> */}
 
           {/* Nút Thêm khách thuê */}
           <button

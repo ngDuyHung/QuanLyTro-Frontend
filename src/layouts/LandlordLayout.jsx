@@ -3,6 +3,8 @@ import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import useAuthStore from "@/stores/authStore"; // Kiểm tra lại đường dẫn này cho đúng với dự án của bạn
 import { toast } from "react-toastify";
 import notificationService from "@/services/notificationService";
+import incidentService from "@/services/incidentService"; // Import service để lấy số lượng sự cố
+import invoiceService from "@/services/invoiceService"; // Import service để lấy số lượng hóa đơn
 
 export default function LandlordLayout() {
   const { user, clearAuth } = useAuthStore();
@@ -14,6 +16,37 @@ export default function LandlordLayout() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const notifRef = useRef(null);
+  // 2. Thêm state lưu số lượng sự cố
+  const [activeIncidentCount, setActiveIncidentCount] = useState(0);
+  // 3. Thêm state lưu số lượng hóa đơn
+  const [activeInvoiceCount, setActiveInvoiceCount] = useState(0);
+
+  useEffect(() => {
+    const fetchActiveIncidentsCount = async () => {
+      try {
+        const response = await incidentService.countActive();
+        // Trực tiếp set state từ kết quả trả về
+        setActiveIncidentCount(response.data.count || 0);
+      } catch (error) {
+        console.error("Lỗi lấy số lượng sự cố:", error);
+      }
+    };
+
+    fetchActiveIncidentsCount();
+  }, []);
+
+  useEffect(() => {
+    const fetchActiveInvoicesCount = async () => {
+      try {
+        const response = await invoiceService.countActive();
+        setActiveInvoiceCount(response.data.count || 0);
+      } catch (error) {
+        console.error("Lỗi lấy số lượng hóa đơn:", error);
+      }
+    };
+
+    fetchActiveInvoicesCount();
+  }, []);
 
   useEffect(() => {
     const fetchLatestNotifs = async () => {
@@ -139,15 +172,23 @@ export default function LandlordLayout() {
             <span>Khách thuê</span>
           </NavLink>
 
-          <NavLink
+        <NavLink
             to="/landlord/incidents"
             className={navLinkClasses}
             onClick={closeSidebar}
           >
+            {/* THẺ DIV NÀY LÀ CHÌA KHÓA: flex-1 sẽ đẩy phần dư thừa sang bên phải */}
             <div className="flex items-center gap-3 flex-1">
               <i className="fa-solid fa-screwdriver-wrench w-5 text-center"></i>
               <span>Sự cố & Bảo trì</span>
             </div>
+            
+            {/* Nút số lượng bây giờ sẽ bám sát lề phải */}
+            {activeIncidentCount > 0 && (
+              <span className="bg-[#ef4444] text-white text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full shrink-0">
+                {activeIncidentCount > 99 ? "99+" : activeIncidentCount}
+              </span>
+            )}
           </NavLink>
 
           <NavLink
@@ -155,13 +196,10 @@ export default function LandlordLayout() {
             className={navLinkClasses}
             onClick={closeSidebar}
           >
-            <div className="flex items-center gap-3 flex-1">
+           
               <i className="fa-solid fa-droplet w-5 text-center"></i>
               <span>Điện nước</span>
-            </div>
-            <span className="bg-[#ef4444] text-white text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full shrink-0">
-              2
-            </span>
+           
           </NavLink>
 
           <NavLink
@@ -169,8 +207,15 @@ export default function LandlordLayout() {
             className={navLinkClasses}
             onClick={closeSidebar}
           >
+             <div className="flex items-center gap-3 flex-1">
             <i className="fa-solid fa-file-invoice w-5 text-center"></i>
             <span>Hóa đơn</span>
+            </div>
+            {activeInvoiceCount > 0 && (
+              <span className="bg-[#ef4444] text-white text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full shrink-0">
+                {activeInvoiceCount > 99 ? "99+" : activeInvoiceCount}
+              </span>
+            )}
           </NavLink>
 
           <NavLink
@@ -182,9 +227,6 @@ export default function LandlordLayout() {
               <i className="fa-solid fa-money-bill-transfer w-5 text-center"></i>
               <span>Thu chi</span>
             </div>
-            <span className="bg-[#ef4444] text-white text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full shrink-0">
-              5
-            </span>
           </NavLink>
 
           <NavLink
@@ -193,7 +235,7 @@ export default function LandlordLayout() {
             onClick={closeSidebar}
           >
             <i className="fa-solid fa-book-open w-5 text-center"></i>
-            <span>Sổ kế toán</span>
+            <span>Sổ doanh thu</span>
           </NavLink>
 
           <NavLink

@@ -80,7 +80,7 @@ export default function AccountingLedgersPage() {
             {/* Tiêu đề trang */}
             <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-[22px] font-bold text-slate-800">Sổ kế toán (Thuế)</h1>
+                    <h1 className="text-[22px] font-bold text-slate-800">Sổ doanh thu (Thuế)</h1>
                     <p className="text-[13px] text-slate-500 mt-1">
                         Theo dõi doanh thu, đối soát và chốt sổ kế toán theo mẫu S1a-HKD của Bộ Tài chính.
                     </p>

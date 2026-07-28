@@ -32,22 +32,20 @@ export default function TenantInvoicesPage() {
     const fetchInvoices = useCallback(async () => {
         setIsLoading(true);
         try {
-            let periodFrom = undefined;
-            let periodTo = undefined;
-            if (month) {
-                periodFrom = `${month}-01`;
-                const year = parseInt(month.split("-")[0], 10);
-                const monthNum = parseInt(month.split("-")[1], 10);
-                const lastDay = new Date(year, monthNum, 0).getDate();
-                periodTo = `${month}-${lastDay}`;
-            }
-
-            const response = await tenantInvoiceService.getAll({
+            // Khởi tạo params gửi lên backend
+            const params = {
                 page,
                 status: status || undefined,
-                period_from: periodFrom,
-                period_to: periodTo,
-            });
+            };
+
+            // Nếu người dùng có chọn tháng, truyền thẳng chuỗi "YYYY-MM" lên backend để lọc
+            if (month) {
+                // Ta có thể đổi tên tham số truyền lên thành 'filter_month' để dễ phân biệt
+                // (Backend sẽ cần được cập nhật nhẹ để bắt tham số này)
+                params.filter_month = month;
+            }
+
+            const response = await tenantInvoiceService.getAll(params);
 
             setInvoices(response.data.data || []);
             setPagination(response.data.meta || null);
@@ -95,8 +93,8 @@ export default function TenantInvoicesPage() {
                                 key={tab.value}
                                 onClick={() => { setStatus(tab.value); setPage(1); }}
                                 className={`py-4 whitespace-nowrap transition relative ${status === tab.value
-                                        ? "text-gray-900 font-semibold"
-                                        : "text-gray-500 hover:text-gray-900"
+                                    ? "text-gray-900 font-semibold"
+                                    : "text-gray-500 hover:text-gray-900"
                                     }`}
                             >
                                 {tab.label}
