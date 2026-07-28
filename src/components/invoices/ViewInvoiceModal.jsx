@@ -320,7 +320,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         <div className="border-x border-slate-200">
                                             <span className="text-slate-500 block mb-0.5">Ngày lập h.đơn</span>
                                             <span className="font-medium text-slate-800 block">
-                                                {invoice.issue_date ? new Date(invoice.issue_date).toLocaleDateString("vi-VN") : "—"}
+                                                {invoice.issue_date ? new Date(invoice.period_to).toLocaleDateString("vi-VN") : "—"}
                                             </span>
                                         </div>
                                         <div>
