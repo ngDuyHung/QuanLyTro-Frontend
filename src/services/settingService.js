@@ -19,10 +19,18 @@ const settingService = {
   // Lưu mẫu Hóa đơn
   saveInvoiceTemplate: (data) => api.post("/settings/invoice-template", data),
 
-
   // Xuất file PDF Sổ kế toán
   exportLedgerPdf: (id) =>
     api.get(`/ledgers/${id}/export-pdf`, { responseType: "blob" }),
+
+  // Lấy trạng thái Bật/Tắt tự động nhắc nhở điện nước
+  getAutoRemindSetting: () => api.get("/settings/auto-remind"),
+
+  // Bật/Tắt tự động nhắc nhở điện nước
+  toggleAutoRemind: (data) => api.post("/settings/auto-remind", data),
+
+  // Test gửi Push Notification đến thiết bị chủ trọ
+  testPushNotification: () => api.post("/settings/test-push"),
 };
 
 export default settingService;

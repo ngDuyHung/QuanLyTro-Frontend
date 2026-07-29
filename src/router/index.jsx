@@ -18,6 +18,7 @@ import NotificationsPage from "@/pages/landlord/NotificationsPage";
 import AccountingLedgersPage from "@/pages/landlord/AccountingLedgersPage";
 import IncidentsPage from "@/pages/landlord/IncidentsPage";
 import ReportsPage from "@/pages/landlord/ReportsPage";
+import SettingsPage from "@/pages/landlord/SettingsPage";
 
 import TenantLayout from "@/layouts/TenantLayout";
 import TenantDashboard from "@/pages/tenant/TenantDashboardPage";
@@ -79,6 +80,7 @@ export default function AppRouter() {
         <Route path="service-prices" element={<ServicePricesPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
 
       </Route>
 

@@ -13,7 +13,16 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] }),
 
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "service-worker.js",
       registerType: "autoUpdate",
+
+      // THÊM ĐOẠN NÀY ĐỂ CHO PHÉP SW CHẠY LÚC NPM RUN DEV
+      devOptions: {
+        enabled: true,
+        type: "module",
+      },
 
       includeAssets: [
         "favicon.ico",
@@ -65,9 +74,7 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
 
-      devOptions: {
-        enabled: true,
-      },
+      
     }),
   ],
 
@@ -82,9 +89,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
+          if (id.includes("node_modules")) {
             // Tách các thư viện (như React, UI framework) vào một file 'vendor.js'
-            return 'vendor';
+            return "vendor";
           }
         },
       },

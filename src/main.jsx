@@ -10,7 +10,7 @@ import { registerSW } from 'virtual:pwa-register';
 // Bật true: Hiển thị giao diện khóa màn hình để ngắm/chỉnh sửa UI lúc dev.
 // Bật false: Chạy thực tế (Tự động ẩn và chỉ hiện khi có bản cập nhật thật).
 // ==========================================
-const DEBUG_MODE = false; 
+const DEBUG_MODE = false;
 
 // Hàm tạo và hiển thị màn hình Loading chuyên nghiệp
 const showPwaLoader = (isDemo = false) => {
@@ -18,13 +18,13 @@ const showPwaLoader = (isDemo = false) => {
 
   const loader = document.createElement('div');
   loader.id = 'pwa-update-overlay';
-  
+
   // Tinh chỉnh nội dung hiển thị dựa vào chế độ Dev hay Thực tế
-  const debugBadge = isDemo 
-    ? `<span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 6px; vertical-align: middle;">DEBUG</span>` 
+  const debugBadge = isDemo
+    ? `<span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 6px; vertical-align: middle;">DEBUG</span>`
     : '';
-  const subText = isDemo 
-    ? 'Đang xem trước giao diện cập nhật' 
+  const subText = isDemo
+    ? 'Đang xem trước giao diện cập nhật'
     : 'Đang áp dụng phiên bản mới nhất...';
 
   loader.innerHTML = `
@@ -76,7 +76,7 @@ const showPwaLoader = (isDemo = false) => {
       </style>
     </div>
   `;
-  
+
   document.body.appendChild(loader);
 };
 
@@ -123,3 +123,4 @@ if (DEBUG_MODE && typeof window !== 'undefined') {
   // Chờ DOM dựng xong hoàn toàn rồi tiêm UI thử nghiệm vào xem ngay lập tức
   setTimeout(() => showPwaLoader(true), 200);
 }
+
