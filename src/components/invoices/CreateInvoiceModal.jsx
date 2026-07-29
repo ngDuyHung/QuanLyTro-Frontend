@@ -943,6 +943,7 @@ export default function CreateInvoiceModal({
                                                             <option value="internet">Internet/tháng</option>
                                                             <option value="discount">Giảm trừ (-)</option>
                                                             <option value="deposit">Cọc/thế chân</option>
+                                                            <option value="damage_fee">Phí hư hại</option>
                                                             <option value="other">Khác</option>
                                                         </select>
                                                         <i className="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 sm:hidden pointer-events-none"></i>
