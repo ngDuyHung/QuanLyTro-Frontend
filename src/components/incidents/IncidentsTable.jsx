@@ -187,9 +187,25 @@ export default function IncidentsTable({
         </div>
     );
 
+    
+  const handlePageChange = (newPage) => {
+    onPageChange?.(newPage);
+
+    setTimeout(() => {
+      // Tìm khối chứa danh sách thông qua ID để cuộn lên
+      const tableContainer = document.getElementById('incident-table-top');
+
+      if (tableContainer) {
+        tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Dự phòng
+      }
+    }, 50);
+  };
+
     return (
         <div className="h-full flex flex-col bg-white">
-            <div className="flex-1 overflow-auto custom-scrollbar">
+            <div id="incident-table-top" className="flex-1 overflow-auto custom-scrollbar">
 
                 {/* --- 1. GIAO DIỆN MOBILE (Dạng Card) --- */}
                 <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50/50">

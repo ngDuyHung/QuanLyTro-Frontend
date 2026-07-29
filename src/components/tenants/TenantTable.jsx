@@ -30,6 +30,9 @@ const getStatusConfig = (status) => {
   }
 };
 
+
+
+
 export default function TenantTable({
   tenants = [],
   properties = [],
@@ -49,6 +52,22 @@ export default function TenantTable({
   onOpenViewModal,
   onOpenDeleteModal,
 }) {
+
+  const handlePageChange = (newPage) => {
+    onPageChange?.(newPage);
+
+    setTimeout(() => {
+      // Tìm khối chứa danh sách thông qua ID để cuộn lên
+      const tableContainer = document.getElementById('tenant-table-top');
+
+      if (tableContainer) {
+        tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Dự phòng
+      }
+    }, 50);
+  };
+
   return (
     <>
       {/* THANH CÔNG CỤ */}
@@ -127,7 +146,7 @@ export default function TenantTable({
       </div>
 
       {/* BẢNG DỮ LIỆU */}
-      <div className="bg-transparent lg:bg-white border-none lg:border lg:border-slate-200 lg:rounded-xl shadow-none lg:shadow-sm lg:overflow-hidden flex flex-col">
+      <div id="tenant-table-top" className="bg-transparent lg:bg-white border-none lg:border lg:border-slate-200 lg:rounded-xl shadow-none lg:shadow-sm lg:overflow-hidden flex flex-col">
 
         {/* --- GIAO DIỆN MOBILE (Dạng Card ẩn trên PC) --- */}
         <div className="lg:hidden flex flex-col gap-3 pb-4">
@@ -381,39 +400,77 @@ export default function TenantTable({
         </div>
 
         {/* PHÂN TRANG */}
-        <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-col sm:flex-row justify-between items-center gap-4">
-          <span className="text-[12px] text-slate-500">
-            Hiển thị 1 - {tenants.length} trong tổng số {pagination?.total || 48} khách thuê
+        <div className="bg-white border border-slate-200 lg:border-x-0 lg:border-b-0 lg:border-t lg:border-slate-100 rounded-xl lg:rounded-b-xl lg:rounded-t-none p-3 lg:p-4 flex items-center justify-between">
+          <span className="text-[12px] lg:text-[13px] text-slate-500">
+            {pagination ? (
+              <>
+                <span className="lg:hidden">
+                  Trang {pagination.current_page || 1}/{pagination.last_page || 1} · {pagination.total || 0} khách thuê
+                </span>
+
+                <span className="hidden lg:inline">
+                  Hiển thị {pagination.from || 0} - {pagination.to || 0} trong tổng số {pagination.total || 0} khách thuê
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="lg:hidden">0 Khách thuê</span>
+                <span className="hidden lg:inline">Chưa có dữ liệu khách thuê</span>
+              </>
+            )}
           </span>
-          <div className="flex items-center gap-4">
-            <div className="flex gap-1">
+
+          {pagination?.last_page > 1 && (
+            <div className="flex items-center gap-1">
+              {/* Nút lùi trang */}
               <button
+                type="button"
                 disabled={page <= 1}
-                onClick={() => onPageChange?.(page - 1)}
-                className="w-8 h-8 rounded flex items-center justify-center text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                onClick={() => handlePageChange(Math.max(1, page - 1))}
+                className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <i className="fa-solid fa-angle-left text-[12px]"></i>
+                <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
               </button>
 
-              <button className="w-8 h-8 rounded flex items-center justify-center bg-brand text-white font-medium text-[13px]">
+              {/* MOBILE UI: Chỉ hiện ô số trang hiện tại */}
+              <button
+                type="button"
+                className="flex lg:hidden w-8 h-8 rounded-lg items-center justify-center bg-brand text-white font-medium text-[13px]"
+              >
                 {page}
               </button>
 
+              {/* DESKTOP UI: Hiện đầy đủ dãy số trang */}
+              <div className="hidden lg:flex gap-1">
+                {Array.from({ length: pagination.last_page }).map((_, index) => {
+                  const pageNumber = index + 1;
+                  return (
+                    <button
+                      key={pageNumber}
+                      type="button"
+                      onClick={() => handlePageChange(pageNumber)}
+                      className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
+                        ? "bg-brand text-white shadow-sm"
+                        : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+                        }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Nút tiến trang */}
               <button
-                disabled={!pagination?.next_page_url}
-                onClick={() => onPageChange?.(page + 1)}
-                className="w-8 h-8 rounded flex items-center justify-center text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                type="button"
+                disabled={page >= pagination.last_page}
+                onClick={() => handlePageChange(page + 1)}
+                className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <i className="fa-solid fa-angle-right text-[12px]"></i>
+                <i className="fa-solid fa-angle-right text-[12px] lg:text-[11px]"></i>
               </button>
             </div>
-            <div className="relative hidden sm:block">
-              <select className="pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded text-[12px] text-slate-600 focus:outline-none appearance-none cursor-pointer">
-                <option>8 / trang</option>
-              </select>
-              <i className="fa-solid fa-angle-down absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] pointer-events-none"></i>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </>

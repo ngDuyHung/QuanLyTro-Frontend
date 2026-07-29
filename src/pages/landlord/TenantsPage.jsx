@@ -62,7 +62,7 @@ export default function TenantsPage() {
         property_id: propertyId || undefined,
         status: status || undefined,
       });
-
+      console.log("fetchTenants response:", response.data);
       const items = response.data.data || [];
       const meta = response.data.meta || null;
 
