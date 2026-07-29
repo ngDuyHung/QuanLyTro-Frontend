@@ -80,12 +80,28 @@ const showPwaLoader = (isDemo = false) => {
   document.body.appendChild(loader);
 };
 
-// 1. Khởi tạo Service Worker và thiết lập logic tự kiểm tra bản mới
+
+// ======================================================================
+// 1. KHỞI TẠO SERVICE WORKER VÀ BẮT SỰ KIỆN CÓ BẢN CẬP NHẬT MỚI
+// ======================================================================
 const updateSW = registerSW({
+  // Khi trình duyệt phát hiện có code mới trên Server
+  onNeedRefresh() {
+    if (DEBUG_MODE) return;
+
+    // Hiển thị UI Loading khóa màn hình
+    showPwaLoader(false);
+
+    // Chờ 1.7 giây cho hiệu ứng loading chạy xong, 
+    // rồi gửi tín hiệu cho Service Worker cài đặt bản mới & Tự động reload trang
+    setTimeout(() => {
+      updateSW(true);
+    }, 1700);
+  },
+
+  // Kiểm tra cập nhật mỗi khi user chuyển app từ background lên foreground
   onRegisteredSW(swUrl, registration) {
     if (!registration) return;
-
-    // Lắp bộ lắng nghe chuyển đổi trạng thái Foreground ứng dụng
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         registration.update();
@@ -93,21 +109,6 @@ const updateSW = registerSW({
     });
   }
 });
-
-// 2. Lắng nghe sự kiện giành quyền điều khiển hệ thống khi cài đặt hoàn tất
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    // Nếu đang bật debug giao diện, chặn không cho reload thật để lập trình viên xem UI
-    if (DEBUG_MODE) return;
-
-    showPwaLoader(false);
-
-    // Trì hoãn 1.7 giây nhằm tạo nhịp nghỉ UX trọn vẹn trước khi Reload trang
-    setTimeout(() => {
-      window.location.reload();
-    }, 1700);
-  });
-}
 
 // KHỞI CHẠY KHỐI RENDER ỨNG DỤNG REACT
 const root = ReactDOM.createRoot(document.getElementById('root'));
