@@ -16,7 +16,7 @@ export default function SettingsPage() {
 
             {/* Header */}
             <div className="mb-4 lg:mb-5">
-                <h1 className="text-[22px] font-bold text-slate-800">Cài đặt hệ thống </h1>
+                <h1 className="text-[22px] font-bold text-slate-800">Cài đặt hệ thống 21</h1>
                 <p className="text-[13px] text-slate-500 mt-1">Cấu hình thông báo.</p>
             </div>
 
