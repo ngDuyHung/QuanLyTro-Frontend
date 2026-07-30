@@ -19,7 +19,10 @@ export default function CreateInvoiceModal({
     onClose,
     properties = [],
     onSuccess,
-    defaultRoom = null
+    defaultRoom = null,
+    defaultLease = null,
+    isCheckout = false, // <--- Bổ sung prop này
+    defaultNote = ""
 }) {
     const [form, setForm] = useState(initialForm);
     const [leases, setLeases] = useState([]);
@@ -68,8 +71,9 @@ export default function CreateInvoiceModal({
             const today = new Date();
             let fromDate, toDate, dueDate;
 
-            // Kiểm tra xem phòng có cấu hình ngày thu tiền không (billing_day)
-            const billingDay = defaultRoom ? parseInt(defaultRoom.billing_day, 10) : null;
+            // Ưu tiên lấy billing_day từ lease trước, nếu không có thì lấy từ room
+            const sourceRoom = defaultLease ? (defaultLease.room || defaultLease) : defaultRoom;
+            const billingDay = sourceRoom ? parseInt(defaultLease?.billing_day || sourceRoom.billing_day, 10) : null;
 
             if (billingDay && !isNaN(billingDay) && billingDay > 0) {
                 // TRƯỜNG HỢP 1: Lấy theo ngày thanh toán của phòng
@@ -91,13 +95,20 @@ export default function CreateInvoiceModal({
             dueDate = new Date(toDate.getTime());
             dueDate.setDate(dueDate.getDate() + 10);
 
+            // DÒ TÌM PROPERTY ID AN TOÀN (Kể cả khi bị nested sâu bên trong)
+            const initPropertyId = defaultLease
+                ? (defaultLease.room?.property_id || defaultLease.room?.property?.id)
+                : (defaultRoom ? (defaultRoom.property_id || defaultRoom.property?.id) : "");
+
             // Cập nhật vào form
             setForm({
                 ...initialForm,
-                property_id: defaultRoom ? defaultRoom.property_id : "",
+                property_id: initPropertyId || "",
+                lease_id: defaultLease ? defaultLease.id : "",
                 period_from: fromDate.toISOString().slice(0, 10),
                 period_to: toDate.toISOString().slice(0, 10),
                 due_date: dueDate.toISOString().slice(0, 10),
+                note: defaultNote || "",
             });
 
             // Reset các state phụ khác (Giữ nguyên phần cũ của bạn)
@@ -109,7 +120,7 @@ export default function CreateInvoiceModal({
             setClientError("");
             setSubmitAction(null);
         }
-    }, [open, defaultRoom]);
+    }, [open, defaultRoom,defaultLease, defaultNote]);
 
     useEffect(() => {
         if (!open || !form.property_id) {
@@ -154,6 +165,7 @@ export default function CreateInvoiceModal({
                 const res = await invoiceService.prepareData({
                     lease_id: form.lease_id,
                     period_to: form.period_to,
+                    is_checkout: isCheckout ? 1 : 0
                 });
 
                 const data = res.data.data;

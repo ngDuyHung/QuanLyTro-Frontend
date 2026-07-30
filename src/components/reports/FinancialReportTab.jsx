@@ -251,7 +251,7 @@ export default function FinancialReportTab({ data }) {
 
             {/* 1.5 DẢI THỐNG KÊ HOẠT ĐỘNG GIAO DỊCH */}
             <div className="flex flex-wrap gap-x-8 gap-y-2 bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-3.5 text-[13px] text-slate-600">
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                     <i className="fa-solid fa-receipt text-green-500"></i>
                     <span><span className="font-bold text-slate-800">{incomeTxCount}</span> phiếu thu</span>
                     {avgIncomeTx > 0 && (
@@ -264,7 +264,7 @@ export default function FinancialReportTab({ data }) {
                     {avgExpenseTx > 0 && (
                         <span className="text-slate-400">· TB {formatVND(avgExpenseTx)}/phiếu</span>
                     )}
-                </div>
+                </div> */}
             </div>
 
             {/* 1.8 KHỐI TIỀN GIỮ HỘ (CỌC) - Tách riêng khỏi lợi nhuận để không gây nhầm lẫn */}

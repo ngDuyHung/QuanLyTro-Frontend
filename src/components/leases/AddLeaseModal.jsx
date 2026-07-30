@@ -16,10 +16,18 @@ const formatMoneyInput = (value) => {
   return new Intl.NumberFormat("vi-VN").format(number);
 };
 
+const getMinEndDate = (startDateStr) => {
+  if (!startDateStr) return "";
+  const date = new Date(startDateStr);
+  date.setMonth(date.getMonth() + 1);
+  return date.toISOString().slice(0, 10);
+};
+
 const initialForm = {
   property_id: "",
   room_id: "",
   start_date: new Date().toISOString().slice(0, 10),
+  end_date: "",
   billing_day: "1",
   deposit: "0",
   room_price: "0",
@@ -357,10 +365,25 @@ export default function AddLeaseModal({
       return;
     }
 
+    // Kiểm tra thời hạn hợp đồng tối thiểu 1 tháng
+    if (form.end_date) {
+      const minEndDate = new Date(getMinEndDate(form.start_date));
+      const selectedEndDate = new Date(form.end_date);
+
+      // Reset giờ phút giây về 0 để so sánh chính xác ngày
+      minEndDate.setHours(0, 0, 0, 0);
+      selectedEndDate.setHours(0, 0, 0, 0);
+
+      if (selectedEndDate < minEndDate) {
+        setClientError("Thời hạn hợp đồng phải tối thiểu là 1 tháng.");
+        return;
+      }
+    }
     const payload = new FormData();
 
     payload.append("room_id", form.room_id);
     payload.append("start_date", form.start_date);
+    payload.append("end_date", form.end_date);
     payload.append("billing_day", form.billing_day || "1");
     payload.append("deposit", onlyDigits(form.deposit) || "0");
     payload.append("room_price", onlyDigits(form.room_price) || "0");
@@ -526,6 +549,22 @@ export default function AddLeaseModal({
                       className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>
+                  
+                  {/* <div>
+                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                      Ngày kết thúc <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={form.end_date}
+                      onChange={handleChange("end_date")}
+                      min={form.start_date} // Ràng buộc UI không cho chọn trước ngày bắt đầu
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                    />
+                    <p className="mt-1.5 text-[12px] text-slate-500">
+                      Để trống nếu là hợp đồng không thời hạn.
+                    </p>
+                  </div> */}
 
                   <div>
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">

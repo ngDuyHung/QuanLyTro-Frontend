@@ -9,6 +9,7 @@ import ContractTemplateModal from "@/components/leases/ContractTemplateModal";
 import DeleteLeaseModal from "@/components/leases/DeleteLeaseModal";
 import ViewLeaseModal from "@/components/leases/ViewLeaseModal";
 import EndLeaseModal from "@/components/leases/EndLeaseModal";
+import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal"; // 1. Import Modal Hóa đơn thanh lý
 const isExpiringSoon = (lease) => {
   if (!lease.end_date || lease.status !== "active") return false;
 
@@ -70,6 +71,10 @@ export default function LeasesPage() {
 
   const [isEndModalOpen, setIsEndModalOpen] = useState(false);
   const [endingLease, setEndingLease] = useState(null);
+
+  // 1. Khai báo thêm state để quản lý Modal Hóa đơn thanh lý
+  const [isCheckoutInvoiceOpen, setIsCheckoutInvoiceOpen] = useState(false);
+  const [checkoutLease, setCheckoutLease] = useState(null);
 
   const fetchProperties = useCallback(async () => {
     try {
@@ -142,8 +147,9 @@ export default function LeasesPage() {
   };
 
   const handleOpenEndModal = (lease) => {
-    setEndingLease(lease);
-    setIsEndModalOpen(true);
+    // Thay vì mở EndLeaseModal, ta mở InvoiceModal trước
+    setCheckoutLease(lease);
+    setIsCheckoutInvoiceOpen(true);
   };
 
   // ---  HÀM XỬ LÝ XÓA ---
@@ -243,6 +249,25 @@ export default function LeasesPage() {
           setViewingLease(null);
         }}
       />
+      {/* 3. Thêm Modal Hóa Đơn Thanh Lý vào đây */}
+      <CreateInvoiceModal
+        open={isCheckoutInvoiceOpen}
+        onClose={() => {
+          setIsCheckoutInvoiceOpen(false);
+          setCheckoutLease(null);
+        }}
+        properties={properties}
+        defaultLease={checkoutLease}
+        isCheckout={true}
+        defaultNote="Hóa đơn thanh lý trả phòng."
+        onSuccess={() => {
+          // 4. LUỒNG LIỀN MẠCH: Xử lý Hóa đơn xong -> Tự động bật Modal kết thúc hợp đồng gốc
+          setIsCheckoutInvoiceOpen(false);
+          setEndingLease(checkoutLease);
+          setIsEndModalOpen(true);
+        }}
+      />
+
       <EndLeaseModal
         open={isEndModalOpen}
         lease={endingLease}

@@ -66,6 +66,24 @@ export default function ViewUtilityModal({ open, reading, onClose }) {
 
   const typeConfig = getTypeConfig(reading.type);
 
+  // === LOGIC TÍNH TOÁN BIẾN ĐỘNG  ===
+  const previousMonthUsage = history.length > 0 ? history[0].usage : null;
+  let usageDiff = 0;
+  let usagePercent = 0;
+  let isWarning = false;
+
+  if (previousMonthUsage !== null && previousMonthUsage > 0) {
+    usageDiff = reading.usage - previousMonthUsage;
+    usagePercent = (usageDiff / previousMonthUsage) * 100;
+    // Cảnh báo đỏ nếu tăng đột biến (Ví dụ: tăng trên 20%)
+    isWarning = usagePercent >= 20;
+  } else if (previousMonthUsage === 0) {
+    // Xử lý case tháng trước dùng 0 số nhưng tháng này có dùng
+    usageDiff = reading.usage;
+    isWarning = reading.usage > 0; // Tự định nghĩa logic cảnh báo nếu cần
+  }
+  // ===============================================
+
   return (
     <>
       <style>{`
@@ -84,7 +102,7 @@ export default function ViewUtilityModal({ open, reading, onClose }) {
       <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
         {/* Modal Box */}
         <div className="bg-slate-50 w-full h-[92vh] sm:h-auto sm:max-h-[90vh] sm:max-w-[950px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out]">
-          
+
           {/* Header - Cố định */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white shrink-0 sticky top-0 z-20">
             <div className="flex items-center gap-3">
@@ -113,10 +131,10 @@ export default function ViewUtilityModal({ open, reading, onClose }) {
           {/* Body - Cuộn nội dung */}
           <div className="flex-1 overflow-y-auto no-scrollbar">
             <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              
+
               {/* CỘT TRÁI: THÔNG TIN CHI TIẾT KỲ HIỆN TẠI (7 Cột trên PC) */}
               <div className="lg:col-span-7 flex flex-col gap-5">
-                
+
                 {/* Khối hiển thị số lớn */}
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
@@ -138,14 +156,45 @@ export default function ViewUtilityModal({ open, reading, onClose }) {
                     </div>
                   </div>
 
-                  <div className="mt-4 bg-green-50/60 border border-green-100 rounded-xl p-4 flex items-center justify-between">
-                    <span className="text-[13px] font-bold text-slate-700">Sử dụng thực tế:</span>
-                    <div className="text-right">
-                      <span className="text-[24px] font-black text-brand leading-none">
-                        {reading.usage.toLocaleString("vi-VN")}
-                      </span>
-                      <span className="text-[13px] font-bold text-brand ml-1">{typeConfig.unit}</span>
+                  {/* Khối hiển thị số lượng sử dụng và cảnh báo */}
+                  <div className={`mt-4 border rounded-xl p-4 transition-colors ${isWarning ? 'bg-red-50 border-red-200' : 'bg-green-50/60 border-green-100'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[13px] font-bold text-slate-700">Sử dụng thực tế:</span>
+                      <div className="text-right">
+                        <span className={`text-[24px] font-black leading-none ${isWarning ? 'text-red-600' : 'text-brand'}`}>
+                          {reading.usage.toLocaleString("vi-VN")}
+                        </span>
+                        <span className={`text-[13px] font-bold ml-1 ${isWarning ? 'text-red-600' : 'text-brand'}`}>
+                          {typeConfig.unit}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Phần hiển thị so sánh với tháng trước */}
+                    {previousMonthUsage !== null && (
+                      <div className={`mt-3 pt-3 border-t flex items-center justify-between text-[12px] ${isWarning ? 'border-red-200/60' : 'border-green-200/60'}`}>
+                        <span className="text-slate-500">
+                          So với kỳ trước ({previousMonthUsage} {typeConfig.unit}):
+                        </span>
+
+                        {usageDiff > 0 ? (
+                          <span className={`font-bold flex items-center gap-1 ${isWarning ? 'text-red-600' : 'text-orange-500'}`}>
+                            <i className="fa-solid fa-arrow-trend-up"></i>
+                            Tăng {usageDiff.toLocaleString("vi-VN")} {typeConfig.unit}
+                            {previousMonthUsage > 0 && ` (${usagePercent.toFixed(1)}%)`}
+                          </span>
+                        ) : usageDiff < 0 ? (
+                          <span className="font-bold flex items-center gap-1 text-green-600">
+                            <i className="fa-solid fa-arrow-trend-down"></i>
+                            Giảm {Math.abs(usageDiff).toLocaleString("vi-VN")} {typeConfig.unit}
+                          </span>
+                        ) : (
+                          <span className="font-bold text-slate-500 flex items-center gap-1">
+                            <i className="fa-solid fa-minus"></i> Không đổi
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -222,7 +271,7 @@ export default function ViewUtilityModal({ open, reading, onClose }) {
                           <div key={hist.id} className="relative pl-5">
                             {/* Chấm tròn mốc thời gian */}
                             <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-slate-300 ring-4 ring-white"></div>
-                            
+
                             <div className="bg-slate-50/60 border border-slate-100 p-3 rounded-xl flex items-center justify-between hover:bg-slate-50 transition-colors">
                               <div>
                                 <span className="text-[11px] font-bold text-slate-400 uppercase block">Kỳ chốt số</span>
