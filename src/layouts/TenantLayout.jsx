@@ -330,9 +330,9 @@ export default function LandlordLayout() {
               </div>
               <div className="hidden sm:flex flex-col">
                 <span className="text-[14px] font-bold text-slate-800 leading-tight">
-                  {user?.name || "Chủ Trọ"}
+                  {user?.name || "Người thuê"}
                 </span>
-                <span className="text-[12px] text-slate-500">Chủ trọ</span>
+                <span className="text-[12px] text-slate-500">Người thuê</span>
               </div>
             </div>
           </div>
