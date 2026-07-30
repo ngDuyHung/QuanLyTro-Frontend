@@ -290,7 +290,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                 <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
 
                     {/* CỘT TRÁI: Giao diện thiết kế chuẩn phong cách App Mobile di động */}
-                    <div className={`w-full flex-1 lg:w-[390px] lg:flex-none min-h-0 overflow-y-auto p-4 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 [&::-webkit-scrollbar]:hidden ${mobileTab === "details" ? "block" : "hidden"} lg:block`}>
+                    <div className={`w-full flex-1 lg:w-[390px] lg:flex-none min-h-0 overflow-y-auto p-3 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 [&::-webkit-scrollbar]:hidden ${mobileTab === "details" ? "block" : "hidden"} lg:block`}>
                         {isLoading || !invoice ? (
                             <div className="flex justify-center items-center h-48 text-brand">
                                 <i className="fa-solid fa-spinner animate-spin text-xl"></i>
@@ -301,7 +301,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
 
                                     {/* 1. Tiêu đề Phòng & Tên khu trọ */}
                                     <div className="text-center pb-4">
-                                        <h3 className="text-[22px] font-bold text-slate-800">Phòng {invoice.room?.name || "—"}</h3>
+                                        <h3 className="text-[22px] font-bold text-slate-800"><i className="fa-solid fa-home mr-2"></i> {invoice.room?.name || "—"}</h3>
                                         <p className="text-[14px] text-slate-500 mt-0.5">{invoice.property?.name || "—"}</p>
                                     </div>
 
