@@ -463,7 +463,7 @@ export default function TenantDashboard() {
 
           {/* Hình minh họa góc phải dưới */}
           <div className="absolute right-10 bottom-10 opacity-90 hidden md:block">
-            <img src="/src/assets/icon_invoice.png" alt="Minh họa hóa đơn" className="w-[250px] h-auto object-contain transform translate-x-4 translate-y-4" />
+            <img src="/icon_invoice.png" alt="Minh họa hóa đơn" className="w-[250px] h-auto object-contain transform translate-x-4 translate-y-4" />
           </div>
         </div>
 
@@ -603,7 +603,7 @@ export default function TenantDashboard() {
 
           {/* Decorative Graphic (Clipboard) */}
           <div className="absolute right-10 bottom-10 opacity-90 hidden md:block">
-            <img src="/src/assets/icon_contract.png" alt="Minh họa hợp đồng" className="w-[150px] h-auto object-contain transform translate-x-4 translate-y-4" />
+            <img src="/icon_contract.png" alt="Minh họa hợp đồng" className="w-[150px] h-auto object-contain transform translate-x-4 translate-y-4" />
           </div>
         </div>
 
