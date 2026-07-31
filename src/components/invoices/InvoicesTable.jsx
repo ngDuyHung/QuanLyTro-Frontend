@@ -484,6 +484,7 @@ export default function InvoicesTable({
               <tr>
                 <th className="py-3.5 px-4 text-[13px] font-semibold text-slate-600 w-[180px]">Mã HĐ / Kỳ</th>
                 <th className="py-3.5 px-4 text-[13px] font-semibold text-slate-600 w-[180px]">Khu nhà / Phòng</th>
+                <th className="py-3.5 px-4 text-[13px] font-semibold text-slate-600 w-[180px]">Ngày thu / hết hạn</th>
                 <th className="py-3.5 px-4 text-[13px] font-semibold text-slate-600 text-right">Tổng tiền (đ)</th>
                 <th className="py-3.5 px-4 text-[13px] font-semibold text-slate-600 text-right">Đã thu (đ)</th>
                 <th className="py-3.5 px-4 text-[13px] font-semibold text-slate-600 text-right">Còn nợ (đ)</th>
@@ -493,14 +494,14 @@ export default function InvoicesTable({
             </thead>
             <tbody className="text-[13px]">
               {isLoading ? (
-                Array.from({ length: 7 }).map((_, i) => (
+                Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="border-b border-slate-50 animate-pulse">
-                    <td colSpan={7} className="py-3 px-4"><div className="h-12 bg-slate-100 rounded"></div></td>
+                    <td colSpan={8} className="py-3 px-4"><div className="h-12 bg-slate-100 rounded"></div></td>
                   </tr>
                 ))
               ) : invoices.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 px-4 text-center text-slate-400">
+                  <td colSpan={8} className="py-16 px-4 text-center text-slate-400">
                     <div className="flex flex-col items-center">
                       <i className="fa-solid fa-receipt text-4xl text-slate-200 mb-3"></i>
                       <p className="text-[14px] font-medium text-slate-500">Chưa có hóa đơn nào.</p>
@@ -535,6 +536,18 @@ export default function InvoicesTable({
                           </span>
                           <span className="text-[11px] text-slate-500 mt-0.5 truncate max-w-[150px]">
                             {invoice.property?.name || "—"}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Ngày thu & Ngày hết hạn */}
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col">
+                          <span className="text-[11px] text-slate-500">
+                            Ngày thu: {invoice.period_from ? formatDate(invoice.period_from) : "—"}
+                          </span>
+                          <span className="text-[11px] text-slate-500 mt-0.5">
+                            Hạn: {invoice.due_date ? formatDate(invoice.due_date) : "—"}
                           </span>
                         </div>
                       </td>

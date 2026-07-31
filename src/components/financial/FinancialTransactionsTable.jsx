@@ -64,6 +64,8 @@ export default function FinancialTransactionsTable({
   onDateFromChange,
   dateTo,
   onDateToChange,
+  search,
+  onSearchChange,
   onOpenAddModal,
   onOpenViewModal,
   onOpenCancelModal,
@@ -73,6 +75,19 @@ export default function FinancialTransactionsTable({
       {/* THANH CÔNG CỤ */}
       <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-4">
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+
+          {/* --- BỔ SUNG Ô TÌM KIẾM --- */}
+          <div className="relative w-full lg:w-56">
+            <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[13px]"></i>
+            <input
+              type="text"
+              placeholder="Mã phiếu, mã hóa đơn..."
+              value={search}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              className="w-full pl-8 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-shadow"
+            />
+          </div>
+          {/* ------------------------- */}
 
           <select
             value={propertyId}
@@ -205,7 +220,7 @@ export default function FinancialTransactionsTable({
               <tr className="text-[13px] font-semibold text-slate-600">
                 <th className="py-4 px-3 w-[110px]">Ngày / Mã GD</th>
                 <th className="py-4 px-3 w-[110px]">Loại GD</th>
-                <th className="py-4 px-3 w-[150px]">Danh mục nghiệp vụ</th>
+                <th className="py-4 px-3 w-[160px]">Danh mục / Hóa đơn</th>
                 <th className="py-4 px-3 w-[140px]">Phòng / Khu nhà</th>
                 <th className="py-4 px-3 w-[150px]">Người giao dịch</th>
                 <th className="py-4 px-3">Nội dung diễn giải</th>
@@ -266,9 +281,31 @@ export default function FinancialTransactionsTable({
                         </span>
                       </td>
 
-                      {/* 4. Danh mục nghiệp vụ */}
-                      <td className="py-4 px-3 text-slate-800 font-semibold">
-                        {item.category_label}
+                      {/* 4. Danh mục nghiệp vụ / Hóa đơn liên kết */}
+                      <td className="py-4 px-3">
+                        <div className="flex flex-col">
+                          <span className="text-slate-800 font-semibold">
+                            {item.category_label}
+                          </span>
+                          {/* In mã hóa đơn và ngày cấn trừ nếu có */}
+                          {item.allocations?.length > 0 && item.allocations[0].invoice && (
+                            <div className="mt-1 flex flex-col">
+                              <span
+                                className="text-[11px] text-brand font-bold flex items-center gap-1.5 cursor-pointer hover:underline"
+                                title="Mã hóa đơn liên kết"
+                              >
+                                <i className="fa-solid fa-file-invoice text-brand/70"></i>
+                                {item.allocations[0].invoice.invoice_code}
+                              </span>
+                              {/* --- BỔ SUNG NGÀY CẤN TRỪ --- */}
+                              {item.allocations[0].allocated_at && (
+                                <span className="text-[10px] text-slate-400 mt-0.5">
+                                  Hạch toán: {formatDate(item.allocations[0].allocated_at)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
 
                       {/* 5. Phòng / Khu nhà */}

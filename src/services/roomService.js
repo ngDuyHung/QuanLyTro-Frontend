@@ -24,6 +24,8 @@ const roomService = {
   delete: (id) => api.delete(`/rooms/${id}`),
 
   updateStatus: (id, data) => api.patch(`/rooms/${id}/status`, data),
+
+  getDebtors: (params) => api.get("/rooms/debtors", { params }),
 };
 
 export default roomService;

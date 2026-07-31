@@ -40,15 +40,15 @@ export default function TenantDashboard() {
     fetchDashboardData();
   }, []);
 
-  // Hàm tính số ngày còn lại của hợp đồng
-  const calculateDaysLeft = (endDate) => {
-    if (!endDate) return 0;
-    const end = new Date(endDate);
-    const today = new Date();
-    const diffTime = end - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
-  };
+  // // Hàm tính số ngày còn lại của hợp đồng
+  // const calculateDaysLeft = (endDate) => {
+  //   if (!endDate) return 0;
+  //   const end = new Date(endDate);
+  //   const today = new Date();
+  //   const diffTime = end - today;
+  //   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  //   return diffDays > 0 ? diffDays : 0;
+  // };
 
   // Hàm format trạng thái Yêu cầu sửa chữa
   const getIncidentStatus = (status) => {
@@ -259,8 +259,8 @@ export default function TenantDashboard() {
   // Lấy dữ liệu an toàn
   const roomInfo = dashboardData?.room_info || {};
   const leaseInfo = dashboardData?.lease_info || {};
-  const daysLeft = calculateDaysLeft(leaseInfo?.end_date || "2026-01-01");
-  
+  // const daysLeft = calculateDaysLeft(leaseInfo?.end_date || "2026-01-01");
+
   return (
     <div className="p-4 lg:p-6 space-y-6">
       {/* ROW 1: Room Info & Notifications */}
@@ -332,13 +332,26 @@ export default function TenantDashboard() {
                 </p>
                 <p className="flex items-center gap-2">
                   <i className="fa-regular fa-calendar-check text-gray-400 w-4"></i>
-                  Ngày hết hạn: {leaseInfo.end_date ? new Date(leaseInfo.end_date).toLocaleDateString('vi-VN') : "01/01/2026"}
+                  Ngày hết hạn: {leaseInfo.end_date ? new Date(leaseInfo.end_date).toLocaleDateString('vi-VN') : "Không thời hạn"}
                 </p>
+                {/* HIỂN THỊ TỔNG NGÀY NẾU CÓ */}
+                {leaseInfo.total_days && (
+                  <p className="flex items-center gap-2">
+                    <i className="fa-solid fa-clock-rotate-left text-gray-400 w-4"></i>
+                    Tổng thời gian: {leaseInfo.total_days} ngày
+                  </p>
+                )}
               </div>
               <div className="pt-2">
-                <span className="text-3xl font-bold text-primary">{daysLeft}</span>{" "}
-                <span className="text-primary font-medium">ngày</span>
-                <p className="text-xs text-gray-500 mt-1">Còn lại</p>
+                {leaseInfo.end_date ? (
+                  <>
+                    <span className="text-3xl font-bold text-primary">{leaseInfo.days_left ?? 0}</span>{" "}
+                    <span className="text-primary font-medium">ngày</span>
+                    {/* <p className="text-xs text-gray-500 mt-1">Còn lại</p> */}
+                  </>
+                ) : (
+                  <span className="text-lg font-bold text-primary">Không thời hạn</span>
+                )}
               </div>
             </div>
           </div>
@@ -610,12 +623,16 @@ export default function TenantDashboard() {
             <div>
               <p className="text-xs text-gray-500 mb-1">Ngày hết hạn</p>
               <p className="font-bold text-gray-900">
-                {leaseInfo.end_date ? new Date(leaseInfo.end_date).toLocaleDateString('vi-VN') : "Đang cập nhật"}
+                {leaseInfo.end_date ? new Date(leaseInfo.end_date).toLocaleDateString('vi-VN') : "Không thời hạn"}
               </p>
             </div>
             <div className="pt-2">
               <p className="text-xs text-gray-500 mb-1">Còn lại</p>
-              <p className="font-bold text-primary text-lg">{daysLeft} ngày</p>
+              {leaseInfo.end_date ? (
+                <p className="font-bold text-primary text-lg">{leaseInfo.days_left ?? 0} ngày</p>
+              ) : (
+                <p className="font-bold text-primary text-lg">Không giới hạn</p>
+              )}
             </div>
           </div>
 
@@ -735,9 +752,12 @@ export default function TenantDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={`${isPaid ? 'bg-[#F0FDF4] text-primary' : 'bg-orange-50 text-orange-600'} text-[10px] font-semibold px-2.5 py-1 rounded-full`}>
-                        {isPaid ? 'Đã thanh toán' : inv.status}
+                      <span
+                        className={`${isPaid ? 'bg-[#F0FDF4] text-primary' : 'bg-orange-50 text-orange-600'} text-[10px] font-semibold px-2.5 py-1 rounded-full`}
+                      >
+                        {isPaid ? 'Đã thanh toán' : (inv.status === 'issued' ? 'Chưa thanh toán' : inv.status)}
                       </span>
+
                       {inv.paid_date && (
                         <span className="text-[11px] text-gray-400">{new Date(inv.paid_date).toLocaleDateString('vi-VN')}</span>
                       )}

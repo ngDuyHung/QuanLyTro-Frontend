@@ -550,7 +550,7 @@ export default function AddLeaseModal({
                     />
                   </div>
                   
-                  {/* <div>
+                  <div>
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                       Ngày kết thúc <span className="text-slate-400 font-normal">(tùy chọn)</span>
                     </label>
@@ -564,7 +564,7 @@ export default function AddLeaseModal({
                     <p className="mt-1.5 text-[12px] text-slate-500">
                       Để trống nếu là hợp đồng không thời hạn.
                     </p>
-                  </div> */}
+                  </div>
 
                   <div>
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">

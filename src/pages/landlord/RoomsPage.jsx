@@ -17,6 +17,7 @@ import CancelReservationModal from "@/components/rooms/CancelReservationModal";
 import reservationService from "@/services/reservationService";
 import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
 import importService from "@/services/importService";
+import DebtorsModal from "@/components/rooms/DebtorsModal";
 const PER_PAGE = 10;
 
 const emptyRoomStats = {
@@ -81,6 +82,8 @@ export default function RoomsPage() {
   // state for exporting excel
   const [isExportingExcel, setIsExportingExcel] = useState(false);
 
+  const [isDebtorsModalOpen, setIsDebtorsModalOpen] = useState(false);
+
   // Lắng nghe sự thay đổi của location.state để tự động cập nhật bộ lọc
   useEffect(() => {
     if (location.state?.filterStatus) {
@@ -91,7 +94,7 @@ export default function RoomsPage() {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchText.trim());
@@ -400,6 +403,16 @@ export default function RoomsPage() {
         <div className="flex items-center gap-2 mt-3 lg:mt-0 pb-1 lg:pb-1 overflow-x-auto no-scrollbar">
           <button
             type="button"
+            onClick={() => setIsDebtorsModalOpen(true)}
+            className="bg-white border border-red-200 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium text-red-600 hover:bg-red-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 transition-colors"
+          >
+            <i className="fa-solid fa-triangle-exclamation"></i>
+            <span className="hidden sm:inline">Khách hay nợ</span>
+            <span className="sm:hidden">DS Nợ</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleExportExcel}
             disabled={isExportingExcel} // chặn click khi đang export
             className={`bg-white border border-slate-200 px-3 sm:px-3.5 py-2 rounded-lg 
@@ -540,6 +553,12 @@ export default function RoomsPage() {
           // Tùy chọn: Gọi fetchRooms() nếu muốn cập nhật lại thống kê trên trang sau khi tạo
           fetchRooms();
         }}
+      />
+
+      <DebtorsModal
+        open={isDebtorsModalOpen}
+        onClose={() => setIsDebtorsModalOpen(false)}
+        propertyId={propertyId} // Truyền propertyId để modal chỉ hiển thị danh sách nợ của khu nhà đang lọc (nếu có)
       />
     </div>
   );

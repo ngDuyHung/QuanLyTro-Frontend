@@ -21,11 +21,26 @@ export default function FinancialTransactionsPage() {
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
 
+    // --- STATE TÌM KIẾM ---
+    const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
+    // Debounce xử lý tìm kiếm (tránh spam API)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setPage(1); // Reset về trang 1 khi tìm kiếm mới
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+    // -----------------------------
+
     // --- Quản lý Modal ---
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [selectedTransaction, setSelectedTransaction] = useState(null);
+
 
     // 1. Tải danh sách Khu nhà cho bộ lọc
     const fetchProperties = useCallback(async () => {
@@ -37,6 +52,7 @@ export default function FinancialTransactionsPage() {
         }
     }, []);
 
+
     // 2. Tải danh sách Thu Chi
     const fetchTransactions = useCallback(async () => {
         try {
@@ -47,6 +63,7 @@ export default function FinancialTransactionsPage() {
                 direction: direction || undefined,
                 date_from: dateFrom || undefined,
                 date_to: dateTo || undefined,
+                search: debouncedSearch || undefined,
             });
 
             setTransactions(response.data.data || []);
@@ -56,7 +73,7 @@ export default function FinancialTransactionsPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [page, propertyId, direction, dateFrom, dateTo]);
+    }, [page, propertyId, direction, dateFrom, dateTo, debouncedSearch]);
 
     useEffect(() => {
         fetchProperties();
@@ -94,6 +111,9 @@ export default function FinancialTransactionsPage() {
                     onDateFromChange={setDateFrom}
                     dateTo={dateTo}
                     onDateToChange={setDateTo}
+
+                    search={search}
+                    onSearchChange={setSearch}
 
                     // Actions
                     onOpenAddModal={() => setIsAddModalOpen(true)}
