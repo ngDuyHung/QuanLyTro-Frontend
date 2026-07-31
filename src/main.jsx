@@ -5,6 +5,20 @@ import './index.css';
 
 import { registerSW } from 'virtual:pwa-register';
 
+// ======================================================================
+// THÊM ĐOẠN NÀY: ÉP TỰ ĐỘNG RELOAD KHI SERVICE WORKER MỚI CHIẾM QUYỀN
+// ======================================================================
+let refreshing = false;
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      console.log("Service Worker mới đã sẵn sàng. Đang tải lại trang...");
+      window.location.reload(); // Ép F5 để hiển thị giao diện mới nhất
+    }
+  });
+}
+
 // ==========================================
 // CẤU HÌNH DEBUG GIAO DIỆN LOADING PWA
 // Bật true: Hiển thị giao diện khóa màn hình để ngắm/chỉnh sửa UI lúc dev.
