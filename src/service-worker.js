@@ -1,23 +1,27 @@
 import { precacheAndRoute } from "workbox-precaching";
-
-// ======================================================================
-// 1. NẠP CACHE PWA (Vite PWA sẽ tự động tiêm danh sách file vào đây)
-// ======================================================================
+// 1. NẠP CACHE PWA
 precacheAndRoute(self.__WB_MANIFEST);
 
-// ======================================================================
-// 2. ÉP BẢN MỚI CÀI ĐẶT NGAY LẬP TỨC (DÙNG CHO BẢN HOTFIX NÀY)
-// Bỏ qua hoàn toàn việc chờ lệnh từ giao diện UI
-// ======================================================================
+// 2. ÉP CÀI ĐẶT BẢN MỚI NGAY LẬP TỨC (Bỏ qua chờ đợi)
 self.addEventListener("install", (event) => {
-  // Lệnh này bắt buộc Service Worker mới đá văng bản cũ ngay tức khắc
   self.skipWaiting();
 });
-// ======================================================================
-// 3. CHIẾM QUYỀN ĐIỀU KHIỂN NGAY LẬP TỨC KHI ĐƯỢC KÍCH HOẠT
-// ======================================================================
+
+// 3. VŨ KHÍ TỐI THƯỢNG: CHIẾM QUYỀN VÀ ÉP TRÌNH DUYỆT RELOAD
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    self.clients.claim().then(() => {
+      // Tìm toàn bộ các tab/cửa sổ PWA đang mở
+      return self.clients.matchAll({ type: "window" });
+    }).then((windowClients) => {
+      // Ép từng cửa sổ tải lại trang hiện tại ngay lập tức
+      windowClients.forEach((client) => {
+        if (client.url && "navigate" in client) {
+          client.navigate(client.url);
+        }
+      });
+    })
+  );
 });
 
 // ======================================================================
