@@ -1,41 +1,41 @@
 import { precacheAndRoute } from "workbox-precaching";
 
-
+// ======================================================================
 // 1. NẠP CACHE PWA (Vite PWA sẽ tự động tiêm danh sách file vào đây)
+// ======================================================================
 precacheAndRoute(self.__WB_MANIFEST);
 
-
-// 2. LẮNG NGHE TÍN HIỆU ÉP CẬP NHẬT TỪ FRONTEND (CHUẨN VITE PWA)
+// ======================================================================
+// 2. CHỜ LỆNH TỪ UI (main.jsx) ĐỂ BỎ QUA TRẠNG THÁI CHỜ
+// ======================================================================
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
-// ĐOẠN NÀY: Ép Service Worker mới chiếm quyền điều khiển các tab đang mở ngay lập tức
-self.addEventListener("activate", (event) => {
+
+// ======================================================================
+// 3. CHIẾM QUYỀN ĐIỀU KHIỂN NGAY LẬP TỨC KHI ĐƯỢC KÍCH HOẠT
+// ======================================================================
+self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-
-// 3. XỬ LÝ SỰ KIỆN NHẬN THÔNG BÁO PUSH TỪ LARAVEL
+// ======================================================================
+// 4. XỬ LÝ SỰ KIỆN NHẬN THÔNG BÁO PUSH TỪ LARAVEL
+// ======================================================================
 self.addEventListener("push", function (event) {
-  //console.log('[Service Worker] 🔴 ĐÃ NHẬN ĐƯỢC TÍN HIỆU PUSH TỪ SERVER!');
-
   // Nếu trình duyệt chưa cấp quyền thì hủy bỏ
   if (!(self.Notification && self.Notification.permission === "granted")) {
-    //console.error('[Service Worker] ❌ Trình duyệt chưa cấp quyền (Permission không phải granted).');
     return;
   }
 
   if (!event.data) {
-    //console.warn('[Service Worker] ⚠️ Tín hiệu Push đến nhưng KHÔNG CÓ DỮ LIỆU (Payload rỗng)!');
     return;
   }
 
   try {
     const rawData = event.data.text();
-    //console.log('[Service Worker] 📦 Dữ liệu Payload nhận được:', rawData);
-
     const data = JSON.parse(rawData);
 
     const title = data.title || "Thông báo từ Kiêu Giang";
@@ -53,24 +53,19 @@ self.addEventListener("push", function (event) {
       self.registration
         .showNotification(title, options)
         .then(() =>
-          console.log(
-            "[Service Worker] ✅ Đã hiển thị popup thông báo ra màn hình thành công!",
-          ),
+          console.log("[Service Worker] ✅ Đã hiển thị popup thông báo ra màn hình thành công!"),
         )
         .catch((err) =>
           console.error("[Service Worker] ❌ Lỗi khi vẽ popup:", err),
         ),
     );
   } catch (error) {
-    console.error(
-      "[Service Worker] ❌ Lỗi nghiêm trọng khi phân tích dữ liệu JSON:",
-      error,
-    );
+    console.error("[Service Worker] ❌ Lỗi nghiêm trọng khi phân tích dữ liệu JSON:", error);
   }
 });
 
 // ======================================================================
-// 4. XỬ LÝ SỰ KIỆN KHI NGƯỜI DÙNG CLICK VÀO POPUP THÔNG BÁO
+// 5. XỬ LÝ SỰ KIỆN KHI NGƯỜI DÙNG CLICK VÀO POPUP THÔNG BÁO
 // ======================================================================
 self.addEventListener("notificationclick", function (event) {
   event.notification.close(); // Đóng popup thông báo ngay lập tức

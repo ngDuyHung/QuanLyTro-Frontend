@@ -65,16 +65,14 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp}"],
         navigateFallback: "/index.html",
-        // Cấm PWA dùng index.html để fallback cho các file nằm trong thư mục assets (JS, CSS)
-        navigateFallbackDenylist: [/^\/assets\//],
+        // Bỏ qua các request bắt đầu bằng /api/ để không cản trở React gọi Laravel API
+        navigateFallbackDenylist: [/^\/assets\//, /^\/api\//],
         // Giúp tối ưu hóa việc băm tài nguyên tĩnh của Vite, tránh lỗi tải cache cũ
         dontCacheBustURLsMatching: new RegExp(".+[.-][a-f0-9]{8}\\..+"),
         cleanupOutdatedCaches: true,
         // Tăng giới hạn dung lượng cache lên 5MB (Fix lỗi build trên Vercel)
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
-
-      
     }),
   ],
 
