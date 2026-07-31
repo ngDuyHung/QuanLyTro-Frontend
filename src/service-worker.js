@@ -1,13 +1,11 @@
 import { precacheAndRoute } from "workbox-precaching";
 
-// ======================================================================
+
 // 1. NẠP CACHE PWA (Vite PWA sẽ tự động tiêm danh sách file vào đây)
-// ======================================================================
 precacheAndRoute(self.__WB_MANIFEST);
 
-// ======================================================================
+
 // 2. LẮNG NGHE TÍN HIỆU ÉP CẬP NHẬT TỪ FRONTEND (CHUẨN VITE PWA)
-// ======================================================================
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
@@ -18,9 +16,8 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// ======================================================================
+
 // 3. XỬ LÝ SỰ KIỆN NHẬN THÔNG BÁO PUSH TỪ LARAVEL
-// ======================================================================
 self.addEventListener("push", function (event) {
   //console.log('[Service Worker] 🔴 ĐÃ NHẬN ĐƯỢC TÍN HIỆU PUSH TỪ SERVER!');
 
