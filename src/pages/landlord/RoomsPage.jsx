@@ -392,7 +392,7 @@ export default function RoomsPage() {
       <div className="mb-4 lg:mb-5 flex flex-col lg:flex-row lg:items-center lg:justify-between lg:border-b lg:border-slate-200">
         <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 lg:border-none">
           <NavLink to="/landlord/properties" end className={tabClasses}>
-            Danh sách khu nhà
+            Danh sách khu nhà2
           </NavLink>
 
           <NavLink to="/landlord/rooms" className={tabClasses}>

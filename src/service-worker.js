@@ -1,4 +1,9 @@
 import { precacheAndRoute } from "workbox-precaching";
+
+// 1. DÒNG NÀY LÀ CHÌA KHÓA: ÉP THAY ĐỔI BYTE. 
+// Mỗi lần muốn ép người dùng cập nhật dứt điểm, bạn chỉ cần đổi số version này (v1, v2...)
+const FORCE_UPDATE_VERSION = "v1.0.1_KILL_CACHE";
+console.log("[Service Worker] Đã nâng cấp lên phiên bản:", FORCE_UPDATE_VERSION);
 // 1. NẠP CACHE PWA
 precacheAndRoute(self.__WB_MANIFEST);
 
