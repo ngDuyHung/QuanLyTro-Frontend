@@ -1,18 +1,34 @@
 import { useEffect, useState } from "react";
 import useAuthStore from "@/stores/authStore";
 import tenantDashboardService from "@/services/dashboardService";
+import tenantNotificationService from "@/services/tenantNotificationService";
+import TenantReportIncidentModal from "@/components/tenant/incidents/TenantReportIncidentModal";
+import TenantViewNotificationModal from "@/components/tenant/notifications/TenantViewNotificationModal";
 
 export default function TenantDashboard() {
   const user = useAuthStore((state) => state.user);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // State cho Modal
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isViewNotiOpen, setIsViewNotiOpen] = useState(false);
+  const [selectedNotiId, setSelectedNotiId] = useState(null);
+
+  // 2. THÊM STATE QUẢN LÝ THÔNG BÁO
+  const [notifications, setNotifications] = useState([]);
+
   // Gọi API lấy dữ liệu dashboard
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const res = await tenantDashboardService.getTenantDashboard();
-      setDashboardData(res.data?.data || res.data);
+      const [dashRes, notiRes] = await Promise.all([
+        tenantDashboardService.getTenantDashboard(),
+        tenantNotificationService.getAll({ page: 1 })
+      ]);
+
+      setDashboardData(dashRes.data?.data || dashRes.data);
+      setNotifications(notiRes.data?.data || []); // Lưu riêng thông báo
     } catch (error) {
       console.error("Lỗi lấy dữ liệu dashboard:", error);
     } finally {
@@ -243,9 +259,8 @@ export default function TenantDashboard() {
   // Lấy dữ liệu an toàn
   const roomInfo = dashboardData?.room_info || {};
   const leaseInfo = dashboardData?.lease_info || {};
-  const notifications = dashboardData?.notifications || [];
-  const daysLeft = calculateDaysLeft(leaseInfo?.end_date || "2026-01-01"); // Giả lập ngày hết hạn nếu API chưa có
-
+  const daysLeft = calculateDaysLeft(leaseInfo?.end_date || "2026-01-01");
+  
   return (
     <div className="p-4 lg:p-6 space-y-6">
       {/* ROW 1: Room Info & Notifications */}
@@ -354,13 +369,16 @@ export default function TenantDashboard() {
                 }
 
                 return (
-                  <div key={noti.id || index} className="flex items-start gap-4">
+                  <div
+                    key={noti.id || index}
+                    className="flex items-start gap-4 cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-xl transition-colors"
+                    onClick={() => { setSelectedNotiId(noti.id); setIsViewNotiOpen(true); }}
+                  >
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
                       <i className={`fa-solid ${iconClass} text-sm`}></i>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-bold text-gray-900">{noti.title}</h4>
-                      {/* Xóa thẻ HTML và fix lỗi entity (&nbsp;) để tạo đoạn xem trước gọn gàng */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-gray-900 truncate">{noti.title}</h4>
                       <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
                         {noti.content
                           ? noti.content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim()
@@ -684,7 +702,10 @@ export default function TenantDashboard() {
             )}
           </div>
 
-          <button className="w-full bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold py-2.5 rounded-xl transition border border-gray-200 border-dashed flex justify-center items-center gap-2 mt-auto">
+          <button
+            onClick={() => setIsReportOpen(true)}
+            className="w-full bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold py-2.5 rounded-xl transition border border-gray-200 border-dashed flex justify-center items-center gap-2 mt-auto"
+          >
             <i className="fa-solid fa-plus text-gray-400"></i> Gửi yêu cầu mới
           </button>
         </div>
@@ -734,6 +755,18 @@ export default function TenantDashboard() {
         </div>
       </div>
 
+      {/* Modal báo cáo sự cố */}
+      <TenantReportIncidentModal
+        open={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        onSuccess={fetchDashboardData} // Gọi lại API reload Dashboard khi báo cáo thành công
+      />
+
+      <TenantViewNotificationModal
+        open={isViewNotiOpen}
+        notificationId={selectedNotiId}
+        onClose={() => { setIsViewNotiOpen(false); setSelectedNotiId(null); }}
+      />
 
     </div>
   );

@@ -60,6 +60,8 @@ export default function InvoicesTable({
   propertyId = "",
   onPropertyIdChange,
   roomId = "",
+  leaseId = "", // BỔ SUNG
+  onLeaseIdChange, // BỔ SUNG
   onRoomIdChange,
   status = "",
   onStatusChange,
@@ -84,6 +86,7 @@ export default function InvoicesTable({
   const activeFilterCount =
     (propertyId ? 1 : 0) +
     (roomId ? 1 : 0) +
+    (leaseId ? 1 : 0) +
     (status ? 1 : 0) +
     (invoiceType ? 1 : 0) +
     (month ? 1 : 0);
@@ -93,6 +96,12 @@ export default function InvoicesTable({
   const FilterContent = (
     <>
       <div className="flex flex-col gap-1.5">
+        {leaseId && (
+          <div className="bg-brand/10 text-brand px-3 py-2 rounded-lg text-[13px] font-medium flex items-center justify-between">
+            <span>Đang lọc theo hợp đồng: HĐ #{leaseId}</span>
+            <button onClick={() => onLeaseIdChange?.("")}><i className="fa-solid fa-xmark"></i></button>
+          </div>
+        )}
         <label className="text-[12px] font-semibold text-slate-700">Khu nhà</label>
         <select
           value={propertyId}

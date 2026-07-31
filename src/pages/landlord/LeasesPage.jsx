@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import LeasesStats from "@/components/leases/LeasesStats";
 import LeasesTable from "@/components/leases/LeasesTable";
@@ -46,6 +47,7 @@ const buildLeaseStats = (items = [], meta = null) => {
 };
 
 export default function LeasesPage() {
+  const navigate = useNavigate();
   const [leases, setLeases] = useState([]);
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -147,9 +149,8 @@ export default function LeasesPage() {
   };
 
   const handleOpenEndModal = (lease) => {
-    // Thay vì mở EndLeaseModal, ta mở InvoiceModal trước
-    setCheckoutLease(lease);
-    setIsCheckoutInvoiceOpen(true);
+    setEndingLease(lease);
+    setIsEndModalOpen(true);
   };
 
   // ---  HÀM XỬ LÝ XÓA ---
@@ -263,8 +264,9 @@ export default function LeasesPage() {
         onSuccess={() => {
           // 4. LUỒNG LIỀN MẠCH: Xử lý Hóa đơn xong -> Tự động bật Modal kết thúc hợp đồng gốc
           setIsCheckoutInvoiceOpen(false);
-          setEndingLease(checkoutLease);
-          setIsEndModalOpen(true);
+          // XÓA 2 dòng dưới đây để tránh bị rối luồng (Chủ nhà lập HĐ xong phải đi thu tiền đã)
+          // setEndingLease(checkoutLease);
+          // setIsEndModalOpen(true);
         }}
       />
 
@@ -276,6 +278,18 @@ export default function LeasesPage() {
           setEndingLease(null);
         }}
         onSuccess={fetchLeases}
+        // BỔ SUNG: Hàm xử lý khi chủ nhà bấm phím tắt "Lập hóa đơn thanh lý" từ bên trong Modal Kết thúc
+        onOpenCheckoutInvoice={(leaseToCheckout) => {
+          setIsEndModalOpen(false); // Đóng modal kết thúc lại
+          setCheckoutLease(leaseToCheckout); // Set data hợp đồng
+          setIsCheckoutInvoiceOpen(true); // Bật modal lập hóa đơn lên
+        }}
+        // BỔ SUNG: Truyền hàm điều hướng sang trang Hóa đơn
+        onGoToInvoices={(leaseId) => {
+          // Chuyển trang và đính kèm param lease_id và lọc các hóa đơn chưa trả đủ
+          // Bạn có thể tùy chỉnh lại các status theo ý muốn
+          navigate(`/landlord/invoices?lease_id=${leaseId}`);
+        }}
       />
     </div>
   );

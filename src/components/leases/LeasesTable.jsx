@@ -344,11 +344,19 @@ export default function LeasesTable({
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col items-start">
                           <span className="font-medium text-slate-800">{formatDate(lease.start_date)}</span>
-                          <span className="text-[11px] text-slate-500 mt-0.5">
-                            {lease.end_date ? `Đến ${formatDate(lease.end_date)}` : "Không thời hạn"}
-                          </span>
+
+                          {/* LOGIC TRẢ PHÒNG */}
+                          {lease.move_out_notice_date ? (
+                            <span className="text-[10px] text-orange-600 mt-1 font-semibold bg-orange-50 px-1.5 py-0.5 rounded w-fit flex items-center gap-1 border border-orange-100" title="Khách đã đăng ký trả phòng">
+                              Báo trả: {formatDate(lease.move_out_notice_date)}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-slate-500 mt-0.5">
+                              {lease.end_date ? `Đến ${formatDate(lease.end_date)}` : "Không thời hạn"}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="py-3 px-4 text-slate-700 font-medium">
@@ -451,8 +459,8 @@ export default function LeasesTable({
                       type="button"
                       onClick={() => handlePageChange(pageNumber)}
                       className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
-                          ? "bg-brand text-white shadow-sm"
-                          : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+                        ? "bg-brand text-white shadow-sm"
+                        : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
                         }`}
                     >
                       {pageNumber}

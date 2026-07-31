@@ -9,7 +9,7 @@ const leasesService = {
 
   update: (id, data) => api.put(`/leases/${id}`, data),
 
-  end: (id) => api.patch(`/leases/${id}/end`),
+  end: (id, data) => api.patch(`/leases/${id}/end`, data),
 
   changeRepresentative: (id, data) =>
     api.patch(`/leases/${id}/representative`, data),

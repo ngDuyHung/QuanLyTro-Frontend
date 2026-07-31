@@ -346,7 +346,7 @@ export default function LandlordLayout() {
           </div>
           <footer className="hidden lg:block py-4 text-center border-t border-slate-200/60 mx-8 shrink-0 relative z-10 bg-slate-50">
             <p className="text-[12px] text-slate-400">
-             <i class="fa-solid fa-shield-halved text-gray-400"></i> Thông tin
+             <i className="fa-solid fa-shield-halved text-gray-400"></i> Thông tin
                     của bạn được bảo mật tuyệt đối | © 2025 Nhà Trọ KieuGiang. 
             </p>
           </footer>

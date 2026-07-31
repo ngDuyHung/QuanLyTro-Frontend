@@ -27,6 +27,10 @@ export default function InvoicesPage() {
     const [searchText, setSearchText] = useState(searchParams.get("search") || "");
     const [propertyId, setPropertyId] = useState(searchParams.get("property_id") || "");
     const [roomId, setRoomId] = useState(searchParams.get("room_id") || "");
+
+    // BỔ SUNG: State nhận lease_id từ URL
+    const [leaseId, setLeaseId] = useState(searchParams.get("lease_id") || "");
+
     const [status, setStatus] = useState("");
     const [invoiceType, setInvoiceType] = useState("");
     const [month, setMonth] = useState(""); // Định dạng: YYYY-MM
@@ -43,6 +47,14 @@ export default function InvoicesPage() {
     // Lưu thông tin hóa đơn đang được chọn để Thao tác (Xem/Xóa/Hủy/Thu tiền)
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+
+
+    // BỔ SUNG: Lắng nghe param lease_id
+    useEffect(() => {
+        setPropertyId(searchParams.get("property_id") || "");
+        setRoomId(searchParams.get("room_id") || "");
+        setLeaseId(searchParams.get("lease_id") || "");
+    }, [searchParams]);
 
     // 1. Tải danh sách Khu nhà phục vụ bộ lọc đầu tiên
     const fetchProperties = useCallback(async () => {
@@ -100,6 +112,7 @@ export default function InvoicesPage() {
                 search: searchText || undefined,
                 property_id: propertyId || undefined,
                 room_id: roomId || undefined,
+                lease_id: leaseId || undefined,
                 status: status || undefined,
                 invoice_type: invoiceType || undefined,
                 period_from: periodFrom,
@@ -113,7 +126,7 @@ export default function InvoicesPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [page, propertyId, roomId, status, invoiceType, month, searchText]);
+    }, [page, propertyId, roomId, leaseId, status, invoiceType, month, searchText]);
 
     // Kích hoạt nạp cấu hình ban đầu
     useEffect(() => {
@@ -181,6 +194,8 @@ export default function InvoicesPage() {
             {/* Khu vực Bảng dữ liệu và thanh lọc công cụ */}
             <div className="flex-1 min-h-0 flex flex-col">
                 <InvoicesTable
+                    leaseId={leaseId}
+                    onLeaseIdChange={(val) => { setLeaseId(val); setPage(1); }}
                     invoices={invoices}
                     properties={properties}
                     rooms={rooms}
@@ -211,6 +226,7 @@ export default function InvoicesPage() {
                     onSearchTextChange={(val) => { setSearchText(val); setPage(1); }}
                     onClearFilters={() => {
                         setSearchText(""); setPropertyId(""); setRoomId("");
+                        setLeaseId("");
                         setStatus(""); setInvoiceType(""); setMonth(""); setPage(1);
                     }}
                 />
