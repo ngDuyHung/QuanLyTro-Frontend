@@ -1,44 +1,20 @@
 import { precacheAndRoute } from "workbox-precaching";
 
-// 1. BIẾN ÉP THAY ĐỔI BYTE (Hãy đổi số này thành v2, v3... mỗi khi bạn muốn ép xóa cache triệt để)
-const FORCE_RESET_VERSION = "v2.0_NUKE_CACHE";
-console.log("[Service Worker] Đang chạy bản:", FORCE_RESET_VERSION);
+const VERSION = "v3.0_FIX_UPDATE_FLOW";
+console.log("[Service Worker] Đang chạy bản:", VERSION);
 
-// Nạp cache
+// 1. NẠP CACHE
+// Workbox sẽ tự động tải file mới và xóa file cũ nhờ cấu hình cleanupOutdatedCaches trong vite.config.js
 precacheAndRoute(self.__WB_MANIFEST);
 
-// 2. ÉP BỎ QUA CHỜ ĐỢI
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
+// 2. LẮNG NGHE LỆNH TỪ MAIN.JSX ĐỂ TIẾN HÀNH CẬP NHẬT
+// Hàm updateSW(true) từ giao diện sẽ gửi tin nhắn xuống đây để kích hoạt bản mới
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log("[Service Worker] Nhận lệnh cài đặt bản mới từ UI Loading!");
+    self.skipWaiting();
+  }
 });
-
-// 3. VŨ KHÍ HẠT NHÂN: XÓA SẠCH CACHE CŨ VÀ ÉP TẢI LẠI TRANG
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    // Bước A: Quét và xóa sạch mọi bộ nhớ Cache của PWA cũ
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          console.log("[Service Worker] Đang tiêu diệt cache:", cacheName);
-          return caches.delete(cacheName);
-        })
-      );
-    })
-    // Bước B: Chiếm quyền điều khiển
-    .then(() => self.clients.claim())
-    // Bước C: Tìm các tab đang mở và ép F5 tải lại từ Server
-    .then(() => self.clients.matchAll({ type: "window" }))
-    .then((windowClients) => {
-      windowClients.forEach((client) => {
-        if (client.url && "navigate" in client) {
-          console.log("[Service Worker] Ép trình duyệt Reload!");
-          client.navigate(client.url);
-        }
-      });
-    })
-  );
-});
-
 // ======================================================================
 // 4. XỬ LÝ SỰ KIỆN NHẬN THÔNG BÁO PUSH TỪ LARAVEL
 // ======================================================================
