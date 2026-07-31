@@ -1,27 +1,37 @@
 import { precacheAndRoute } from "workbox-precaching";
 
-// 1. DÒNG NÀY LÀ CHÌA KHÓA: ÉP THAY ĐỔI BYTE. 
-// Mỗi lần muốn ép người dùng cập nhật dứt điểm, bạn chỉ cần đổi số version này (v1, v2...)
-const FORCE_UPDATE_VERSION = "v1.0.1_KILL_CACHE";
-console.log("[Service Worker] Đã nâng cấp lên phiên bản:", FORCE_UPDATE_VERSION);
-// 1. NẠP CACHE PWA
+// 1. BIẾN ÉP THAY ĐỔI BYTE (Hãy đổi số này thành v2, v3... mỗi khi bạn muốn ép xóa cache triệt để)
+const FORCE_RESET_VERSION = "v2.0_NUKE_CACHE";
+console.log("[Service Worker] Đang chạy bản:", FORCE_RESET_VERSION);
+
+// Nạp cache
 precacheAndRoute(self.__WB_MANIFEST);
 
-// 2. ÉP CÀI ĐẶT BẢN MỚI NGAY LẬP TỨC (Bỏ qua chờ đợi)
+// 2. ÉP BỎ QUA CHỜ ĐỢI
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// 3. VŨ KHÍ TỐI THƯỢNG: CHIẾM QUYỀN VÀ ÉP TRÌNH DUYỆT RELOAD
+// 3. VŨ KHÍ HẠT NHÂN: XÓA SẠCH CACHE CŨ VÀ ÉP TẢI LẠI TRANG
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    self.clients.claim().then(() => {
-      // Tìm toàn bộ các tab/cửa sổ PWA đang mở
-      return self.clients.matchAll({ type: "window" });
-    }).then((windowClients) => {
-      // Ép từng cửa sổ tải lại trang hiện tại ngay lập tức
+    // Bước A: Quét và xóa sạch mọi bộ nhớ Cache của PWA cũ
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          console.log("[Service Worker] Đang tiêu diệt cache:", cacheName);
+          return caches.delete(cacheName);
+        })
+      );
+    })
+    // Bước B: Chiếm quyền điều khiển
+    .then(() => self.clients.claim())
+    // Bước C: Tìm các tab đang mở và ép F5 tải lại từ Server
+    .then(() => self.clients.matchAll({ type: "window" }))
+    .then((windowClients) => {
       windowClients.forEach((client) => {
         if (client.url && "navigate" in client) {
+          console.log("[Service Worker] Ép trình duyệt Reload!");
           client.navigate(client.url);
         }
       });
