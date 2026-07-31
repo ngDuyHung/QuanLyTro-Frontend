@@ -16,7 +16,7 @@ export default defineConfig({
       strategies: "injectManifest",
       srcDir: "src",
       filename: "service-worker.js",
-      registerType: "autoUpdate",
+      registerType: "prompt",
 
       // THÊM ĐOẠN NÀY ĐỂ CHO PHÉP SW CHẠY LÚC NPM RUN DEV
       devOptions: {

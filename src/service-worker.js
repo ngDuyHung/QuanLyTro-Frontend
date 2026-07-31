@@ -13,6 +13,10 @@ self.addEventListener("message", (event) => {
     self.skipWaiting();
   }
 });
+// ĐOẠN NÀY: Ép Service Worker mới chiếm quyền điều khiển các tab đang mở ngay lập tức
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
 
 // ======================================================================
 // 3. XỬ LÝ SỰ KIỆN NHẬN THÔNG BÁO PUSH TỪ LARAVEL
