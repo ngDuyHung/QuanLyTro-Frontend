@@ -6,14 +6,13 @@ import { precacheAndRoute } from "workbox-precaching";
 precacheAndRoute(self.__WB_MANIFEST);
 
 // ======================================================================
-// 2. CHỜ LỆNH TỪ UI (main.jsx) ĐỂ BỎ QUA TRẠNG THÁI CHỜ
+// 2. ÉP BẢN MỚI CÀI ĐẶT NGAY LẬP TỨC (DÙNG CHO BẢN HOTFIX NÀY)
+// Bỏ qua hoàn toàn việc chờ lệnh từ giao diện UI
 // ======================================================================
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
+self.addEventListener("install", (event) => {
+  // Lệnh này bắt buộc Service Worker mới đá văng bản cũ ngay tức khắc
+  self.skipWaiting();
 });
-
 // ======================================================================
 // 3. CHIẾM QUYỀN ĐIỀU KHIỂN NGAY LẬP TỨC KHI ĐƯỢC KÍCH HOẠT
 // ======================================================================
