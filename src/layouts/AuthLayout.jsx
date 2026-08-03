@@ -1,6 +1,6 @@
 import { Outlet, Navigate } from "react-router-dom";
 import useAuthStore from "../stores/authStore";
-
+import { Link } from "react-router-dom";
 export default function AuthLayout() {
   const user = useAuthStore((state) => state.user);
 
@@ -18,12 +18,12 @@ export default function AuthLayout() {
       <div className="flex-1 flex flex-col md:flex-row w-full">
         {/* === CỘT TRÁI (BANNER) - ĐÃ SỬA GIỐNG HÌNH 1 === */}
         <div className="hidden md:flex flex-col w-[55%] relative overflow-hidden bg-white pl-12 pr-10 pt-12 xl:pl-20 xl:pr-16">
-          
+
           {/* Cục mờ trang trí nền giống thiết kế */}
           <div className="absolute right-[10%] top-[30%] w-40 h-40 rounded-full bg-primary/10 blur-[60px] pointer-events-none"></div>
 
           {/* Logo & Tên */}
-          <div className="flex items-center gap-3 relative z-10">
+          <Link to="/" className="flex items-center gap-3 relative z-10">
             <img src="/icon-logo.png" alt="Logo" className="w-16 h-16" />
             <div>
               <h1 className="text-xl font-bold text-primary leading-tight">
@@ -31,7 +31,7 @@ export default function AuthLayout() {
               </h1>
               <p className="text-xs text-gray-500 font-medium">Quản lý nhà trọ thông minh</p>
             </div>
-          </div>
+          </Link>
 
           {/* Tiêu đề chính */}
           <div className="mt-14 xl:mt-20 relative z-10">
@@ -115,7 +115,7 @@ export default function AuthLayout() {
 
         {/* === CỘT PHẢI (CHỨA FORM) === */}
         <div className="w-full md:w-[45%] bg-white md:bg-[#fcfdff] relative flex flex-col items-center justify-center p-4 sm:p-8 md:p-12 min-h-screen md:min-h-0">
-          
+
           <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-10 z-20">
             <button className="flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition">
               <img src="https://flagcdn.com/w20/vn.png" alt="VN" className="w-5 h-auto rounded-sm" />
@@ -125,12 +125,12 @@ export default function AuthLayout() {
           </div>
 
           <div className="md:hidden flex flex-col items-center mb-6 mt-12">
-              <img src="/icon-logo.png" alt="Logo" className="w-16 h-16 mb-3" />
+            <img src="/icon-logo.png" alt="Logo" className="w-16 h-16 mb-3" />
             <h1 className="text-xl font-bold text-primary leading-tight">Nhà Trọ Kiêu Giang</h1>
           </div>
 
           <div className="w-full max-w-[440px] z-10 pb-8 md:pb-0">
-             <Outlet />
+            <Outlet />
           </div>
         </div>
       </div>

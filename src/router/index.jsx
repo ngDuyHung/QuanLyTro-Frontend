@@ -29,6 +29,9 @@ import TenantIncidentsPage from "@/pages/tenant/TenantIncidentsPage.jsx";
 import TenantNotificationsPage from "@/pages/tenant/TenantNotificationsPage.jsx";
 import TenantAccountPage from "@/pages/tenant/TenantAccountPage.jsx";
 import TenantMembersPage from "@/pages/tenant/TenantMembersPage.jsx";
+import PublicRoomSearchPage from "@/pages/public/PublicRoomSearchPage";
+import PublicRoomDetailPage from "@/pages/public/PublicRoomDetailPage";
+import PublicLayout from "@/layouts/PublicLayout";
 
 // Component bảo vệ Route: Chỉ cho vào nếu có Token và đúng Role
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -49,6 +52,13 @@ const Placeholder = ({ title }) => (
 export default function AppRouter() {
   return (
     <Routes>
+
+      {/* KHỐI ROUTE PUBLIC (SỬ DỤNG PUBLIC LAYOUT) */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<PublicRoomSearchPage />} />
+        <Route path="/phong-tro/:id" element={<PublicRoomDetailPage />} />
+      </Route>
+
       {/* Tuyến đường công khai (Auth) */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
@@ -101,7 +111,7 @@ export default function AppRouter() {
         <Route path="notifications" element={<TenantNotificationsPage />} />
         <Route path="account" element={<TenantAccountPage />} />
         <Route path="members" element={<TenantMembersPage />} />
-      </Route>  
+      </Route>
 
       {/* Tuyến đường của Admin */}
       <Route
@@ -118,7 +128,7 @@ export default function AppRouter() {
         }
       />
 
-      <Route path="/" element={<Navigate to="/login" replace />} />
+
       <Route
         path="/unauthorized"
         element={<Placeholder title="403 - Bạn không có quyền truy cập!" />}

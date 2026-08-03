@@ -41,7 +41,7 @@ export default function PaymentInvoiceModal({
         return () => { document.body.style.overflow = ""; };
     }, [open]);
 
-    // === BỔ SUNG LOGIC TÌM GIAO DỊCH PENDING & HÀM DUYỆT ===
+    // === LOGIC TÌM GIAO DỊCH PENDING & HÀM DUYỆT ===
     const pendingAllocation = invoice?.allocations?.find(
         (a) => a.financial_transaction?.status === 'pending'
     );

@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 
+const ROOM_AMENITIES = [
+  { value: "air_conditioner", label: "Máy lạnh", icon: "fa-snowflake" },
+  { value: "heater", label: "Nóng lạnh", icon: "fa-fire" },
+  { value: "wifi", label: "Wifi", icon: "fa-wifi" },
+  { value: "cooking", label: "Nấu ăn", icon: "fa-kitchen-set" },
+  { value: "camera", label: "Camera", icon: "fa-video" },
+  { value: "balcony", label: "Ban công", icon: "fa-sun" },
+  { value: "mezzanine", label: "Gác lửng", icon: "fa-stairs" },
+  { value: "parking", label: "Giữ xe", icon: "fa-motorcycle" },
+  { value: "free_hours", label: "Giờ tự do", icon: "fa-clock" },
+];
+
 const initialForm = {
   property_id: "",
   name: "",
@@ -13,8 +25,11 @@ const initialForm = {
   allow_shared: true,
   is_public: true,
   description: "",
+  amenities: [],
 
 };
+
+
 
 const MAX_IMAGES = 5;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -56,6 +71,7 @@ const toForm = (room) => ({
   allow_shared: Boolean(room?.allow_shared),
   is_public: Boolean(room?.is_public),
   description: room?.description || "",
+  amenities: Array.isArray(room?.amenities) ? room.amenities : [],
 });
 
 export default function EditRoomModal({
@@ -184,6 +200,19 @@ export default function EditRoomModal({
         ...prev,
         [field]: moneyFields.includes(field) ? formatMoneyInput(value) : value,
       };
+    });
+  };
+
+  const handleToggleAmenity = (value) => {
+    setForm((prev) => {
+      const currentAmenities = prev.amenities || [];
+      if (currentAmenities.includes(value)) {
+        // Nếu đã có thì bỏ check (xóa khỏi mảng)
+        return { ...prev, amenities: currentAmenities.filter((item) => item !== value) };
+      } else {
+        // Nếu chưa có thì check (thêm vào mảng)
+        return { ...prev, amenities: [...currentAmenities, value] };
+      }
     });
   };
 
@@ -363,6 +392,17 @@ export default function EditRoomModal({
     payload.append("allow_shared", form.allow_shared ? "1" : "0");
     payload.append("is_public", form.is_public ? "1" : "0");
     payload.append("description", form.description || "");
+
+    payload.append("description", form.description || "");
+
+    // Thay formData thành payload
+    if (form.amenities && form.amenities.length > 0) {
+      form.amenities.forEach((amenity, index) => {
+        payload.append(`amenities[${index}]`, amenity);
+      });
+    } else {
+      payload.append('amenities', '');
+    }
 
     deletedImageIds.forEach((id) => {
       payload.append("deleted_image_ids[]", String(id));
@@ -815,6 +855,34 @@ export default function EditRoomModal({
                     placeholder="Nhập tiện ích phòng, giờ giấc, quy định riêng..."
                   ></textarea>
                 </div>
+
+                {/* BẮT ĐẦU: KHỐI TIỆN ÍCH PHÒNG */}
+                <div className="col-span-full sm:col-span-2 lg:col-span-full mt-2">
+                  <label className="block text-[13px] font-semibold text-slate-700 mb-3">
+                    Tiện ích có sẵn trong phòng
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-3.5 gap-x-4 p-4 border border-slate-200 rounded-xl bg-slate-50/50">
+                    {ROOM_AMENITIES.map((amenity) => (
+                      <label key={amenity.value} className="flex items-center gap-2.5 cursor-pointer group">
+                        <div className="relative flex items-center justify-center shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={form.amenities?.includes(amenity.value) || false}
+                            onChange={() => handleToggleAmenity(amenity.value)}
+                            className="peer appearance-none w-4 h-4 border border-slate-300 rounded-[4px] bg-white checked:bg-brand checked:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer group-hover:border-brand/50"
+                          />
+                          <i className="fa-solid fa-check absolute text-white text-[10px] opacity-0 peer-checked:opacity-100 pointer-events-none"></i>
+                        </div>
+                        <span className="text-[13px] text-slate-600 font-medium select-none group-hover:text-slate-800 transition-colors flex items-center gap-1.5">
+                          {/* Tuỳ chọn: Có thể giữ icon hoặc xóa icon đi cho gọn */}
+                          <i className={`fa-solid ${amenity.icon} text-slate-400 text-[11px]`}></i>
+                          {amenity.label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                {/* KẾT THÚC: KHỐI TIỆN ÍCH PHÒNG */}
 
                 {clientError && (
                   <div className="px-3.5 py-2.5 rounded-lg bg-red-50 border border-red-100 text-red-600 text-[13px] font-medium">

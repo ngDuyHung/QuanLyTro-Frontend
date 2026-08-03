@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from "react";
 
+const ROOM_AMENITIES_MAP = {
+  air_conditioner: { label: "Máy lạnh", icon: "fa-snowflake" },
+  heater: { label: "Nóng lạnh", icon: "fa-fire" },
+  wifi: { label: "Wifi", icon: "fa-wifi" },
+  cooking: { label: "Nấu ăn", icon: "fa-kitchen-set" },
+  camera: { label: "Camera", icon: "fa-video" },
+  balcony: { label: "Ban công", icon: "fa-sun" },
+  mezzanine: { label: "Gác lửng", icon: "fa-stairs" },
+  parking: { label: "Giữ xe", icon: "fa-motorcycle" },
+  free_hours: { label: "Giờ tự do", icon: "fa-clock" },
+};
+
 // --- CÁC HÀM HELPER FORMAT DỮ LIỆU ---
 const formatCurrency = (value) => {
   const number = Number(value || 0);
@@ -48,7 +60,7 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
       setZoomedImage(null);
       return;
     }
-    
+
     document.body.style.overflow = "hidden";
 
     const images = room?.images || [];
@@ -85,11 +97,11 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
       `}</style>
 
       {/* --- MODAL CHÍNH --- */}
-      <div 
+      <div
         className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all"
         onClick={onClose}
       >
-        <div 
+        <div
           className="bg-slate-50 w-full h-[90vh] sm:h-auto sm:max-h-[90vh] lg:max-w-[950px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out]"
           onClick={(e) => e.stopPropagation()}
         >
@@ -113,7 +125,7 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                 </p>
               </div>
             </div>
-            
+
             <button
               type="button"
               onClick={onClose}
@@ -126,29 +138,29 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
           {/* --- BODY --- */}
           <div className="overflow-y-auto no-scrollbar flex-1 p-4 sm:p-5">
             <div className="sm:hidden mb-4">
-                <span className={`px-2.5 py-1 text-[11px] font-bold border rounded-md uppercase tracking-wide inline-flex items-center gap-1.5 ${statusConfig.badgeClass}`}>
-                  <i className={`fa-solid ${statusConfig.icon}`}></i>
-                  {room.status_label || statusConfig.label}
-                </span>
+              <span className={`px-2.5 py-1 text-[11px] font-bold border rounded-md uppercase tracking-wide inline-flex items-center gap-1.5 ${statusConfig.badgeClass}`}>
+                <i className={`fa-solid ${statusConfig.icon}`}></i>
+                {room.status_label || statusConfig.label}
+              </span>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-5">
               {/* CỘT TRÁI: THÔNG TIN PHÒNG */}
               <div className="flex-1 lg:w-3/5 flex flex-col gap-5">
-                
+
                 {/* Khu vực Ảnh */}
                 <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                   {activeImage ? (
                     <div className="w-full relative group">
                       {/* Ảnh chính - Bấm để phóng to */}
-                      <img 
-                        src={activeImage} 
-                        alt={room.name} 
+                      <img
+                        src={activeImage}
+                        alt={room.name}
                         onClick={() => setZoomedImage(activeImage)}
-                        className="w-full h-[200px] sm:h-[240px] object-cover transition-all duration-300 cursor-zoom-in" 
+                        className="w-full h-[200px] sm:h-[240px] object-cover transition-all duration-300 cursor-zoom-in"
                       />
                       {/* Nút gợi ý phóng to */}
-                      <button 
+                      <button
                         onClick={() => setZoomedImage(activeImage)}
                         className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Phóng to ảnh"
@@ -159,16 +171,15 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                       {images.length > 1 && (
                         <div className="flex gap-2 p-3 overflow-x-auto no-scrollbar bg-slate-50 border-t border-slate-200">
                           {images.map((img, idx) => (
-                            <img 
-                              key={idx} 
-                              src={img.image_url} 
-                              alt={`Thumbnail ${idx}`} 
+                            <img
+                              key={idx}
+                              src={img.image_url}
+                              alt={`Thumbnail ${idx}`}
                               onClick={() => setActiveImage(img.image_url)}
-                              className={`w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover flex-shrink-0 border-2 cursor-pointer transition-all ${
-                                img.image_url === activeImage 
-                                  ? 'border-brand scale-[1.03] shadow-sm'
-                                  : 'border-transparent hover:opacity-70'
-                              }`} 
+                              className={`w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover flex-shrink-0 border-2 cursor-pointer transition-all ${img.image_url === activeImage
+                                ? 'border-brand scale-[1.03] shadow-sm'
+                                : 'border-transparent hover:opacity-70'
+                                }`}
                             />
                           ))}
                         </div>
@@ -188,7 +199,7 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                     <i className="fa-solid fa-circle-info text-brand text-[13px]"></i>
                     <h3 className="text-[14px] font-bold text-slate-800">Thông tin phòng</h3>
                   </div>
-                  
+
                   <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-4">
                     <div>
                       <p className="text-[11px] font-semibold text-slate-400 uppercase mb-1">Giá thuê</p>
@@ -251,6 +262,33 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                     </div>
                   </div>
                 )}
+
+                {/* KHỐI TIỆN ÍCH PHÒNG*/}
+                {room.amenities && room.amenities.length > 0 && (
+                  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+                      <i className="fa-solid fa-list-check text-brand text-[13px]"></i>
+                      <h3 className="text-[14px] font-bold text-slate-800">Tiện ích phòng</h3>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex flex-wrap gap-2.5">
+                        {room.amenities.map((amenityKey) => {
+                          const amenity = ROOM_AMENITIES_MAP[amenityKey];
+                          if (!amenity) return null; // Bỏ qua nếu có tag rác
+                          return (
+                            <span
+                              key={amenityKey}
+                              className="bg-slate-100 border border-slate-200 text-slate-600 text-[12px] font-medium px-3 py-1.5 rounded-lg flex items-center gap-2"
+                            >
+                              <i className={`fa-solid ${amenity.icon} text-slate-400 text-[12px]`}></i>
+                              {amenity.label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* CỘT PHẢI: THÔNG TIN KHÁCH THUÊ */}
@@ -279,7 +317,7 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                         {residents.map((resident, index) => {
                           const tenant = resident.tenant;
                           const roleCfg = getRoleConfig(resident.role);
-                          if(!tenant) return null;
+                          if (!tenant) return null;
 
                           return (
                             <div key={index} className="flex items-start p-3 rounded-xl border border-slate-100 hover:border-brand/30 hover:bg-slate-50 transition-colors shadow-sm">
@@ -291,8 +329,8 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                                   {tenant.full_name}
                                 </p>
                                 {tenant.phone ? (
-                                  <a 
-                                    href={`tel:${tenant.phone}`} 
+                                  <a
+                                    href={`tel:${tenant.phone}`}
                                     className="inline-flex items-center gap-1.5 mt-1 text-[13px] font-semibold text-brand hover:text-brand-dark transition-colors"
                                   >
                                     <i className="fa-solid fa-phone text-[11px]"></i>
@@ -339,7 +377,7 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
 
       {/* --- MODAL ZOOM ẢNH (CHẾ ĐỘ XEM TOÀN MÀN HÌNH) --- */}
       {zoomedImage && (
-        <div 
+        <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 sm:p-10 animate-[fadeIn_0.2s_ease-out]"
           onClick={() => setZoomedImage(null)} // Click ra ngoài hoặc vào ảnh để đóng
         >
@@ -352,11 +390,11 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
           >
             <i className="fa-solid fa-xmark text-[20px]"></i>
           </button>
-          
+
           {/* Ảnh được phóng to */}
-          <img 
-            src={zoomedImage} 
-            alt="Zoomed room" 
+          <img
+            src={zoomedImage}
+            alt="Zoomed room"
             className="max-w-full max-h-full object-contain rounded-lg cursor-zoom-out shadow-2xl"
           />
         </div>
