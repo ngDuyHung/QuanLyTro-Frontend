@@ -1,8 +1,8 @@
 import { precacheAndRoute } from "workbox-precaching";
-
+import { clientsClaim } from "workbox-core";
 const VERSION = "v3.0_FIX_UPDATE_FLOW";
 console.log("[Service Worker] Đang chạy bản:", VERSION);
-
+clientsClaim();
 // 1. NẠP CACHE
 // Workbox sẽ tự động tải file mới và xóa file cũ nhờ cấu hình cleanupOutdatedCaches trong vite.config.js
 precacheAndRoute(self.__WB_MANIFEST);
