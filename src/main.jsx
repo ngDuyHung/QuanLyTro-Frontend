@@ -136,9 +136,17 @@ const updateSW = registerSW({
     showPwaLoader(false);
 
     // Chờ 1.7 giây cho hiệu ứng loading chạy xong, 
-    // rồi gửi tín hiệu cho Service Worker cài đặt bản mới & Tự động reload trang
+    // rồi gửi tín hiệu cho Service Worker cài đặt bản mới
     setTimeout(() => {
       updateSW(true);
+
+      // BỔ SUNG LƯỚI AN TOÀN (FALLBACK) Ở ĐÂY
+      // Nếu sau 2.5 giây mà sự kiện controllerchange bị hụt, ta ép tải lại luôn
+      setTimeout(() => {
+        console.warn("[Fallback] Sự kiện thay đổi Service Worker bị hụt, ép tải lại trang...");
+        window.location.reload();
+      }, 2500);
+
     }, 1700);
   },
 
