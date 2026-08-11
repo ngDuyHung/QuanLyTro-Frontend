@@ -9,7 +9,7 @@ import { registerSW } from 'virtual:pwa-register';
 // KHỐI CODE: ÉP XÓA CACHE VÀ UPDATE KHI CÓ PHIÊN BẢN MỚI
 // MỖI LẦN PUSH BẢN MỚI, BẠN CHỈ CẦN THAY ĐỔI GIÁ TRỊ CỦA APP_VERSION DƯỚI ĐÂY
 // ======================================================================
-const APP_VERSION = "v3.1"; // Đổi thành v3.2, v3.3... cho các lần deploy sau
+const APP_VERSION = "v3.2"; // Đổi thành v3.2, v3.3... cho các lần deploy sau
 const localVersion = localStorage.getItem("KIUGIANG_APP_VERSION");
 
 if (localVersion !== APP_VERSION) {

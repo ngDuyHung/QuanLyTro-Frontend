@@ -1,7 +1,7 @@
 import { precacheAndRoute } from "workbox-precaching";
 import { clientsClaim } from "workbox-core";
 
-const VERSION = "v3.1";
+const VERSION = "v3.2"; // Đổi thành v3.2, v3.3... cho các lần deploy sau
 console.log("[Service Worker] Đang chạy bản:", VERSION);
 
 // BỔ SUNG DÒNG NÀY: Ép SW kiểm soát ngay lập tức các client đang mở
