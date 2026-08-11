@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import utilityService from "@/services/utilityService";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 // Helper định dạng ngày tháng
 const formatDate = (value) => {
@@ -17,72 +18,63 @@ const getTypeConfig = (type) => {
 };
 
 export default function ViewUtilityModal({ open, reading, onClose }) {
-  const [history, setHistory] = useState([]);
+  // --- STATE  ---
+  const [analysisData, setAnalysisData] = useState(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // Khóa cuộn nền khi mở modal
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  // Tự động tải lịch sử tiêu thụ của riêng phòng này qua các kỳ trước
+  // Gọi API Phân tích 6 tháng
   useEffect(() => {
-    if (!open || !reading) return;
+    if (!open || !reading?.room_id) {
+      setAnalysisData(null);
+      return;
+    }
 
-    const fetchRoomHistory = async () => {
+    const fetchAnalysis = async () => {
       try {
         setIsLoadingHistory(true);
-        // Tận dụng API có sẵn, lọc theo Khu nhà và Loại dịch vụ trước để tối ưu hóa dữ liệu
-        const response = await utilityService.getAll({
-          property_id: reading.property_id,
+        const response = await utilityService.getAnalysis({
+          room_id: reading.room_id,
           type: reading.type,
-          per_page: 50,
         });
-
-        // Lọc lại trên FE các bản ghi của cùng tên phòng, loại bỏ bản ghi hiện tại đang xem
-        const filteredHistory = (response.data.data || [])
-          .filter((item) => item.room_name === reading.room_name && item.id !== reading.id)
-          .slice(0, 4); // Lấy tối đa 4 kỳ gần nhất để hiển thị timeline
-
-        setHistory(filteredHistory);
+        setAnalysisData(response.data.data);
       } catch (error) {
-        console.error("Không thể tải lịch sử tiêu thụ của phòng", error);
+        console.error("Không thể tải dữ liệu phân tích", error);
       } finally {
         setIsLoadingHistory(false);
       }
     };
 
-    fetchRoomHistory();
+    fetchAnalysis();
   }, [open, reading]);
 
   if (!open || !reading) return null;
 
   const typeConfig = getTypeConfig(reading.type);
 
-  // === LOGIC TÍNH TOÁN BIẾN ĐỘNG  ===
-  const previousMonthUsage = history.length > 0 ? history[0].usage : null;
+  // === LOGIC TÍNH TOÁN BIẾN ĐỘNG SO VỚI THÁNG KỀ TRƯỚC ===
+  let previousMonthUsage = null;
   let usageDiff = 0;
   let usagePercent = 0;
   let isWarning = false;
 
-  if (previousMonthUsage !== null && previousMonthUsage > 0) {
+  // Lấy dữ liệu tháng liền kề từ mảng chart_data (phần tử kề cuối)
+  if (analysisData?.chart_data?.length > 1) {
+    const chartData = analysisData.chart_data;
+    previousMonthUsage = chartData[chartData.length - 2].usage;
     usageDiff = reading.usage - previousMonthUsage;
-    usagePercent = (usageDiff / previousMonthUsage) * 100;
-    // Cảnh báo đỏ nếu tăng đột biến (Ví dụ: tăng trên 20%)
-    isWarning = usagePercent >= 20;
-  } else if (previousMonthUsage === 0) {
-    // Xử lý case tháng trước dùng 0 số nhưng tháng này có dùng
+    usagePercent = previousMonthUsage > 0 ? (usageDiff / previousMonthUsage) * 100 : 0;
+    isWarning = usagePercent >= 20; // Cảnh báo Đỏ bên trái nếu tăng >20% so với tháng liền kề
+  } else if (analysisData?.chart_data?.length === 1) {
+    previousMonthUsage = 0;
     usageDiff = reading.usage;
-    isWarning = reading.usage > 0; // Tự định nghĩa logic cảnh báo nếu cần
   }
-  // ===============================================
 
   return (
     <>
@@ -251,59 +243,93 @@ export default function ViewUtilityModal({ open, reading, onClose }) {
 
               </div>
 
-              {/* CỘT PHẢI: LỊCH SỬ TIÊU THỤ CÁC KỲ TRƯỚC (5 Cột trên PC) */}
-              <div className="lg:col-span-5 flex flex-col h-full">
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex-1 flex flex-col">
-                  <div className="bg-slate-50/80 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-                    <i className="fa-solid fa-clock-rotate-left text-slate-500 text-[13px]"></i>
-                    <h3 className="text-[14px] font-bold text-slate-800">Nhật ký tiêu thụ kỳ trước</h3>
+              {/* CỘT PHẢI: PHÂN TÍCH TIÊU THỤ 6 THÁNG (5 Cột trên PC) */}
+              <div className="lg:col-span-5 flex flex-col gap-5 h-full pb-4">
+
+                {/* KHỐI BIỂU ĐỒ LINE CHART */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[280px]">
+                  <div className="bg-slate-50/80 px-4 py-3 border-b border-slate-100 flex items-center gap-2 shrink-0">
+                    <i className="fa-solid fa-chart-line text-brand text-[13px]"></i>
+                    <h3 className="text-[14px] font-bold text-slate-800">Biểu đồ tiêu thụ 6 tháng</h3>
                   </div>
 
-                  <div className="p-4 sm:p-5 flex-1">
+                  <div className="p-4 flex-1">
                     {isLoadingHistory ? (
-                      <div className="py-10 text-center text-slate-400 text-[13px] animate-pulse">
-                        <i className="fa-solid fa-spinner animate-spin mb-2 text-xl text-brand"></i>
-                        <p>Đang đối soát lịch sử phòng...</p>
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 text-[13px] animate-pulse">
+                        <i className="fa-solid fa-spinner animate-spin mb-2 text-2xl text-brand"></i>
+                        <p>Đang phân tích dữ liệu...</p>
                       </div>
-                    ) : history.length > 0 ? (
-                      <div className="relative border-l-2 border-slate-200/80 ml-2 space-y-5 pb-2">
-                        {history.map((hist) => (
-                          <div key={hist.id} className="relative pl-5">
-                            {/* Chấm tròn mốc thời gian */}
-                            <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-slate-300 ring-4 ring-white"></div>
-
-                            <div className="bg-slate-50/60 border border-slate-100 p-3 rounded-xl flex items-center justify-between hover:bg-slate-50 transition-colors">
-                              <div>
-                                <span className="text-[11px] font-bold text-slate-400 uppercase block">Kỳ chốt số</span>
-                                <span className="font-bold text-[13px] text-slate-700 mt-0.5 block">
-                                  {formatDate(hist.reading_date)}
-                                </span>
-                                <span className="text-[11px] text-slate-400 mt-1 block">
-                                  Chỉ số: {hist.previous_reading} → {hist.current_reading}
-                                </span>
-                              </div>
-
-                              <div className="text-right">
-                                <span className="text-[16px] font-extrabold text-slate-800 block">
-                                  +{hist.usage.toLocaleString("vi-VN")}
-                                </span>
-                                <span className="text-[11px] text-slate-400 font-bold">{typeConfig.unit}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                    ) : analysisData?.chart_data?.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={analysisData.chart_data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                          <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                          <Tooltip
+                            contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                            labelStyle={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '4px' }}
+                            formatter={(value) => [`${value} ${typeConfig.unit}`, 'Sử dụng']}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="usage"
+                            stroke={reading.type === 'electricity' ? '#f59e0b' : '#3b82f6'}
+                            strokeWidth={3}
+                            dot={{ r: 4, strokeWidth: 2, fill: '#fff' }}
+                            activeDot={{ r: 6, strokeWidth: 0 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex flex-col items-center justify-center text-center py-12">
-                        <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-2.5">
-                          <i className="fa-solid fa-hourglass-start text-xl text-slate-300"></i>
+                      <div className="h-full flex flex-col items-center justify-center text-center">
+                        <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-2">
+                          <i className="fa-solid fa-chart-simple text-xl text-slate-300"></i>
                         </div>
-                        <p className="text-[13px] font-semibold text-slate-500">Đây là kỳ chốt số đầu tiên</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5 max-w-[200px]">Phòng này chưa có lịch sử tiêu thụ điện nước ở các tháng trước đó.</p>
+                        <p className="text-[13px] font-semibold text-slate-500">Chưa đủ dữ liệu vẽ biểu đồ</p>
                       </div>
                     )}
                   </div>
                 </div>
+
+                {/* KHỐI ĐÁNH GIÁ (SUMMARY BOX) */}
+                {!isLoadingHistory && analysisData?.summary?.has_data && (
+                  <div className={`rounded-xl border p-4 shadow-sm ${analysisData.summary.status === 'warning_high' ? 'bg-red-50 border-red-200' :
+                      analysisData.summary.status === 'warning_low' ? 'bg-blue-50 border-blue-200' :
+                        'bg-emerald-50 border-emerald-200'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${analysisData.summary.status === 'warning_high' ? 'bg-red-100 text-red-600' :
+                          analysisData.summary.status === 'warning_low' ? 'bg-blue-100 text-blue-600' :
+                            'bg-emerald-100 text-emerald-600'
+                        }`}>
+                        <i className={`fa-solid ${analysisData.summary.status === 'warning_high' ? 'fa-arrow-trend-up' :
+                            analysisData.summary.status === 'warning_low' ? 'fa-arrow-trend-down' :
+                              'fa-check'
+                          }`}></i>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className={`text-[14px] font-bold ${analysisData.summary.status === 'warning_high' ? 'text-red-700' :
+                            analysisData.summary.status === 'warning_low' ? 'text-blue-700' :
+                              'text-emerald-700'
+                          }`}>
+                          Đánh giá mức độ tiêu thụ
+                        </h4>
+                        <p className={`text-[13px] mt-1 leading-relaxed ${analysisData.summary.status === 'warning_high' ? 'text-red-600' :
+                            analysisData.summary.status === 'warning_low' ? 'text-blue-600' :
+                              'text-emerald-600'
+                          }`}>
+                          {analysisData.summary.message}
+                        </p>
+                        <div className="mt-3 pt-3 border-t border-black/5 flex items-center justify-between text-[12px]">
+                          <span className="opacity-70 font-medium">Trung bình {analysisData.summary.data_count} tháng qua:</span>
+                          <span className="font-bold">{analysisData.summary.average_6_months} {typeConfig.unit}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
 
             </div>

@@ -237,34 +237,11 @@ export default function RoomsPage() {
 
   const handleOpenRoomDetail = async (room) => {
     if (!room?.id) return;
-
-    try {
-      // 1. BẬT MODAL LÊN NGAY LẬP TỨC VÀ HIỂN THỊ LOADING
-      setIsViewRoomOpen(true);
-      setIsLoadingRoomDetail(true);
-
-      // Truyền tạm thông tin room cơ bản vào để modal có data khởi tạo (nếu cần)
-      setSelectedRoom(room);
-
-      // 2. Gọi API lấy dữ liệu chi tiết
-      const response = await roomService.getById(room.id);
-      const roomDetail = response.data.data || response.data;
-
-      // 3. Cập nhật lại dữ liệu thật sau khi gọi xong
-      setSelectedRoom(roomDetail);
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-        "Không thể tải chi tiết phòng. Vui lòng thử lại.",
-      );
-
-      // Tắt modal đi nếu quá trình lấy dữ liệu bị lỗi
-      setSelectedRoom(null);
-      setIsViewRoomOpen(false);
-    } finally {
-      // 4. Tắt trạng thái loading
-      setIsLoadingRoomDetail(false);
-    }
+    
+    // Đẩy luôn cục dữ liệu phòng đã có sẵn ở list vào modal
+    setSelectedRoom(room);
+    // Mở modal lên ngay lập tức mà không cần delay
+    setIsViewRoomOpen(true);
   };
 
   const handleCloseRoomDetail = () => {

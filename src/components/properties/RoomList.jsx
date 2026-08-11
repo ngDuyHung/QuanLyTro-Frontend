@@ -338,27 +338,9 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
 
   const handleOpenRoomDetail = async (room) => {
     if (!room?.id) return;
-
-    try {
-      setIsLoadingRoomDetail(true);
-
-      const response = await roomService.getById(room.id);
-
-      const roomDetail = response.data.data || response.data;
-
-      setSelectedRoom(roomDetail);
+      setSelectedRoom(room);
       setIsViewRoomOpen(true);
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-        "Không thể tải chi tiết phòng. Vui lòng thử lại.",
-      );
-
-      setSelectedRoom(null);
-      setIsViewRoomOpen(false);
-    } finally {
-      setIsLoadingRoomDetail(false);
-    }
+   
   };
 
   const handleCloseRoomDetail = () => {

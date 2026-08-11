@@ -523,7 +523,7 @@ export default function InvoicesTable({
                             {invoice.invoice_code}
                           </span>
                           <span className="text-[11px] text-slate-500 mt-0.5" title={`${formatDate(invoice.period_from)} - ${formatDate(invoice.period_to)}`}>
-                            Kỳ: {formatDate(invoice.period_to)}
+                            Kỳ: {formatDate(invoice.period_from)}
                           </span>
                         </div>
                       </td>

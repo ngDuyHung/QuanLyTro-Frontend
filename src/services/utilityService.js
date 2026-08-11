@@ -11,6 +11,8 @@ const utilityService = {
   update: (id, data) => api.post(`/utilities/${id}`, data),
 
   delete: (id) => api.delete(`/utilities/${id}`),
+
+  getAnalysis: (params) => api.get("/utilities/analysis", { params }),
 };
 
 export default utilityService;

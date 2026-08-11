@@ -311,8 +311,8 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                             <span className="text-slate-500 block mb-0.5">Hóa đơn tháng</span>
                                             <span className="font-medium text-slate-800 block">
                                                 {(() => {
-                                                    if (!invoice.period_to) return "—";
-                                                    const d = new Date(invoice.period_to);
+                                                    if (!invoice.period_from) return "—";
+                                                    const d = new Date(invoice.period_from);
                                                     return `T.${d.getMonth() + 1}, ${d.getFullYear()}`;
                                                 })()}
                                             </span>
@@ -320,7 +320,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         <div className="border-x border-slate-200">
                                             <span className="text-slate-500 block mb-0.5">Ngày lập h.đơn</span>
                                             <span className="font-medium text-slate-800 block">
-                                                {invoice.issue_date ? new Date(invoice.period_to).toLocaleDateString("vi-VN") : "—"}
+                                                {invoice.issue_date ? new Date(invoice.period_from).toLocaleDateString("vi-VN") : "—"}
                                             </span>
                                         </div>
                                         <div>
