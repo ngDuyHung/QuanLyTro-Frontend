@@ -1,16 +1,18 @@
 import { precacheAndRoute } from "workbox-precaching";
 import { clientsClaim } from "workbox-core";
-const VERSION = "v3.0_FIX_UPDATE_FLOW";
+
+const VERSION = "v3.1";
 console.log("[Service Worker] Đang chạy bản:", VERSION);
+
+// BỔ SUNG DÒNG NÀY: Ép SW kiểm soát ngay lập tức các client đang mở
 clientsClaim();
+
 // 1. NẠP CACHE
-// Workbox sẽ tự động tải file mới và xóa file cũ nhờ cấu hình cleanupOutdatedCaches trong vite.config.js
 precacheAndRoute(self.__WB_MANIFEST);
 
 // 2. LẮNG NGHE LỆNH TỪ MAIN.JSX ĐỂ TIẾN HÀNH CẬP NHẬT
-// Hàm updateSW(true) từ giao diện sẽ gửi tin nhắn xuống đây để kích hoạt bản mới
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
     console.log("[Service Worker] Nhận lệnh cài đặt bản mới từ UI Loading!");
     self.skipWaiting();
   }
@@ -47,14 +49,19 @@ self.addEventListener("push", function (event) {
       self.registration
         .showNotification(title, options)
         .then(() =>
-          console.log("[Service Worker] ✅ Đã hiển thị popup thông báo ra màn hình thành công!"),
+          console.log(
+            "[Service Worker] ✅ Đã hiển thị popup thông báo ra màn hình thành công!",
+          ),
         )
         .catch((err) =>
           console.error("[Service Worker] ❌ Lỗi khi vẽ popup:", err),
         ),
     );
   } catch (error) {
-    console.error("[Service Worker] ❌ Lỗi nghiêm trọng khi phân tích dữ liệu JSON:", error);
+    console.error(
+      "[Service Worker] ❌ Lỗi nghiêm trọng khi phân tích dữ liệu JSON:",
+      error,
+    );
   }
 });
 

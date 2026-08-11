@@ -6,25 +6,30 @@ import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 
 // ======================================================================
-// KHỐI CODE: TỰ ĐỘNG ÉP XÓA CACHE DỰA VÀO VITE BUILD TIMESTAMP
+// KHỐI CODE: ÉP XÓA CACHE VÀ UPDATE KHI CÓ PHIÊN BẢN MỚI
+// MỖI LẦN PUSH BẢN MỚI, BẠN CHỈ CẦN THAY ĐỔI GIÁ TRỊ CỦA APP_VERSION DƯỚI ĐÂY
 // ======================================================================
-const APP_VERSION = __APP_VERSION__; // Biến này do Vite tự động bơm vào lúc build
+const APP_VERSION = "v3.1"; // Đổi thành v3.2, v3.3... cho các lần deploy sau
 const localVersion = localStorage.getItem("KIUGIANG_APP_VERSION");
 
 if (localVersion !== APP_VERSION) {
-  console.log("[Updater] Phát hiện bản Build mới! Đang dọn dẹp hệ thống...");
+  console.log("[Updater] Phát hiện phiên bản mới! Đang dọn dẹp hệ thống...");
 
   // 1. Xóa toàn bộ bộ nhớ Cache Storage của PWA
   if ('caches' in window) {
     caches.keys().then((names) => {
-      names.forEach(name => caches.delete(name));
+      names.forEach(name => {
+        caches.delete(name);
+      });
     });
   }
 
   // 2. Tiêu diệt toàn bộ Service Worker cũ đang kẹt
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
-      registrations.forEach(registration => registration.unregister());
+      registrations.forEach(registration => {
+        registration.unregister();
+      });
     });
   }
 
@@ -32,6 +37,7 @@ if (localVersion !== APP_VERSION) {
   localStorage.setItem("KIUGIANG_APP_VERSION", APP_VERSION);
   window.location.reload(true);
 }
+// ======================================================================
 
 // ======================================================================
 // THÊM ĐOẠN NÀY: ÉP TỰ ĐỘNG RELOAD KHI SERVICE WORKER MỚI CHIẾM QUYỀN
