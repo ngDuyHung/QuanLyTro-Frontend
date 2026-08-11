@@ -7,7 +7,10 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
 export default defineConfig({
- 
+  // THÊM BLOCK NÀY VÀO ĐỂ VITE TỰ ĐỘNG GEN VERSION LÚC BUILD
+  define: {
+    __APP_VERSION__: JSON.stringify(Date.now().toString()),
+  },
   plugins: [
     react(),
     tailwindcss(),
