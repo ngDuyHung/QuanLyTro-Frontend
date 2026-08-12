@@ -91,8 +91,8 @@ export default function CreateInvoiceModal({
                 toDate.setDate(toDate.getDate() - 1);
             }
 
-            // Hạn thanh toán: Bằng ngày kết thúc ("Đến ngày") cộng thêm 10 ngày
-            dueDate = new Date(toDate.getTime());
+            // Hạn thanh toán: Bằng ngày bắt đầu ("Từ ngày") cộng thêm 10 ngày
+            dueDate = new Date(fromDate.getTime());
             dueDate.setDate(dueDate.getDate() + 10);
 
             // DÒ TÌM PROPERTY ID AN TOÀN (Kể cả khi bị nested sâu bên trong)
@@ -100,27 +100,35 @@ export default function CreateInvoiceModal({
                 ? (defaultLease.room?.property_id || defaultLease.room?.property?.id)
                 : (defaultRoom ? (defaultRoom.property_id || defaultRoom.property?.id) : "");
 
+            // Hàm helper nhỏ để format ngày theo giờ Local (tránh lỗi lệch Timezone)
+            const formatDateLocal = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
             // Cập nhật vào form
             setForm({
                 ...initialForm,
                 property_id: initPropertyId || "",
                 lease_id: defaultLease ? defaultLease.id : "",
-                period_from: fromDate.toISOString().slice(0, 10),
-                period_to: toDate.toISOString().slice(0, 10),
-                due_date: dueDate.toISOString().slice(0, 10),
+                period_from: formatDateLocal(fromDate),
+                period_to: formatDateLocal(toDate),
+                due_date: formatDateLocal(dueDate),
                 note: defaultNote || "",
             });
 
             // Reset các state phụ khác (Giữ nguyên phần cũ của bạn)
             setLeases([]);
             setRent({ price: 0 });
-            setElectricity({ prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false });
-            setWater({ prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false });
+            setElectricity({ reading_id: null, prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false });
+            setWater({ reading_id: null, prev: "", current: "", price: 0, free: 0, image: null, preview: "", is_chot_roi: false });
             setDynamicItems([]);
             setClientError("");
             setSubmitAction(null);
         }
-    }, [open, defaultRoom,defaultLease, defaultNote]);
+    }, [open, defaultRoom, defaultLease, defaultNote]);
 
     useEffect(() => {
         if (!open || !form.property_id) {
@@ -283,14 +291,22 @@ export default function CreateInvoiceModal({
 
             // Bước 1: Chốt điện nước ngầm
             const processUtility = async (utilityState, typeStr) => {
-                if (!utilityState.is_chot_roi && utilityState.current !== "") {
+                if (utilityState.current !== "") {
                     const fd = new FormData();
                     fd.append("lease_id", form.lease_id);
                     fd.append("type", typeStr);
+                    fd.append("previous_reading", utilityState.prev); // Bổ sung cập nhật cả số cũ nếu user sửa
                     fd.append("current_reading", utilityState.current);
-                    fd.append("reading_date", form.period_to);
+                    fd.append("reading_date", form.period_from);
                     if (utilityState.image) fd.append("meter_image", utilityState.image);
-                    await utilityService.create(fd);
+
+                    if (utilityState.reading_id) {
+                        // Thêm _method=PUT để tương thích Laravel API Resource khi dùng FormData
+                        fd.append("_method", "PUT");
+                        await utilityService.update(utilityState.reading_id, fd);
+                    } else {
+                        await utilityService.create(fd);
+                    }
                 }
             };
 
@@ -643,63 +659,47 @@ export default function CreateInvoiceModal({
                                                 <div className="flex items-start gap-3 w-full">
                                                     {/* Nhập Số cũ / Số mới */}
                                                     <div className="flex-1 flex gap-2 relative">
-                                                        <div className={`flex-1 border rounded-lg p-2 transition-colors ${item.state.is_chot_roi ? 'bg-slate-50 border-slate-200' : 'bg-slate-50 border-slate-200 focus-within:border-brand focus-within:bg-white'}`}>
+                                                        <div className="flex-1 border border-slate-200 rounded-lg p-2 transition-colors bg-slate-50 focus-within:border-brand focus-within:bg-white">
                                                             <div className="flex justify-between items-center mb-1">
                                                                 <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Số cũ</label>
-                                                                {item.state.is_chot_roi && <i className="fa-solid fa-lock text-[10px] text-slate-400"></i>}
                                                             </div>
                                                             <input
                                                                 type="number"
-                                                                disabled={item.state.is_chot_roi}
                                                                 value={item.state.prev}
                                                                 onChange={(e) => handleUtilityChange(item.type, 'prev', e.target.value)}
-                                                                className="w-full bg-transparent text-[15px] font-bold text-slate-700 outline-none disabled:text-slate-400"
+                                                                className="w-full bg-transparent text-[15px] font-bold text-slate-700 outline-none"
                                                                 placeholder="0"
                                                             />
                                                         </div>
 
-                                                        <div className={`flex-1 border rounded-lg p-2 transition-colors ${item.state.is_chot_roi ? 'bg-slate-50 border-slate-200' : 'bg-brand/5 border-brand/30 focus-within:border-brand focus-within:bg-white'}`}>
+                                                        <div className="flex-1 border border-brand/30 rounded-lg p-2 transition-colors bg-brand/5 focus-within:border-brand focus-within:bg-white">
                                                             <div className="flex justify-between items-center mb-1">
-                                                                <label className={`text-[10px] font-bold uppercase tracking-wide ${item.state.is_chot_roi ? 'text-slate-500' : 'text-brand'}`}>Số mới</label>
-                                                                {item.state.is_chot_roi && <i className="fa-solid fa-lock text-[10px] text-slate-400"></i>}
+                                                                <label className="text-[10px] font-bold uppercase tracking-wide text-brand">Số mới</label>
                                                             </div>
                                                             <input
                                                                 type="number"
-                                                                disabled={item.state.is_chot_roi}
                                                                 value={item.state.current}
                                                                 onChange={(e) => handleUtilityChange(item.type, 'current', e.target.value)}
-                                                                className={`w-full bg-transparent text-[15px] font-black outline-none ${item.state.is_chot_roi ? 'text-slate-400' : 'text-brand'}`}
+                                                                className="w-full bg-transparent text-[15px] font-black outline-none text-brand"
                                                                 placeholder="0"
                                                             />
                                                         </div>
                                                     </div>
 
-                                                    {/* Ảnh chụp */}
+                                                    {/* Ảnh chụp (Luôn cho phép sửa) */}
                                                     <div className="w-[60px] h-[60px] shrink-0">
-                                                        {!item.state.is_chot_roi ? (
-                                                            item.state.preview ? (
-                                                                <div className="relative w-full h-full rounded-lg border border-slate-200 bg-slate-100">
-                                                                    <div onClick={() => setZoomImage(item.state.preview)} className="w-full h-full cursor-zoom-in">
-                                                                        <img src={item.state.preview} alt="preview" className="w-full h-full object-cover rounded-lg" />
-                                                                    </div>
-                                                                    <button type="button" onClick={() => handleRemoveImage(item.type)} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] active:scale-90"><i className="fa-solid fa-xmark"></i></button>
+                                                        {item.state.preview ? (
+                                                            <div className="relative w-full h-full rounded-lg border border-slate-200 bg-slate-100">
+                                                                <div onClick={() => setZoomImage(item.state.preview)} className="w-full h-full cursor-zoom-in">
+                                                                    <img src={item.state.preview} alt="preview" className="w-full h-full object-cover rounded-lg" />
                                                                 </div>
-                                                            ) : (
-                                                                <label className="w-full h-full rounded-lg border border-dashed border-slate-300 text-slate-400 flex flex-col items-center justify-center gap-1 cursor-pointer bg-slate-50">
-                                                                    <i className="fa-solid fa-camera text-[16px]"></i>
-                                                                    <input type="file" accept="image/*" className="hidden" onChange={handleImageChange(item.type)} />
-                                                                </label>
-                                                            )
-                                                        ) : (
-                                                            <div className="w-full h-full rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 relative">
-                                                                {item.state.preview ? (
-                                                                    <div onClick={() => setZoomImage(item.state.preview)} className="w-full h-full cursor-zoom-in group">
-                                                                        <img src={item.state.preview} alt="preview" className="w-full h-full object-cover rounded-lg opacity-80" />
-                                                                    </div>
-                                                                ) : (
-                                                                    <i className="fa-solid fa-lock text-[16px] text-slate-300"></i>
-                                                                )}
+                                                                <button type="button" onClick={() => handleRemoveImage(item.type)} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] active:scale-90 shadow-sm"><i className="fa-solid fa-xmark"></i></button>
                                                             </div>
+                                                        ) : (
+                                                            <label className="w-full h-full rounded-lg border border-dashed border-slate-300 text-slate-400 flex flex-col items-center justify-center gap-1 cursor-pointer bg-slate-50 hover:bg-slate-100 hover:text-brand hover:border-brand transition-colors">
+                                                                <i className="fa-solid fa-camera text-[16px]"></i>
+                                                                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange(item.type)} />
+                                                            </label>
                                                         )}
                                                     </div>
                                                 </div>
@@ -784,17 +784,16 @@ export default function CreateInvoiceModal({
 
                                             <div className="flex-1 flex flex-col lg:flex-row gap-3 w-full">
 
-                                                {/* Lưới các ô Inputs: Chữ nhãn nằm hoàn toàn ĐẰNG TRONG ô input. Đổi từ lg:grid-cols-4 thành lg:grid-cols-5 */}
+                                                {/* Lưới các ô Inputs: Bỏ thuộc tính disabled */}
                                                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 flex-1">
                                                     {/* Ô Số cũ */}
                                                     <div className="relative">
                                                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 pointer-events-none">Số cũ</span>
                                                         <input
                                                             type="number"
-                                                            disabled={item.state.is_chot_roi}
                                                             value={item.state.prev}
                                                             onChange={(e) => handleUtilityChange(item.type, 'prev', e.target.value)}
-                                                            className="w-full pl-[46px] pr-2 py-2 lg:py-1.5 border border-slate-200 bg-white rounded-lg text-[13px] font-semibold focus:border-brand outline-none disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                                                            className="w-full pl-[46px] pr-2 py-2 lg:py-1.5 border border-slate-200 bg-white rounded-lg text-[13px] font-semibold focus:border-brand outline-none transition-colors"
                                                         />
                                                     </div>
 
@@ -803,10 +802,9 @@ export default function CreateInvoiceModal({
                                                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 pointer-events-none">Số mới</span>
                                                         <input
                                                             type="number"
-                                                            disabled={item.state.is_chot_roi}
                                                             value={item.state.current}
                                                             onChange={(e) => handleUtilityChange(item.type, 'current', e.target.value)}
-                                                            className="w-full pl-[52px] pr-2 py-2 lg:py-1.5 border border-brand/40 bg-brand/5 rounded-lg text-[13px] font-bold text-brand focus:border-brand outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 transition-colors"
+                                                            className="w-full pl-[52px] pr-2 py-2 lg:py-1.5 border border-brand/40 bg-brand/5 rounded-lg text-[13px] font-bold text-brand focus:border-brand outline-none transition-colors"
                                                         />
                                                     </div>
 
@@ -839,7 +837,7 @@ export default function CreateInvoiceModal({
                                                     </div>
                                                 </div>
 
-                                                {/* Khu vực Xử lý Ảnh Chốt số & Thành tiền */}
+                                                {/* Khu vực Xử lý Ảnh Chốt số & Thành tiền (Luôn cho sửa ảnh) */}
                                                 <div className="flex items-center justify-between lg:justify-end gap-3 lg:w-[130px] shrink-0 pt-2 lg:pt-0 border-t border-dashed border-slate-100 lg:border-0">
 
                                                     {/* Cột Hiển thị Thành Tiền */}
@@ -847,50 +845,29 @@ export default function CreateInvoiceModal({
                                                         {amount.toLocaleString()} đ
                                                     </div>
 
-                                                    {!item.state.is_chot_roi ? (
-                                                        item.state.preview ? (
-                                                            <div className="relative w-full lg:w-9 h-9 rounded-lg border border-slate-200 bg-slate-100 shrink-0">
-                                                                <div
-                                                                    onClick={() => setZoomImage(item.state.preview)}
-                                                                    className="w-full h-full cursor-zoom-in relative group"
-                                                                    title="Bấm để xem phóng to"
-                                                                >
-                                                                    <img src={item.state.preview} alt="preview" className="w-full h-full object-cover rounded-lg shadow-sm" />
-                                                                </div>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handleRemoveImage(item.type)}
-                                                                    className="absolute -top-1.5 -right-1.5 w-5 h-5 lg:w-4 lg:h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-[10px] lg:text-[9px] shadow-md cursor-pointer z-10 transition-transform active:scale-90"
-                                                                    title="Xóa ảnh"
-                                                                >
-                                                                    <i className="fa-solid fa-xmark"></i>
-                                                                </button>
+                                                    {item.state.preview ? (
+                                                        <div className="relative w-full lg:w-9 h-9 rounded-lg border border-slate-200 bg-slate-100 shrink-0">
+                                                            <div
+                                                                onClick={() => setZoomImage(item.state.preview)}
+                                                                className="w-full h-full cursor-zoom-in relative group"
+                                                                title="Bấm để xem phóng to"
+                                                            >
+                                                                <img src={item.state.preview} alt="preview" className="w-full h-full object-cover rounded-lg shadow-sm" />
                                                             </div>
-                                                        ) : (
-                                                            <label className="w-full lg:w-9 h-9 rounded-lg border border-dashed border-slate-300 text-slate-500 hover:text-brand hover:border-brand hover:bg-brand/5 flex items-center justify-center gap-2 lg:gap-0 cursor-pointer transition-colors shrink-0 bg-white" title="Chụp ảnh đồng hồ">
-                                                                <i className="fa-solid fa-camera text-[14px] lg:text-[13px]"></i>
-                                                                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange(item.type)} />
-                                                            </label>
-                                                        )
-                                                    ) : (
-                                                        <div className="flex-1 lg:w-9 lg:h-9 flex items-center justify-center lg:justify-end gap-2 bg-slate-50 lg:bg-transparent rounded-lg py-1.5 lg:py-0">
-                                                            {item.state.preview ? (
-                                                                <div
-                                                                    onClick={() => setZoomImage(item.state.preview)}
-                                                                    className="w-9 h-9 rounded-lg border border-slate-200 cursor-zoom-in relative group"
-                                                                    title="Bấm xem ảnh đã chụp"
-                                                                >
-                                                                    <img src={item.state.preview} alt="preview" className="w-full h-full object-cover rounded-lg shadow-sm" />
-                                                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-slate-500 text-white rounded-full flex items-center justify-center text-[8px] shadow-sm">
-                                                                        <i className="fa-solid fa-lock"></i>
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <>
-                                                                    <i className="fa-solid fa-lock text-[12px] text-slate-400"></i>
-                                                                </>
-                                                            )}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveImage(item.type)}
+                                                                className="absolute -top-1.5 -right-1.5 w-5 h-5 lg:w-4 lg:h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-[10px] lg:text-[9px] shadow-md cursor-pointer z-10 transition-transform active:scale-90"
+                                                                title="Xóa ảnh"
+                                                            >
+                                                                <i className="fa-solid fa-xmark"></i>
+                                                            </button>
                                                         </div>
+                                                    ) : (
+                                                        <label className="w-full lg:w-9 h-9 rounded-lg border border-dashed border-slate-300 text-slate-500 hover:text-brand hover:border-brand hover:bg-brand/5 flex items-center justify-center gap-2 lg:gap-0 cursor-pointer transition-colors shrink-0 bg-white" title="Chụp ảnh đồng hồ">
+                                                            <i className="fa-solid fa-camera text-[14px] lg:text-[13px]"></i>
+                                                            <input type="file" accept="image/*" className="hidden" onChange={handleImageChange(item.type)} />
+                                                        </label>
                                                     )}
                                                 </div>
 

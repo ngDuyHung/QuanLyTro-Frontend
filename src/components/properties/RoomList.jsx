@@ -338,9 +338,9 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
 
   const handleOpenRoomDetail = async (room) => {
     if (!room?.id) return;
-      setSelectedRoom(room);
-      setIsViewRoomOpen(true);
-   
+    setSelectedRoom(room);
+    setIsViewRoomOpen(true);
+
   };
 
   const handleCloseRoomDetail = () => {
@@ -687,9 +687,9 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
               return (
                 <div
                   key={room.id}
-                  className={`bg-white border border-l-[2px] rounded-2xl shadow-sm overflow-visible transition-colors ${hasDebt
-                    ? "border-slate-200 border-l-red-500 shadow-red-50"
-                    : "border-slate-200 border-l-emerald-400"
+                  className={`bg-white border-2 rounded-2xl shadow-sm overflow-visible transition-colors ${hasDebt
+                    ? "border-red-500 shadow-red-50"
+                    : "border-emerald-400"
                     }`}
                 >
                   {/* Header */}
