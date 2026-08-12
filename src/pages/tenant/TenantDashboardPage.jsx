@@ -4,6 +4,8 @@ import tenantDashboardService from "@/services/dashboardService";
 import tenantNotificationService from "@/services/tenantNotificationService";
 import TenantReportIncidentModal from "@/components/tenant/incidents/TenantReportIncidentModal";
 import TenantViewNotificationModal from "@/components/tenant/notifications/TenantViewNotificationModal";
+import { toast } from "react-toastify"; // Import toast
+import api from "@/services/api"; // Import api để gọi API subscribe
 
 export default function TenantDashboard() {
   const user = useAuthStore((state) => state.user);
@@ -17,6 +19,10 @@ export default function TenantDashboard() {
 
   // 2. THÊM STATE QUẢN LÝ THÔNG BÁO
   const [notifications, setNotifications] = useState([]);
+
+  // --- STATE CHO PUSH NOTIFICATION BANNER ---
+  const [showPushBanner, setShowPushBanner] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   // Gọi API lấy dữ liệu dashboard
   const fetchDashboardData = async () => {
@@ -38,7 +44,61 @@ export default function TenantDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
+
+    // KIỂM TRA QUYỀN THÔNG BÁO KHI MỞ DASHBOARD
+    if ('Notification' in window && 'serviceWorker' in navigator) {
+      if (Notification.permission === 'default') {
+        setShowPushBanner(true); // Chỉ hiện nếu chưa cấp quyền (default)
+      }
+    }
   }, []);
+
+  // --- HÀM XỬ LÝ ĐĂNG KÝ WEB PUSH ---
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  const handleEnablePush = async () => {
+    try {
+      setIsSubscribing(true);
+      const permission = await Notification.requestPermission();
+
+      if (permission !== 'granted') {
+        toast.warning("Bạn đã từ chối nhận thông báo. Bạn có thể bật lại trong cài đặt trình duyệt.");
+        setShowPushBanner(false);
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+      });
+
+      const subData = subscription.toJSON();
+      await api.post('/push/subscribe', {
+        endpoint: subData.endpoint,
+        keys: subData.keys
+      });
+
+      toast.success("Bật thông báo thành công!");
+      setShowPushBanner(false); // Ẩn banner đi
+    } catch (error) {
+      console.error(error);
+      toast.error("Có lỗi xảy ra khi đăng ký nhận thông báo.");
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   // // Hàm tính số ngày còn lại của hợp đồng
   // const calculateDaysLeft = (endDate) => {
@@ -263,6 +323,37 @@ export default function TenantDashboard() {
 
   return (
     <div className="p-4 lg:p-6 space-y-6">
+      {/* --- BANNER XIN QUYỀN NHẬN THÔNG BÁO --- */}
+      {showPushBanner && (
+        <div className="bg-brand/10 border border-brand/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-[fadeIn_0.3s_ease-out]">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="w-10 h-10 rounded-full bg-brand/20 text-brand flex items-center justify-center shrink-0">
+              <i className="fa-regular fa-bell text-lg"></i>
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-800 text-sm">Bật thông báo hệ thống</h4>
+              <p className="text-xs text-slate-600 mt-0.5">Nhận ngay lời nhắc đóng tiền, chốt điện nước và tin tức từ chủ trọ.</p>
+            </div>
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto shrink-0">
+            <button
+              onClick={() => setShowPushBanner(false)}
+              className="flex-1 sm:flex-none px-4 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors"
+            >
+              Để sau
+            </button>
+            <button
+              onClick={handleEnablePush}
+              disabled={isSubscribing}
+              className="flex-1 sm:flex-none px-4 py-2 bg-brand text-white text-xs font-bold rounded-xl hover:bg-brand-dark transition-colors flex justify-center items-center gap-2 shadow-md shadow-brand/20"
+            >
+              {isSubscribing ? <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : <i className="fa-solid fa-check"></i>}
+              Bật ngay
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ROW 1: Room Info & Notifications */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 

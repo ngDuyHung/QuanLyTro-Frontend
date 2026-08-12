@@ -15,6 +15,9 @@ const notificationService = {
 
   // Xóa thông báo
   delete: (id) => api.delete(`/notifications/${id}`),
+
+  // Gửi lại Web Push
+  resendPush: (id) => api.post(`/notifications/${id}/resend-push`),
 };
 
 export default notificationService;

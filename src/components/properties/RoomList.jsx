@@ -747,7 +747,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
 
                       {/* Cột 2: Trạng thái thanh toán */}
                       <div>
-                        <p className="text-[11px] text-slate-500 mb-1">Thanh toán</p>
+                        <p className="text-[11px] text-slate-500 mb-1">Tháng này</p>
 
                         {room.payment_status === "debt" ? (
                           /* THIẾT KẾ NÚT BẤM KHI CÓ NỢ */
@@ -771,7 +771,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                           /* TRẠNG THÁI CHƯA LẬP HÓA ĐƠN */
                           <div className="flex items-center gap-1.5 text-amber-500 font-semibold text-[13px] pt-0.5">
                             <i className="fa-solid fa-file-circle-plus text-[14px]"></i>
-                            <span>Chưa lập HĐ</span>
+                            <span>Chưa lập hóa đơn</span>
                           </div>
                         ) : (
                           /* TRẠNG THÁI TRỐNG HOẶC KHÁC */

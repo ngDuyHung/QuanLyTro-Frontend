@@ -210,7 +210,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
 
           {/* Cột 2: Trạng thái thanh toán */}
           <div>
-            <p className="text-[11px] text-slate-500 mb-1">Thanh toán</p>
+            <p className="text-[11px] text-slate-500 mb-1">Tháng này</p>
             {room.payment_status === "debt" ? (
               /* THIẾT KẾ NÚT BẤM KHI CÓ NỢ */
               <div
@@ -790,7 +790,7 @@ export default function RoomTable({
 
               <th className="py-3 px-4 border-b border-slate-100">Trạng thái</th>
               <th className="py-3 px-4 border-b border-slate-100">Người thuê</th>
-              <th className="py-3 px-4 border-b border-slate-100">Thanh toán</th>
+              <th className="py-3 px-4 border-b border-slate-100">Tháng này</th>
 
               {renderSortableHeader("Ngày tạo", "created_at_asc", "created_at_desc")}
 

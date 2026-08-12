@@ -31,6 +31,9 @@ const settingService = {
 
   // Test gửi Push Notification đến thiết bị chủ trọ
   testPushNotification: () => api.post("/settings/test-push"),
+
+  // Test Workflow tự động nhắc nhở (Demo)
+  testWorkflowRemind: () => api.post("/settings/test-workflow-remind"),
 };
 
 export default settingService;

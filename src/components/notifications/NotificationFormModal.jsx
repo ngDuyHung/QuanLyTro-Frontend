@@ -9,6 +9,7 @@ const initialForm = {
     type: "info",
     target_type: "all",
     target_id: "",
+    action_url: "", // Thêm action_url
     is_pinned: false,
     status: "draft",
     content: "",
@@ -41,6 +42,7 @@ export default function NotificationFormModal({ open, onClose, onSubmit, isSubmi
                 type: initialData.type || "info",
                 target_type: initialData.target_type || "all",
                 target_id: initialData.target_id || "",
+                action_url: initialData.action_url || "", // Gắn vào form
                 is_pinned: Boolean(initialData.is_pinned),
                 status: initialData.status || "draft",
                 content: initialData.content || "",
@@ -198,6 +200,18 @@ export default function NotificationFormModal({ open, onClose, onSubmit, isSubmi
                         )}
                     </div>
 
+                    {/* Hàng 3: URL Action */}
+                    <div className="flex flex-col">
+                        <label className="block text-[13px] font-bold text-slate-700 mb-1.5 ml-1">Đường dẫn đính kèm (URL) <span className="text-slate-400 font-normal text-[11px]">(Tùy chọn - Mở ra khi click vào Push)</span></label>
+                        <input
+                            type="text"
+                            value={form.action_url}
+                            onChange={handleChange("action_url")}
+                            placeholder="VD: /tenant/utilities?action=submit_reading"
+                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[13px] font-medium text-slate-700 focus:border-brand outline-none"
+                        />
+                    </div>
+
                     {/* Vùng Editor */}
                     <div className="flex-1 flex flex-col min-h-[350px]">
                         <label className="block text-[13px] font-bold text-slate-700 mb-1.5 ml-1">Nội dung thông báo <span className="text-red-500">*</span></label>
@@ -212,9 +226,8 @@ export default function NotificationFormModal({ open, onClose, onSubmit, isSubmi
                     </div>
                 </div>
 
-                {/* Footer - Cập nhật Responsive theo yêu cầu */}
+                {/* Footer */}
                 <div className="border-t border-slate-200 p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white shrink-0">
-                    {/* Nút Hủy: Trên Mobile nằm dưới cùng (row 2), trên PC nằm bên trái */}
                     <button 
                         type="button" 
                         onClick={onClose} 
@@ -224,7 +237,6 @@ export default function NotificationFormModal({ open, onClose, onSubmit, isSubmi
                         Hủy bỏ
                     </button>
                     
-                    {/* Hàng chứa Nháp & Đăng: Trên Mobile nằm hàng đầu (row 1), nháp ngắn đăng dài */}
                     <div className="order-1 sm:order-2 flex flex-row gap-2 w-full sm:w-auto items-center">
                         <button 
                             type="button" 
