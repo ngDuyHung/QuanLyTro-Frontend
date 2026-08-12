@@ -11,7 +11,6 @@ export default function TenantUtilitiesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [pagination, setPagination] = useState(null);
 
-    // dòng này để lấy query params từ URL
     const [searchParams, setSearchParams] = useSearchParams();
 
     // Filters
@@ -44,11 +43,8 @@ export default function TenantUtilitiesPage() {
 
     // MỞ MODAL TỰ ĐỘNG
     useEffect(() => {
-        // Kiểm tra xem trên URL có param action=submit_reading không
         if (searchParams.get("action") === "submit_reading") {
-            setIsSubmitModalOpen(true); // Tự động mở modal
-
-            // Xóa param khỏi URL sau khi đã mở để tránh việc F5 lại trang bị tự động mở lại
+            setIsSubmitModalOpen(true);
             searchParams.delete("action");
             setSearchParams(searchParams, { replace: true });
         }
@@ -60,6 +56,7 @@ export default function TenantUtilitiesPage() {
 
     return (
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 md:p-6 lg:p-6 pt-6 flex flex-col h-full bg-slate-50">
+            {/* Header Area */}
             <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-[22px] font-bold text-slate-800">Chỉ số Điện / Nước</h1>
@@ -69,6 +66,7 @@ export default function TenantUtilitiesPage() {
                 </div>
             </div>
 
+            {/* Table Section */}
             <div className="flex-1 min-h-0 flex flex-col">
                 <TenantUtilitiesTable
                     readings={readings}
@@ -77,9 +75,9 @@ export default function TenantUtilitiesPage() {
                     onPageChange={setPage}
                     isLoading={isLoading}
                     type={type}
-                    onTypeChange={(val) => { setType(val); setPage(1); }}
+                    onTypeChange={setType}
                     month={month}
-                    onMonthChange={(val) => { setMonth(val); setPage(1); }}
+                    onMonthChange={setMonth}
                     onOpenSubmitModal={() => setIsSubmitModalOpen(true)}
                     onOpenViewModal={(reading) => {
                         setSelectedReading(reading);
@@ -88,6 +86,7 @@ export default function TenantUtilitiesPage() {
                 />
             </div>
 
+            {/* Modals */}
             <TenantSubmitUtilityModal
                 open={isSubmitModalOpen}
                 onClose={() => setIsSubmitModalOpen(false)}
