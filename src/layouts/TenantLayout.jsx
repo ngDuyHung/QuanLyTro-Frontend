@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import useAuthStore from "@/stores/authStore"; // Kiểm tra lại đường dẫn này cho đúng với dự án của bạn
 import { toast } from "react-toastify";
 import notificationService from "@/services/notificationService";
+import api from "@/services/api";
 
 export default function LandlordLayout() {
   const { user, clearAuth } = useAuthStore();
@@ -50,11 +51,69 @@ export default function LandlordLayout() {
   }, [location.pathname]);
   // -----------------------------
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // THÊM: Xóa Push Token trước khi logout
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          await api.post('/push/unsubscribe', { endpoint: subscription.endpoint });
+        }
+      } catch (error) {
+        console.error("Lỗi xóa push token khi logout", error);
+      }
+    }
+
     clearAuth();
     toast.info("Đã đăng xuất khỏi hệ thống");
     navigate("/login");
   };
+
+  // --- THÊM: ĐỒNG BỘ NGẦM PUSH TOKEN ---
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  useEffect(() => {
+    const syncPushSubscription = async () => {
+      if ('Notification' in window && 'serviceWorker' in navigator && Notification.permission === 'granted') {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          let subscription = await registration.pushManager.getSubscription();
+
+          if (!subscription) {
+            const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+            subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+            });
+          }
+
+          if (subscription) {
+            const subData = subscription.toJSON();
+            // Gửi lên Backend để cập nhật lại token cho user đang login
+            await api.post('/push/subscribe', {
+              endpoint: subData.endpoint,
+              keys: subData.keys
+            });
+          }
+        } catch (error) {
+          console.error("Lỗi đồng bộ push token ngầm:", error);
+        }
+      }
+    };
+
+    syncPushSubscription();
+  }, []);
+  // -------------------------------------
 
   const navLinkClasses = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-colors ${isActive
@@ -346,8 +405,8 @@ export default function LandlordLayout() {
           </div>
           <footer className="hidden lg:block py-4 text-center border-t border-slate-200/60 mx-8 shrink-0 relative z-10 bg-slate-50">
             <p className="text-[12px] text-slate-400">
-             <i className="fa-solid fa-shield-halved text-gray-400"></i> Thông tin
-                    của bạn được bảo mật tuyệt đối | © 2025 Nhà Trọ KieuGiang. 
+              <i className="fa-solid fa-shield-halved text-gray-400"></i> Thông tin
+              của bạn được bảo mật tuyệt đối | © 2025 Nhà Trọ KieuGiang.
             </p>
           </footer>
         </div>

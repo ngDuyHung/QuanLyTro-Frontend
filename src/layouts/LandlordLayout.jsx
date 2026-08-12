@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import notificationService from "@/services/notificationService";
 import incidentService from "@/services/incidentService"; // Import service để lấy số lượng sự cố
 import invoiceService from "@/services/invoiceService"; // Import service để lấy số lượng hóa đơn
+import api from "@/services/api";
 
 export default function LandlordLayout() {
   const { user, clearAuth } = useAuthStore();
@@ -83,7 +84,67 @@ export default function LandlordLayout() {
   }, [location.pathname]);
   // -----------------------------
 
-  const handleLogout = () => {
+
+  // --- ĐỒNG BỘ NGẦM PUSH TOKEN ---
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  useEffect(() => {
+    const syncPushSubscription = async () => {
+      if ('Notification' in window && 'serviceWorker' in navigator && Notification.permission === 'granted') {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          let subscription = await registration.pushManager.getSubscription();
+
+          if (!subscription) {
+            const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+            subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+            });
+          }
+
+          if (subscription) {
+            const subData = subscription.toJSON();
+            // Gửi lên Backend để cập nhật lại token cho user đang login
+            await api.post('/push/subscribe', {
+              endpoint: subData.endpoint,
+              keys: subData.keys
+            });
+          }
+        } catch (error) {
+          console.error("Lỗi đồng bộ push token ngầm:", error);
+        }
+      }
+    };
+
+    syncPushSubscription();
+  }, []);
+  // -------------------------------------
+
+  const handleLogout = async () => {
+    // THÊM: Xóa Push Token trước khi logout
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          await api.post('/push/unsubscribe', { endpoint: subscription.endpoint });
+          // Không gọi subscription.unsubscribe() để giữ quyền trình duyệt, chỉ xóa ở Backend
+        }
+      } catch (error) {
+        console.error("Lỗi xóa push token khi logout", error);
+      }
+    }
+
     clearAuth();
     toast.info("Đã đăng xuất khỏi hệ thống");
     navigate("/login");
@@ -172,7 +233,7 @@ export default function LandlordLayout() {
             <span>Khách thuê</span>
           </NavLink>
 
-        <NavLink
+          <NavLink
             to="/landlord/incidents"
             className={navLinkClasses}
             onClick={closeSidebar}
@@ -182,7 +243,7 @@ export default function LandlordLayout() {
               <i className="fa-solid fa-screwdriver-wrench w-5 text-center"></i>
               <span>Sự cố & Bảo trì</span>
             </div>
-            
+
             {/* Nút số lượng bây giờ sẽ bám sát lề phải */}
             {activeIncidentCount > 0 && (
               <span className="bg-[#ef4444] text-white text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full shrink-0">
@@ -196,10 +257,10 @@ export default function LandlordLayout() {
             className={navLinkClasses}
             onClick={closeSidebar}
           >
-           
-              <i className="fa-solid fa-droplet w-5 text-center"></i>
-              <span>Điện nước</span>
-           
+
+            <i className="fa-solid fa-droplet w-5 text-center"></i>
+            <span>Điện nước</span>
+
           </NavLink>
 
           <NavLink
@@ -207,9 +268,9 @@ export default function LandlordLayout() {
             className={navLinkClasses}
             onClick={closeSidebar}
           >
-             <div className="flex items-center gap-3 flex-1">
-            <i className="fa-solid fa-file-invoice w-5 text-center"></i>
-            <span>Hóa đơn</span>
+            <div className="flex items-center gap-3 flex-1">
+              <i className="fa-solid fa-file-invoice w-5 text-center"></i>
+              <span>Hóa đơn</span>
             </div>
             {activeInvoiceCount > 0 && (
               <span className="bg-[#ef4444] text-white text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full shrink-0">
