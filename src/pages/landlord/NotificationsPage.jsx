@@ -27,7 +27,7 @@ export default function NotificationsPage() {
     useEffect(() => {
         const timer = setTimeout(() => {
             setSearch(searchText.trim());
-            setPage(1); 
+            setPage(1);
         }, 400);
         return () => clearTimeout(timer);
     }, [searchText]);
@@ -85,7 +85,7 @@ export default function NotificationsPage() {
 
     const handleSaveNotification = async (formData) => {
         try {
-            setIsLoading(true); 
+            setIsLoading(true);
             if (formData.id) {
                 await notificationService.update(formData.id, formData);
                 toast.success("Cập nhật thông báo thành công!");
@@ -112,12 +112,20 @@ export default function NotificationsPage() {
         }
     };
 
+    // HÀM NÀY VÀO ĐỂ RESET FILTER KHI CHUYỂN TAB
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setPage(1);
+        setSearchText("");
+        setFilterStatus("");
+        setFilterTargetType("");
+    };
+
     // Hàm style cho Tab
     const tabClasses = (tab) =>
-        `px-4 sm:px-6 py-3 text-[13px] sm:text-[14px] transition-colors border-b-2 -mb-[1px] whitespace-nowrap cursor-pointer flex items-center gap-2 ${
-            activeTab === tab
-                ? "font-bold text-brand border-brand"
-                : "font-medium text-slate-500 hover:text-slate-800 border-transparent"
+        `px-4 sm:px-6 py-3 text-[13px] sm:text-[14px] transition-colors border-b-2 -mb-[1px] whitespace-nowrap cursor-pointer flex items-center gap-2 ${activeTab === tab
+            ? "font-bold text-brand border-brand"
+            : "font-medium text-slate-500 hover:text-slate-800 border-transparent"
         }`;
 
     return (
@@ -143,10 +151,10 @@ export default function NotificationsPage() {
 
             {/* --- UI 2 TABS --- */}
             <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 mb-5">
-                <button className={tabClasses("manual")} onClick={() => { setActiveTab("manual"); setPage(1); }}>
+                <button className={tabClasses("manual")} onClick={() => handleTabChange("manual")}>
                     <i className="fa-regular fa-comment-dots"></i> Do tôi soạn
                 </button>
-                <button className={tabClasses("system")} onClick={() => { setActiveTab("system"); setPage(1); }}>
+                <button className={tabClasses("system")} onClick={() => handleTabChange("system")}>
                     <i className="fa-solid fa-robot"></i> Hệ thống tự động
                 </button>
             </div>
@@ -176,7 +184,7 @@ export default function NotificationsPage() {
                 open={isFormModalOpen}
                 onClose={() => setIsFormModalOpen(false)}
                 onSubmit={handleSaveNotification}
-                isSubmitting={isLoading} 
+                isSubmitting={isLoading}
                 initialData={editingNotification}
             />
 

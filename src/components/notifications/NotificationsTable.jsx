@@ -25,6 +25,7 @@ const formatDate = (value) => {
     });
 };
 
+
 export default function NotificationsTable({
     notifications = [],
     isLoading,
@@ -43,6 +44,19 @@ export default function NotificationsTable({
     onResendPush,
     activeTab, // Nhận prop activeTab
 }) {
+
+    const handlePageChange = (newPage) => {
+        onPageChange?.(newPage);
+        setTimeout(() => {
+            const tableContainer = document.getElementById('notifications-table-top');
+            if (tableContainer) {
+                tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }, 50);
+    };
+
     return (
         <>
             {/* Thanh công cụ lọc */}
@@ -93,8 +107,7 @@ export default function NotificationsTable({
                 </div>
             </div>
 
-            <div className="bg-transparent lg:bg-white border-none lg:border lg:border-slate-200 lg:rounded-xl shadow-none lg:shadow-sm lg:overflow-hidden flex flex-col flex-1">
-                
+            <div id="notifications-table-top" className="bg-transparent lg:bg-white border-none lg:border lg:border-slate-200 lg:rounded-xl shadow-none lg:shadow-sm lg:overflow-hidden flex flex-col flex-1">
                 {/* --- GIAO DIỆN MOBILE --- */}
                 <div className="lg:hidden flex flex-col gap-3 pb-4">
                     {isLoading ? (
@@ -277,14 +290,14 @@ export default function NotificationsTable({
                                                     <button onClick={() => onView(item)} className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors shadow-sm" title="Xem trước nội dung">
                                                         <i className="fa-regular fa-eye text-[13px]"></i>
                                                     </button>
-                                                    
+
                                                     {/* Ẩn nút Sửa nếu là hệ thống */}
                                                     {!isSystem && (
                                                         <button onClick={() => onEdit(item)} className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-600 hover:bg-amber-50 flex items-center justify-center transition-colors shadow-sm" title="Chỉnh sửa">
                                                             <i className="fa-solid fa-pen text-[12px]"></i>
                                                         </button>
                                                     )}
-                                                    
+
                                                     <button onClick={() => onDelete(item.id)} className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-600 hover:bg-red-50 flex items-center justify-center transition-colors shadow-sm" title="Xóa thông báo">
                                                         <i className="fa-regular fa-trash-can text-[13px]"></i>
                                                     </button>
@@ -297,7 +310,82 @@ export default function NotificationsTable({
                         </tbody>
                     </table>
                 </div>
-            </div>
+
+                {/* ================= THÊM KHỐI PHÂN TRANG VÀO ĐÂY ================= */}
+                <div className="bg-white border border-slate-200 lg:border-x-0 lg:border-b-0 lg:border-t lg:border-slate-100 rounded-xl lg:rounded-b-xl lg:rounded-t-none p-3 lg:p-4 flex items-center justify-between mt-auto">
+                    <span className="text-[12px] lg:text-[13px] text-slate-500">
+                        {pagination ? (
+                            <>
+                                <span className="lg:hidden">
+                                    Trang {pagination.current_page || 1}/{pagination.last_page || 1} · {pagination.total || 0} thông báo
+                                </span>
+
+                                <span className="hidden lg:inline">
+                                    Hiển thị {pagination.from || 0} - {pagination.to || 0} trong tổng số {pagination.total || 0} thông báo
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="lg:hidden">0 Thông báo</span>
+                                <span className="hidden lg:inline">Chưa có dữ liệu thông báo</span>
+                            </>
+                        )}
+                    </span>
+
+                    {pagination?.last_page > 1 && (
+                        <div className="flex items-center gap-1">
+                            {/* Nút lùi trang */}
+                            <button
+                                type="button"
+                                disabled={page <= 1}
+                                onClick={() => handlePageChange(Math.max(1, page - 1))}
+                                className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
+                            </button>
+
+                            {/* MOBILE UI: Chỉ hiện ô số trang hiện tại */}
+                            <button
+                                type="button"
+                                className="flex lg:hidden w-8 h-8 rounded-lg items-center justify-center bg-brand text-white font-medium text-[13px]"
+                            >
+                                {page}
+                            </button>
+
+                            {/* DESKTOP UI: Hiện đầy đủ dãy số trang */}
+                            <div className="hidden lg:flex gap-1">
+                                {Array.from({ length: pagination.last_page }).map((_, index) => {
+                                    const pageNumber = index + 1;
+                                    return (
+                                        <button
+                                            key={pageNumber}
+                                            type="button"
+                                            onClick={() => handlePageChange(pageNumber)}
+                                            className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
+                                                ? "bg-brand text-white shadow-sm"
+                                                : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+                                                }`}
+                                        >
+                                            {pageNumber}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Nút tiến trang */}
+                            <button
+                                type="button"
+                                disabled={page >= pagination.last_page}
+                                onClick={() => handlePageChange(page + 1)}
+                                className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <i className="fa-solid fa-angle-right text-[12px] lg:text-[11px]"></i>
+                            </button>
+                        </div>
+                    )}
+                </div>
+                {/* ================= KẾT THÚC KHỐI PHÂN TRANG ================= */}
+            </div >
         </>
     );
 }

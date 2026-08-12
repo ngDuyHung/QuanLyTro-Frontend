@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import tenantUtilityService from "@/services/tenantUtilityService";
 import TenantUtilitiesTable from "@/components/tenant/utilities/TenantUtilitiesTable";
@@ -10,10 +11,13 @@ export default function TenantUtilitiesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [pagination, setPagination] = useState(null);
 
+    // dòng này để lấy query params từ URL
+    const [searchParams, setSearchParams] = useSearchParams();
+
     // Filters
     const [page, setPage] = useState(1);
-    const [type, setType] = useState(""); 
-    const [month, setMonth] = useState(""); 
+    const [type, setType] = useState("");
+    const [month, setMonth] = useState("");
 
     // Modals
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
@@ -37,6 +41,18 @@ export default function TenantUtilitiesPage() {
             setIsLoading(false);
         }
     }, [page, type, month]);
+
+    // MỞ MODAL TỰ ĐỘNG
+    useEffect(() => {
+        // Kiểm tra xem trên URL có param action=submit_reading không
+        if (searchParams.get("action") === "submit_reading") {
+            setIsSubmitModalOpen(true); // Tự động mở modal
+
+            // Xóa param khỏi URL sau khi đã mở để tránh việc F5 lại trang bị tự động mở lại
+            searchParams.delete("action");
+            setSearchParams(searchParams, { replace: true });
+        }
+    }, [searchParams, setSearchParams]);
 
     useEffect(() => {
         fetchReadings();
