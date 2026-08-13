@@ -575,9 +575,12 @@ export default function LandlordLayout() {
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex items-center px-1 z-40 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)] h-[calc(68px+env(safe-area-inset-bottom))]">
 
           {/* 1. Trang chủ */}
-          <NavLink to="/landlord/dashboard" className="flex-1 flex justify-center h-full">
+          <NavLink to="/landlord/dashboard" className="flex-1 relative flex justify-center h-full">
             {({ isActive }) => (
-              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+              <div className={`w-full h-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                {/* HIỆU ỨNG GẠCH TRÊN */}
+                <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-[3px] rounded-b-md transition-all duration-300 ${isActive ? "w-8 bg-brand" : "w-0 bg-transparent"}`}></div>
+
                 <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
                   <i className="fa-solid fa-chart-pie text-[20px]"></i>
                 </div>
@@ -587,11 +590,14 @@ export default function LandlordLayout() {
           </NavLink>
 
           {/* 2. Khu nhà */}
-          <NavLink to="/landlord/properties" className="flex-1 flex justify-center h-full">
+          <NavLink to="/landlord/properties" className="flex-1 relative flex justify-center h-full">
             {({ isActive }) => {
               const active = isActive || isPropertiesGroupActive;
               return (
-                <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${active ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                <div className={`w-full h-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${active ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                  {/* HIỆU ỨNG GẠCH TRÊN */}
+                  <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-[3px] rounded-b-md transition-all duration-300 ${active ? "w-8 bg-brand" : "w-0 bg-transparent"}`}></div>
+
                   <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${active ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
                     <i className="fa-solid fa-building text-[20px]"></i>
                   </div>
@@ -602,9 +608,12 @@ export default function LandlordLayout() {
           </NavLink>
 
           {/* 3. Hóa đơn (Kèm chấm đỏ Badge) */}
-          <NavLink to="/landlord/invoices" className="flex-1 flex justify-center h-full">
+          <NavLink to="/landlord/invoices" className="flex-1 relative flex justify-center h-full">
             {({ isActive }) => (
-              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+              <div className={`w-full h-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                {/* HIỆU ỨNG GẠCH TRÊN */}
+                <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-[3px] rounded-b-md transition-all duration-300 ${isActive ? "w-8 bg-brand" : "w-0 bg-transparent"}`}></div>
+
                 <div className={`relative flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
                   <i className="fa-solid fa-file-invoice-dollar text-[20px]"></i>
                   {/* Chấm đỏ báo có hóa đơn mới */}
@@ -616,9 +625,12 @@ export default function LandlordLayout() {
           </NavLink>
 
           {/* 4. Khách thuê */}
-          <NavLink to="/landlord/tenants" className="flex-1 flex justify-center h-full">
+          <NavLink to="/landlord/tenants" className="flex-1 relative flex justify-center h-full">
             {({ isActive }) => (
-              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+              <div className={`w-full h-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                {/* HIỆU ỨNG GẠCH TRÊN */}
+                <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-[3px] rounded-b-md transition-all duration-300 ${isActive ? "w-8 bg-brand" : "w-0 bg-transparent"}`}></div>
+
                 <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
                   <i className="fa-solid fa-users text-[20px]"></i>
                 </div>
@@ -627,11 +639,10 @@ export default function LandlordLayout() {
             )}
           </NavLink>
 
-          {/* 5. Nút Thêm (Mở Sidebar) */}
-          <button onClick={() => setIsSidebarOpen(true)} className="flex-1 flex justify-center h-full">
-            <div className="w-full flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 transition-all duration-300">
+          {/* 5. Nút Thêm (Mở Sidebar) - Nút này không có trạng thái active nên không cần gạch trên */}
+          <button onClick={() => setIsSidebarOpen(true)} className="flex-1 relative flex justify-center h-full">
+            <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 transition-all duration-300">
               <div className="flex items-center justify-center w-12 h-8 rounded-full bg-transparent scale-100">
-                {/* Đổi icon bars mặc định thành bars-staggered cho hiện đại hơn */}
                 <i className="fa-solid fa-bars-staggered text-[20px]"></i>
               </div>
               <span className="text-[10px] font-medium">Thêm</span>

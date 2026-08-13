@@ -332,7 +332,7 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
 
             {/* 3. KHU VỰC USER AVATAR & DROPDOWN (Đã cập nhật) */}
             <div className="relative ml-1 pl-1 border-l border-slate-200" ref={userMenuRef}>
-              <div 
+              <div
                 className="flex items-center gap-2 cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition-colors"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               >
@@ -355,15 +355,15 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
                     <p className="font-bold text-slate-800 text-[14px]">{user?.name}</p>
                     <p className="text-[12px] text-slate-500">{user?.phone}</p>
                   </div>
-                  
+
                   <div className="p-2 flex flex-col gap-1">
-                    <button 
+                    <button
                       onClick={() => { setIsUserMenuOpen(false); setIsProfileModalOpen(true); }}
                       className="w-full text-left px-3 py-2 text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-brand rounded-lg transition-colors flex items-center gap-2"
                     >
                       <i className="fa-solid fa-lock w-4"></i> Đổi mật khẩu
                     </button>
-                    <NavLink 
+                    <NavLink
                       to="/tenant/account"
                       onClick={() => setIsUserMenuOpen(false)}
                       className="w-full text-left px-3 py-2 text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-brand rounded-lg transition-colors flex items-center gap-2"
@@ -371,7 +371,7 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
                       <i className="fa-regular fa-address-card w-4"></i> Hồ sơ định danh
                     </NavLink>
                     <div className="h-px bg-slate-100 my-1"></div>
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="w-full text-left px-3 py-2 text-[13px] font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
                     >
@@ -403,9 +403,12 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex items-center px-1 z-40 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)] h-[calc(68px+env(safe-area-inset-bottom))]">
 
           {/* 1. Trang chủ */}
-          <NavLink to="/tenant/dashboard" className="flex-1 flex justify-center h-full">
+          <NavLink to="/tenant/dashboard" className="flex-1 relative flex justify-center h-full">
             {({ isActive }) => (
-              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+              <div className={`w-full h-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                {/* HIỆU ỨNG GẠCH TRÊN */}
+                <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-[3px] rounded-b-md transition-all duration-300 ${isActive ? "w-8 bg-brand" : "w-0 bg-transparent"}`}></div>
+
                 <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
                   <i className="fa-solid fa-house text-[20px]"></i>
                 </div>
@@ -415,9 +418,12 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
           </NavLink>
 
           {/* 2. Hóa đơn */}
-          <NavLink to="/tenant/invoices" className="flex-1 flex justify-center h-full">
+          <NavLink to="/tenant/invoices" className="flex-1 relative flex justify-center h-full">
             {({ isActive }) => (
-              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+              <div className={`w-full h-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                {/* HIỆU ỨNG GẠCH TRÊN */}
+                <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-[3px] rounded-b-md transition-all duration-300 ${isActive ? "w-8 bg-brand" : "w-0 bg-transparent"}`}></div>
+
                 <div className={`relative flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
                   <i className="fa-solid fa-file-invoice-dollar text-[20px]"></i>
                 </div>
@@ -427,9 +433,12 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
           </NavLink>
 
           {/* 3. Sự cố */}
-          <NavLink to="/tenant/incidents" className="flex-1 flex justify-center h-full">
+          <NavLink to="/tenant/incidents" className="flex-1 relative flex justify-center h-full">
             {({ isActive }) => (
-              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+              <div className={`w-full h-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                {/* HIỆU ỨNG GẠCH TRÊN */}
+                <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-[3px] rounded-b-md transition-all duration-300 ${isActive ? "w-8 bg-brand" : "w-0 bg-transparent"}`}></div>
+
                 <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
                   <i className="fa-solid fa-screwdriver-wrench text-[20px]"></i>
                 </div>
@@ -439,9 +448,12 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
           </NavLink>
 
           {/* 4. Điện nước */}
-          <NavLink to="/tenant/utilities" className="flex-1 flex justify-center h-full">
+          <NavLink to="/tenant/utilities" className="flex-1 relative flex justify-center h-full">
             {({ isActive }) => (
-              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+              <div className={`w-full h-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                {/* HIỆU ỨNG GẠCH TRÊN */}
+                <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-[3px] rounded-b-md transition-all duration-300 ${isActive ? "w-8 bg-brand" : "w-0 bg-transparent"}`}></div>
+
                 <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
                   <i className="fa-solid fa-droplet text-[20px]"></i>
                 </div>
@@ -451,8 +463,8 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
           </NavLink>
 
           {/* 5. Nút Thêm (Mở Sidebar) */}
-          <button onClick={() => setIsSidebarOpen(true)} className="flex-1 flex justify-center h-full">
-            <div className="w-full flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 transition-all duration-300">
+          <button onClick={() => setIsSidebarOpen(true)} className="flex-1 relative flex justify-center h-full">
+            <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 transition-all duration-300">
               <div className="flex items-center justify-center w-12 h-8 rounded-full bg-transparent scale-100">
                 <i className="fa-solid fa-bars-staggered text-[20px]"></i>
               </div>
@@ -462,9 +474,9 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
         </nav>
 
         {/* 4. RENDER MODAL CẬP NHẬT TÀI KHOẢN */}
-        <UserProfileModal 
-          open={isProfileModalOpen} 
-          onClose={() => setIsProfileModalOpen(false)} 
+        <UserProfileModal
+          open={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
         />
 
       </main>
