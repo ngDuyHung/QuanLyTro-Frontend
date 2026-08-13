@@ -335,7 +335,7 @@ export default function LandlordDashboard() {
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Cọc giữ chỗ</span>
+                  <span className="text-[14px] font-semibold text-slate-700 text-center leading-tight">Cọc giữ chỗ</span>
                 </Link>
 
                 <Link to="/landlord/rooms" state={{ filterStatus: 'available' }} className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
@@ -347,14 +347,14 @@ export default function LandlordDashboard() {
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Lập hợp<br />đồng mới</span>
+                  <span className="text-[14px] font-semibold text-slate-700 text-center leading-tight">Lập hợp<br />đồng mới</span>
                 </Link>
 
                 <Link to="/landlord/rooms" state={{ filterStatus: 'occupied' }} className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
                   <div className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center relative">
                     <i className="fa-solid fa-file-invoice-dollar text-[22px]"></i>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Lập hóa đơn</span>
+                  <span className="text-[14px] font-semibold text-slate-700 text-center leading-tight">Lập hóa đơn</span>
                 </Link>
               </>
             )}
@@ -384,28 +384,28 @@ export default function LandlordDashboard() {
                   <div className="w-10 h-10 rounded-full bg-[#0e8b4d]/10 text-[#0e8b4d] flex items-center justify-center relative">
                     <i className="fa-solid fa-house-medical text-[22px]"></i>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Khu nhà</span>
+                  <span className="text-[14px] font-semibold text-slate-700 text-center leading-tight">Khu nhà</span>
                 </Link>
 
                 <Link to="/landlord/rooms" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
                   <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center relative">
                     <i className="fa-solid fa-door-open text-[22px]"></i>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Phòng trọ</span>
+                  <span className="text-[14px] font-semibold text-slate-700 text-center leading-tight">Phòng trọ</span>
                 </Link>
 
                 <Link to="/landlord/tenants" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
                   <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center relative">
                     <i className="fa-solid fa-users text-[22px]"></i>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Khách thuê</span>
+                  <span className="text-[14px] font-semibold text-slate-700 text-center leading-tight">Khách thuê</span>
                 </Link>
 
                 <Link to="/landlord/utilities" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">
                   <div className="w-10 h-10 rounded-full bg-yellow-50 text-yellow-500 flex items-center justify-center relative">
                     <i className="fa-solid fa-bolt text-[22px]"></i>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 text-center leading-tight">Điện nước</span>
+                  <span className="text-[14px] font-semibold text-slate-700 text-center leading-tight">Điện nước</span>
                 </Link>
 
                 <Link to="/landlord/invoices" className="bg-white border border-slate-100 rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2.5 shadow-sm active:scale-95 transition-transform">

@@ -360,94 +360,103 @@ export default function InvoicesTable({
               const statusConf = getStatusConfig(invoice.status);
 
               return (
-                <div key={invoice.id} className="bg-white border border-slate-200 border-l-[2px] border-l-emerald-400 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                  {/* Header: Tên phòng + Trạng thái */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                <div key={invoice.id} className="relative bg-white rounded-xl shadow-sm border-[1.5px] border-emerald-500 flex flex-col overflow-hidden mb-3">
+
+                  {/* --- PHẦN 1: HEADER (Phòng & Trạng thái) --- */}
+                  <div className="flex items-start justify-between p-3 pb-2">
                     <div className="flex flex-col">
-                      <span className="font-bold text-slate-800 text-[14px] leading-none">{invoice.room?.name || "—"}</span>
-                      <span className="text-[11px] text-slate-500 mt-1">{invoice.property?.name || "—"}</span>
+                      <div className="flex items-center gap-1.5 font-bold text-slate-900 text-[16px]">
+                        <i className="fa-solid fa-house-chimney text-emerald-600 text-[14px]"></i> {invoice.room?.name || "—"}
+                      </div>
+                      <div className="text-[12px] font-medium text-slate-500 mt-0.5">{invoice.property?.name || "—"}</div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <span className={`px-2.5 py-1 border text-[10px] font-semibold rounded-md flex items-center gap-1.5 w-fit ${statusConf.className}`}>
-                        <i className={`fa-solid ${statusConf.icon} text-[10px]`}></i> {statusConf.label}
+                      <span className={`px-2 py-1 border text-[11px] font-bold rounded-lg flex items-center gap-1 w-fit ${statusConf.className}`}>
+                        <i className={`fa-solid ${statusConf.icon}`}></i> {statusConf.label}
                       </span>
-                      {(invoice.status == 'issued' || invoice.status == 'partially_paid')
-                        && invoice.due_date
-                        && calculateOverdueDays(invoice.due_date) > 0 && (
-                          <span className="text-[10px] text-red-500 font-semibold italic">
-                            Trễ {calculateOverdueDays(invoice.due_date)} ngày
+                      {(invoice.status === 'issued' || invoice.status === 'partially_paid') && invoice.due_date && calculateOverdueDays(invoice.due_date) > 0 && (
+                        <span className="text-[10px] text-red-600 font-bold italic bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
+                          Trễ {calculateOverdueDays(invoice.due_date)} ngày
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* --- PHẦN 2: THÔNG TIN HÓA ĐƠN & SỐ TIỀN (Gộp ngang để tiết kiệm chiều cao) --- */}
+                  <div className="px-3 pb-3">
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex flex-col gap-2">
+
+                      {/* Dòng trên: HĐ & Kỳ */}
+                      <div className="flex justify-between items-center border-b border-slate-200/70 pb-2">
+                        <span className="text-[12px] font-bold text-slate-600 flex items-center gap-1.5">
+                          <i className="fa-regular fa-file-lines text-slate-400 text-[13px]"></i> {invoice.invoice_code}
+                        </span>
+                        <span className="text-[12px] font-bold text-slate-600">Kỳ: {formatDate(invoice.period_to)}</span>
+                      </div>
+
+                      {/* Dòng dưới: Khối Tiền (Trái: Cần thu | Phải: Tóm tắt) */}
+                      <div className="flex justify-between items-center pt-0.5">
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-0.5">
+                            {invoice.status === 'paid' ? 'Đã thanh toán' : 'Cần thu (Còn nợ)'}
                           </span>
-                        )}
+                          <span className={`text-[20px] font-black leading-none tracking-tight ${invoice.status === 'paid' ? 'text-green-600' : 'text-emerald-600'}`}>
+                            {formatCurrency(invoice.remaining_amount)} <span className="text-[14px] underline decoration-slate-300 font-bold ml-0.5">đ</span>
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col items-end text-[11px] gap-0.5">
+                          <div className="text-slate-500">Tổng: <span className="font-bold text-slate-700">{formatCurrency(invoice.total_amount)}</span></div>
+                          {Number(invoice.discount_amount) > 0 && (
+                            <div className="text-slate-500">Giảm: <span className="font-bold text-red-500">-{formatCurrency(invoice.discount_amount)}</span></div>
+                          )}
+                          <div className="text-slate-500">Đã trả: <span className="font-bold text-slate-700">{formatCurrency(invoice.paid_amount)}</span></div>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
 
-                  {/* Body: Chi tiết Hóa đơn */}
-                  <div className="p-4 flex flex-col gap-3">
-                    <div className="flex justify-between items-center">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-800 text-[13px] flex items-center gap-1.5">
-                          <i className="fa-regular fa-file-lines text-slate-400 text-[12px]"></i>
-                          {invoice.invoice_code}
-                        </span>
-                        <span className="text-[11px] text-slate-500 mt-0.5">Kỳ: {formatDate(invoice.period_to)}</span>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-[11px] text-slate-500 mb-0.5">Tổng tiền</span>
-                        <span className="font-bold text-slate-800 text-[14px]">{formatCurrency(invoice.total_amount)} đ</span>
-                        {Number(invoice.discount_amount) > 0 && (
-                          <span className="text-[10px] text-red-500 font-medium">- {formatCurrency(invoice.discount_amount)}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Hộp tóm tắt công nợ */}
-                    <div className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-100 mt-1">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-500 mb-0.5">Đã thu</span>
-                        <span className="font-medium text-slate-600 text-[13px]">{formatCurrency(invoice.paid_amount)}</span>
-                      </div>
-                      <div className="h-6 w-px bg-slate-200 mx-2"></div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-[10px] text-slate-500 mb-0.5">Còn nợ</span>
-                        <span className={`font-bold text-[13px] ${Number(invoice.remaining_amount) > 0 ? 'text-red-500' : 'text-slate-400'}`}>
-                          {formatCurrency(invoice.remaining_amount)}
-                        </span>
-                      </div>
-                    </div>
+                  {/* --- PHẦN 3: ĐƯỜNG CẮT RĂNG CƯA (TICKET EFFECT) --- */}
+                  <div className="relative border-t-[1.5px] border-dashed border-emerald-300">
+                    {/* Khoét 2 lỗ viền mảnh tương xứng */}
+                    <div className="absolute -left-[9px] -top-[9px] w-4 h-4 rounded-full bg-slate-50 border-r-[1.5px] border-emerald-500"></div>
+                    <div className="absolute -right-[9px] -top-[9px] w-4 h-4 rounded-full bg-slate-50 border-l-[1.5px] border-emerald-500"></div>
                   </div>
 
-                  {/* Footer: Thao tác (Tương thích logic như PC) */}
-                  <div className="px-3 py-2.5 bg-slate-50 border-t border-slate-100 flex gap-2">
-                    {/* Nút Xem (Lúc nào cũng hiện) */}
+                  {/* --- PHẦN 4: THAO TÁC (FOOTER) --- */}
+                  <div className="bg-emerald-50/40 p-3 flex gap-2">
+
+                    {/* Nút Xem (Thu gọn padding) */}
                     <button
                       type="button"
                       onClick={() => onOpenViewModal?.(invoice)}
-                      className="flex-1 py-2 border border-slate-200 rounded-lg bg-white text-[12px] font-medium text-slate-600 active:bg-slate-100 flex items-center justify-center gap-1.5 shadow-sm"
+                      className="flex-1 py-2.5 border-2 border-slate-200 rounded-xl bg-white text-[13px] font-bold text-slate-700 active:bg-slate-100 flex items-center justify-center gap-1.5 shadow-sm"
                     >
-                      <i className="fa-solid fa-print"></i> Xem / In
+                      <i className="fa-solid fa-print text-[14px]"></i> Xem / In
                     </button>
 
-                    {/* HIỂN THỊ DÀNH RIÊNG CHO HÓA ĐƠN NHÁP */}
+                    {/* HÓA ĐƠN NHÁP */}
                     {invoice.status === 'draft' && (
                       <>
                         <button
                           type="button"
                           onClick={() => onOpenIssueConfirm?.(invoice)}
-                          className="flex-1 py-2 border border-blue-200 rounded-lg bg-blue-50 text-[12px] font-medium text-blue-600 active:bg-blue-100 flex items-center justify-center gap-1.5 shadow-sm"
+                          className="flex-[1.5] py-2.5 border-2 border-blue-300 rounded-xl bg-blue-50 text-[13px] font-bold text-blue-700 active:bg-blue-100 flex items-center justify-center gap-1.5 shadow-sm"
                         >
-                          <i className="fa-regular fa-paper-plane"></i> Phát hành
+                          <i className="fa-regular fa-paper-plane text-[14px]"></i> Phát hành
                         </button>
                         <button
                           type="button"
                           onClick={() => onOpenDeleteModal?.(invoice)}
-                          className="w-10 flex shrink-0 items-center justify-center border border-red-100 rounded-lg bg-white text-[12px] text-red-500 active:bg-red-50 shadow-sm"
+                          className="w-11 flex shrink-0 items-center justify-center border-2 border-red-200 rounded-xl bg-white text-[14px] text-red-500 active:bg-red-50 shadow-sm"
                         >
                           <i className="fa-regular fa-trash-can"></i>
                         </button>
                       </>
                     )}
 
-                    {/* HIỂN THỊ DÀNH CHO HÓA ĐƠN ĐÃ PHÁT HÀNH/CÒN NỢ */}
+                    {/* HÓA ĐƠN ĐÃ PHÁT HÀNH/CÒN NỢ */}
                     {['issued', 'partially_paid', 'overdue'].includes(invoice.status) && (
                       <>
                         {(() => {
@@ -460,9 +469,9 @@ export default function InvoicesTable({
                               <button
                                 type="button"
                                 onClick={() => onOpenPaymentModal?.(invoice)}
-                                className="flex-1 py-2 border border-amber-300 rounded-lg bg-amber-50 text-[12px] font-bold text-amber-600 hover:bg-amber-100 flex items-center justify-center gap-1.5 shadow-sm animate-pulse"
+                                className="flex-[1.5] py-2.5 border-2 border-amber-400 rounded-xl bg-amber-50 text-[13px] font-bold text-amber-700 hover:bg-amber-100 flex items-center justify-center gap-1.5 shadow-sm animate-pulse"
                               >
-                                <i className="fa-solid fa-bell"></i> Duyệt tiền
+                                <i className="fa-solid fa-bell text-[14px]"></i> Duyệt tiền
                               </button>
                             );
                           }
@@ -471,27 +480,26 @@ export default function InvoicesTable({
                             <button
                               type="button"
                               onClick={() => onOpenPaymentModal?.(invoice)}
-                              className="flex-1 py-2 border border-green-200 rounded-lg bg-green-50 text-[12px] font-medium text-green-700 active:bg-green-100 flex items-center justify-center gap-1.5 shadow-sm"
+                              className="flex-[1.5] py-2.5 border-2 border-green-600 rounded-xl bg-green-600 text-[13px] font-bold text-white active:bg-green-700 flex items-center justify-center gap-1.5 shadow-sm"
                             >
-                              <i className="fa-solid fa-sack-dollar"></i> Thu tiền
+                              <i className="fa-solid fa-sack-dollar text-[14px]"></i> Thu tiền
                             </button>
                           );
                         })()}
 
-                        {/* Chỉ cho Hủy khi chưa thu đồng nào */}
+                        {/* Hủy */}
                         {Number(invoice.paid_amount) === 0 && (
                           <button
                             type="button"
                             onClick={() => onOpenCancelModal?.(invoice)}
-                            className="w-10 flex shrink-0 items-center justify-center border border-slate-200 rounded-lg bg-white text-[12px] text-slate-400 active:bg-slate-50 shadow-sm"
+                            className="w-11 flex shrink-0 items-center justify-center border-2 border-slate-200 rounded-xl bg-white text-[14px] text-slate-500 active:bg-slate-50 shadow-sm"
                           >
-                            <i className="fa-solid fa-ban text-[12px]"></i>
+                            <i className="fa-solid fa-ban"></i>
                           </button>
                         )}
                       </>
                     )}
                   </div>
-
                 </div>
               );
             })
