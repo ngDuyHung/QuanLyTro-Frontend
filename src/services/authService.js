@@ -12,6 +12,9 @@ const authService = {
   me: () => api.get("/auth/me"),
 
   logout: () => api.post("/auth/logout"),
+
+  updateProfile: (data) => api.put("/auth/profile", data),
+  changePassword: (data) => api.put("/auth/password", data),
 };
 
 export default authService;

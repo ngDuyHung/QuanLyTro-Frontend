@@ -1,4 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import tenantService from "@/services/tenantService";
 
 // Hàm helper để render nhãn trạng thái lịch sử
 const getHistoryStatusConfig = (status) => {
@@ -21,6 +23,8 @@ const getInitial = (name) => {
 };
 
 export default function ViewTenantModal({ open, tenant, onClose }) {
+    const [isResettingPass, setIsResettingPass] = useState(false);
+
     useEffect(() => {
         if (open) {
             document.body.style.overflow = "hidden";
@@ -31,6 +35,23 @@ export default function ViewTenantModal({ open, tenant, onClose }) {
             document.body.style.overflow = "";
         };
     }, [open]);
+
+    // HÀM XỬ LÝ NÚT KHÔI PHỤC MẬT KHẨU
+    const handleResetPassword = async () => {
+        if (!window.confirm(`Bạn có chắc chắn muốn khôi phục mật khẩu của khách thuê này về mặc định (là số điện thoại: ${tenant.phone}) không?`)) {
+            return;
+        }
+
+        try {
+            setIsResettingPass(true);
+            const res = await tenantService.resetPassword(tenant.id);
+            toast.success(res.data?.message || "Đã khôi phục mật khẩu thành công!");
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Lỗi khi khôi phục mật khẩu.");
+        } finally {
+            setIsResettingPass(false);
+        }
+    };
 
     if (!open || !tenant) return null;
 
@@ -144,7 +165,52 @@ export default function ViewTenantModal({ open, tenant, onClose }) {
                                 </div>
                             </div>
 
-                            {/* 3. Hình ảnh giấy tờ */}
+                            {/* 3. TÀI KHOẢN APP KHÁCH THUÊ */}
+                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="bg-slate-50/80 px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <i className="fa-solid fa-mobile-screen-button text-emerald-500"></i>
+                                        <h3 className="text-[14px] font-bold text-slate-800">Tài khoản App Khách thuê</h3>
+                                    </div>
+                                    {tenant.user_id && (
+                                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold rounded">Đã kích hoạt</span>
+                                    )}
+                                </div>
+                                <div className="p-4">
+                                    {tenant.user_id ? (
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 border border-slate-100 p-3 rounded-xl">
+                                            <div>
+                                                <p className="text-[12px] text-slate-500 mb-1">Tên đăng nhập (SĐT)</p>
+                                                <p className="text-[15px] font-bold text-slate-800">{tenant.phone}</p>
+                                            </div>
+                                            <button
+                                                onClick={handleResetPassword}
+                                                disabled={isResettingPass}
+                                                className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[12px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50"
+                                            >
+                                                {isResettingPass ? (
+                                                    <i className="fa-solid fa-circle-notch fa-spin text-brand"></i>
+                                                ) : (
+                                                    <i className="fa-solid fa-rotate-right text-brand"></i>
+                                                )}
+                                                Khôi phục mật khẩu
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4">
+                                            <p className="text-[13px] text-slate-500">Khách thuê này chưa được hệ thống cấp tài khoản.</p>
+                                        </div>
+                                    )}
+                                    <div className="mt-3 bg-blue-50 border border-blue-100 p-2.5 rounded-lg flex items-start gap-2">
+                                        <i className="fa-solid fa-circle-info text-blue-500 mt-0.5 text-[12px]"></i>
+                                        <p className="text-[11px] text-blue-700 leading-relaxed">
+                                            Mật khẩu mặc định sau khi khôi phục chính là <b>Số điện thoại</b> của khách thuê.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 4. Hình ảnh giấy tờ */}
                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                                 <div className="bg-slate-50/80 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
                                     <i className="fa-regular fa-images text-orange-500"></i>

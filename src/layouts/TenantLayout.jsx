@@ -1,20 +1,28 @@
 import { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import useAuthStore from "@/stores/authStore"; // Kiểm tra lại đường dẫn này cho đúng với dự án của bạn
+import useAuthStore from "@/stores/authStore";
 import { toast } from "react-toastify";
 import notificationService from "@/services/notificationService";
 import api from "@/services/api";
 
-export default function LandlordLayout() {
+// 1. IMPORT MODAL TÀI KHOẢN VÀO ĐÂY
+import UserProfileModal from "@/components/user/UserProfileModal";
+
+export default function TenantLayout() { // Đổi tên component cho chuẩn
   const { user, clearAuth } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 1. STATE ĐIỀU KHIỂN SIDEBAR TRÊN MOBILE
+  // STATE ĐIỀU KHIỂN SIDEBAR & THÔNG BÁO
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const notifRef = useRef(null);
+
+  // 2. STATE ĐIỀU KHIỂN DROPDOWN & MODAL TÀI KHOẢN
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
     const fetchLatestNotifs = async () => {
@@ -28,17 +36,19 @@ export default function LandlordLayout() {
     fetchLatestNotifs();
   }, []);
 
-  // Xử lý click ra ngoài để đóng dropdown thông báo
+  // Xử lý click ra ngoài để đóng dropdown thông báo & dropdown user
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
         setIsNotifOpen(false);
       }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
 
   // Khởi tạo một Ref để trỏ vào khung cuộn nội dung
   const scrollContainerRef = useRef(null);
@@ -49,10 +59,9 @@ export default function LandlordLayout() {
       scrollContainerRef.current.scrollTo(0, 0);
     }
   }, [location.pathname]);
-  // -----------------------------
 
   const handleLogout = async () => {
-    // THÊM: Xóa Push Token trước khi logout
+    // Xóa Push Token trước khi logout
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.ready;
@@ -70,7 +79,7 @@ export default function LandlordLayout() {
     navigate("/login");
   };
 
-  // --- THÊM: ĐỒNG BỘ NGẦM PUSH TOKEN ---
+  // --- ĐỒNG BỘ NGẦM PUSH TOKEN ---
   const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
@@ -113,7 +122,6 @@ export default function LandlordLayout() {
 
     syncPushSubscription();
   }, []);
-  // -------------------------------------
 
   const navLinkClasses = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-colors ${isActive
@@ -121,17 +129,12 @@ export default function LandlordLayout() {
       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
     }`;
 
-  // Hàm check active thủ công cho menu "Khu nhà & Phòng"
-  const isPropertiesGroupActive =
-    location.pathname.includes("/landlord/properties") ||
-    location.pathname.includes("/landlord/rooms");
-
-  // Hàm đóng sidebar (dùng khi click vào overlay hoặc click vào 1 link trên mobile)
+  // Hàm đóng sidebar
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
     <div className="fixed inset-0 bg-[#f8fafc] text-slate-800 overflow-hidden flex font-sans">
-      {/* 2. LỚP PHỦ OVERLAY (Chỉ hiện trên Mobile khi isSidebarOpen == true) */}
+      {/* LỚP PHỦ OVERLAY */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-50 lg:hidden"
@@ -140,7 +143,6 @@ export default function LandlordLayout() {
       )}
 
       {/* ================= SIDEBAR ================= */}
-      {/* 3. ĐIỀU CHỈNH CLASS TRANSLATE DỰA VÀO STATE */}
       <aside
         className={`fixed lg:relative w-[260px] bg-white border-r border-slate-200 flex flex-col h-full z-50 shrink-0 transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
@@ -152,112 +154,73 @@ export default function LandlordLayout() {
             <h1 className="text-[15px] font-bold text-brand leading-tight">
               Nhà Trọ Kiêu Giang
             </h1>
-            <p className="text-[12px] text-slate-500">Cổng thông tin người thuê</p>
+            <p className="text-[12px] text-slate-500">Cổng thông tin khách thuê</p>
           </div>
         </div>
 
-        {/* NAVIGATION LIST (Thêm sự kiện onClick={closeSidebar} để bấm menu xong là tự thu gọn trên đt) */}
+        {/* NAVIGATION LIST */}
         <nav className="flex-1 overflow-y-auto sidebar-scroll px-4 py-4 space-y-1">
-          <NavLink
-            to="/tenant/dashboard"
-            className={navLinkClasses}
-            onClick={closeSidebar}
-          >
+          <NavLink to="/tenant/dashboard" className={navLinkClasses} onClick={closeSidebar}>
             <i className="fa-solid fa-house w-5 text-center"></i>
             <span>Trang chủ</span>
           </NavLink>
 
-          <NavLink
-            to="/tenant/invoices"
-            className={navLinkClasses}
-            onClick={closeSidebar}
-          >
+          <NavLink to="/tenant/invoices" className={navLinkClasses} onClick={closeSidebar}>
             <div className="flex items-center gap-3 flex-1">
               <i className="fa-solid fa-file-invoice-dollar w-5 text-center"></i>
               <span>Hóa đơn</span>
             </div>
-
           </NavLink>
 
-          <NavLink
-            to="/tenant/utilities"
-            className={navLinkClasses}
-            onClick={closeSidebar}
-          >
+          <NavLink to="/tenant/utilities" className={navLinkClasses} onClick={closeSidebar}>
             <i className="fa-solid fa-droplet w-5 text-center"></i>
             <span>Điện nước</span>
           </NavLink>
 
-          <NavLink
-            to="/tenant/contracts"
-            className={navLinkClasses}
-            onClick={closeSidebar}
-          >
+          <NavLink to="/tenant/contracts" className={navLinkClasses} onClick={closeSidebar}>
             <div className="flex items-center gap-3 flex-1">
               <i className="fa-solid fa-file-signature w-5 text-center"></i>
               <span>Hợp đồng</span>
             </div>
-
           </NavLink>
 
-          <NavLink
-            to="/tenant/incidents"
-            className={navLinkClasses}
-            onClick={closeSidebar}
-          >
+          <NavLink to="/tenant/incidents" className={navLinkClasses} onClick={closeSidebar}>
             <i className="fa-solid fa-screwdriver-wrench w-5 text-center"></i>
             <span>Yêu cầu sửa chữa</span>
           </NavLink>
 
-          <NavLink
-            to="/tenant/notifications"
-            className={navLinkClasses}
-            onClick={closeSidebar}
-          >
+          <NavLink to="/tenant/notifications" className={navLinkClasses} onClick={closeSidebar}>
             <i className="fa-regular fa-bell w-5 text-center"></i>
             <span>Thông báo</span>
           </NavLink>
 
-          <NavLink
-            to="/tenant/members"
-            className={navLinkClasses}
-            onClick={closeSidebar}
-          >
+          <NavLink to="/tenant/members" className={navLinkClasses} onClick={closeSidebar}>
             <i className="fa-solid fa-users w-5 text-center"></i>
             <span>Thành viên</span>
           </NavLink>
 
-          <NavLink
-            to="/tenant/account"
-            className={navLinkClasses}
-            onClick={closeSidebar}
-          >
-            <i className="fa-solid fa-user   w-5 text-center"></i>
-            <span>Tài khoản</span>
+          <NavLink to="/tenant/account" className={navLinkClasses} onClick={closeSidebar}>
+            <i className="fa-solid fa-user w-5 text-center"></i>
+            <span>Hồ sơ lưu trú</span>
           </NavLink>
-
         </nav>
-
 
         {/* BOTTOM SECTION */}
         <div className="p-4 shrink-0 flex flex-col gap-4 border-t border-slate-100">
-          {/* HỖ TRỢ */}
           <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center">
                 <i className="fa-solid fa-phone-volume"></i>
               </div>
               <div>
-                <p className="text-[12px] text-slate-500">Liện hệ chủ trọ</p>
+                <p className="text-[12px] text-slate-500">Liên hệ quản lý</p>
                 <p className="text-[13px] font-semibold text-slate-800">
                   0987 667 849
                 </p>
               </div>
             </div>
-            <span className="text-[11px] text-slate-400">8:00 - 20:00</span>
           </div>
 
-          {/* ĐĂNG XUẤT */}
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-[14px] font-medium transition-colors"
@@ -269,11 +232,10 @@ export default function LandlordLayout() {
       </aside>
 
       {/* ================= MAIN CONTENT AREA ================= */}
-      <main className="flex-1 flex flex-col h-dvh min-w-0 bg-slate-50">
+      <main className="flex-1 flex flex-col h-dvh min-w-0 bg-slate-50 relative">
         {/* HEADER */}
-        <header className="h-[80px] bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 shrink-0">
+        <header className="h-[75px] bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 shrink-0">
           <div className="flex items-center gap-3">
-            {/* 4. NÚT MỞ SIDEBAR TRÊN MOBILE */}
             <button
               onClick={() => setIsSidebarOpen(true)}
               className="lg:hidden p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
@@ -282,22 +244,17 @@ export default function LandlordLayout() {
             </button>
 
             <div className="flex flex-col">
-              <h2 className="text-[18px] lg:text-[20px] font-bold text-slate-800 leading-tight">
-                Xin chào {user?.name || "Khách thuê"} 👋
+              <h2 className="text-[17px] lg:text-[20px] font-bold text-slate-800 leading-tight">
+                Xin chào, {user?.name || "Khách thuê"} 👋
               </h2>
               <div className="hidden sm:flex items-center text-[12px] text-slate-500 mt-0.5">
-                <span className="text-slate-700">Chào mừng bạn trở lại. Dưới đây là thông tin phòng và các hoạt động của bạn.</span>
+                <span className="text-slate-700">Theo dõi thông tin và chi phí phòng trọ dễ dàng.</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* <button className="hidden md:flex bg-white text-brand border border-green-200 hover:bg-green-50 px-4 py-2 rounded-full text-sm font-semibold items-center gap-2 transition-colors">
-              <i className="fa-regular fa-circle-question"></i>
-              <span className="hidden lg:inline">Hướng dẫn sử dụng</span>
-            </button> */}
-
-            {/* KHU VỰC NÚT VÀ MENU THÔNG BÁO */}
+            {/* THÔNG BÁO */}
             <div className="relative mx-1" ref={notifRef}>
               <button
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
@@ -312,20 +269,13 @@ export default function LandlordLayout() {
                 )}
               </button>
 
-              {/* DROPDOWN MENU */}
+              {/* DROPDOWN MENU THÔNG BÁO */}
               {isNotifOpen && (
                 <div className="fixed left-4 right-4 top-[70px] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-3 sm:w-[380px] bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 overflow-hidden z-[100] flex flex-col sm:origin-top-right animate-[fadeIn_0.2s_ease-out]">
-
-                  {/* Tiêu đề Dropdown */}
                   <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 backdrop-blur-sm shrink-0">
-                    <h3 className="font-bold text-slate-800 text-[15px]">Thông báo hệ thống</h3>
-                    {/* Chức năng đánh dấu đã đọc (bạn có thể phát triển API sau) */}
-                    <button className="text-[12px] font-semibold text-brand hover:text-green-700 transition-colors">
-                      Đánh dấu đã đọc
-                    </button>
+                    <h3 className="font-bold text-slate-800 text-[15px]">Thông báo mới</h3>
                   </div>
 
-                  {/* Danh sách thông báo cuộn */}
                   <div className="max-h-[60vh] sm:max-h-[360px] overflow-y-auto no-scrollbar flex flex-col bg-white">
                     {notifications.length === 0 ? (
                       <div className="py-10 text-center flex flex-col items-center justify-center gap-2 text-slate-400">
@@ -336,7 +286,6 @@ export default function LandlordLayout() {
                       </div>
                     ) : (
                       notifications.map((item) => {
-                        // Tùy chỉnh icon theo type
                         const getIcon = (type) => {
                           if (type === 'billing') return { c: 'text-red-500 bg-red-50', i: 'fa-file-invoice-dollar' };
                           if (type === 'warning') return { c: 'text-amber-500 bg-amber-50', i: 'fa-triangle-exclamation' };
@@ -368,32 +317,71 @@ export default function LandlordLayout() {
                     )}
                   </div>
 
-                  {/* Nút Xem tất cả */}
                   <div className="p-3 border-t border-slate-100 text-center bg-slate-50 shrink-0">
                     <NavLink
-                      to="/landlord/notifications"
+                      to="/tenant/notifications"
                       onClick={() => setIsNotifOpen(false)}
                       className="text-[13px] font-bold text-brand hover:text-green-700 w-full block py-1.5 transition-colors"
                     >
                       Xem tất cả thông báo <i className="fa-solid fa-arrow-right text-[11px] ml-1"></i>
                     </NavLink>
                   </div>
-
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-2 cursor-pointer pl-1 border-l border-slate-200 ml-1">
-              <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 text-lg shrink-0 overflow-hidden">
-                <i className="fa-solid fa-user"></i>
+            {/* 3. KHU VỰC USER AVATAR & DROPDOWN (Đã cập nhật) */}
+            <div className="relative ml-1 pl-1 border-l border-slate-200" ref={userMenuRef}>
+              <div 
+                className="flex items-center gap-2 cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition-colors"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              >
+                <div className="w-9 h-9 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-sm">
+                  {user?.name?.charAt(0)?.toUpperCase() || "T"}
+                </div>
+                <div className="hidden sm:flex flex-col pr-1">
+                  <span className="text-[14px] font-bold text-slate-800 leading-tight">
+                    {user?.name || "Người thuê"}
+                  </span>
+                  <span className="text-[12px] text-slate-500">{user?.phone || 'Tài khoản'}</span>
+                </div>
+                <i className="fa-solid fa-chevron-down text-[10px] text-slate-400 hidden sm:block"></i>
               </div>
-              <div className="hidden sm:flex flex-col">
-                <span className="text-[14px] font-bold text-slate-800 leading-tight">
-                  {user?.name || "Người thuê"}
-                </span>
-                <span className="text-[12px] text-slate-500">Người thuê</span>
-              </div>
+
+              {/* USER MENU DROPDOWN */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-[220px] bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden z-[100] animate-[fadeIn_0.2s_ease-out]">
+                  <div className="px-4 py-3 border-b border-slate-50 sm:hidden">
+                    <p className="font-bold text-slate-800 text-[14px]">{user?.name}</p>
+                    <p className="text-[12px] text-slate-500">{user?.phone}</p>
+                  </div>
+                  
+                  <div className="p-2 flex flex-col gap-1">
+                    <button 
+                      onClick={() => { setIsUserMenuOpen(false); setIsProfileModalOpen(true); }}
+                      className="w-full text-left px-3 py-2 text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-brand rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <i className="fa-solid fa-lock w-4"></i> Đổi mật khẩu
+                    </button>
+                    <NavLink 
+                      to="/tenant/account"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="w-full text-left px-3 py-2 text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-brand rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <i className="fa-regular fa-address-card w-4"></i> Hồ sơ định danh
+                    </NavLink>
+                    <div className="h-px bg-slate-100 my-1"></div>
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full text-left px-3 py-2 text-[13px] font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <i className="fa-solid fa-arrow-right-from-bracket w-4"></i> Đăng xuất
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+
           </div>
         </header>
 
@@ -406,63 +394,58 @@ export default function LandlordLayout() {
           <footer className="hidden lg:block py-4 text-center border-t border-slate-200/60 mx-8 shrink-0 relative z-10 bg-slate-50">
             <p className="text-[12px] text-slate-400">
               <i className="fa-solid fa-shield-halved text-gray-400"></i> Thông tin
-              của bạn được bảo mật tuyệt đối | © 2025 Nhà Trọ KieuGiang.
+              của bạn được bảo mật tuyệt đối | © 2026 Nhà Trọ Kiêu Giang.
             </p>
           </footer>
         </div>
 
-        {/* ================= BOTTOM NAVIGATION (CHỈ HIỂN THỊ TRÊN MOBILE) ================= */}
+        {/* ================= BOTTOM NAVIGATION (MOBILE) ĐÃ SỬA LẠI ĐÚNG ROUTE TENANT ================= */}
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex items-center px-1 z-40 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)] h-[calc(68px+env(safe-area-inset-bottom))]">
 
           {/* 1. Trang chủ */}
-          <NavLink to="/landlord/dashboard" className="flex-1 flex justify-center h-full">
+          <NavLink to="/tenant/dashboard" className="flex-1 flex justify-center h-full">
             {({ isActive }) => (
               <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
                 <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
-                  <i className="fa-solid fa-chart-pie text-[20px]"></i>
+                  <i className="fa-solid fa-house text-[20px]"></i>
                 </div>
                 <span className={`text-[10px] transition-all duration-300 ${isActive ? "font-bold" : "font-medium"}`}>Trang chủ</span>
               </div>
             )}
           </NavLink>
 
-          {/* 2. Khu nhà */}
-          <NavLink to="/landlord/properties" className="flex-1 flex justify-center h-full">
-            {({ isActive }) => {
-              const active = isActive || isPropertiesGroupActive;
-              return (
-                <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${active ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
-                  <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${active ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
-                    <i className="fa-solid fa-building text-[20px]"></i>
-                  </div>
-                  <span className={`text-[10px] transition-all duration-300 ${active ? "font-bold" : "font-medium"}`}>Khu nhà</span>
-                </div>
-              );
-            }}
-          </NavLink>
-
-          {/* 3. Hóa đơn (Kèm chấm đỏ Badge) */}
-          <NavLink to="/landlord/invoices" className="flex-1 flex justify-center h-full">
+          {/* 2. Hóa đơn */}
+          <NavLink to="/tenant/invoices" className="flex-1 flex justify-center h-full">
             {({ isActive }) => (
               <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
                 <div className={`relative flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
                   <i className="fa-solid fa-file-invoice-dollar text-[20px]"></i>
-                  {/* Chấm đỏ báo có hóa đơn mới */}
-                  <span className="absolute top-1 right-2.5 w-2 h-2 bg-red-500 border border-white rounded-full"></span>
                 </div>
                 <span className={`text-[10px] transition-all duration-300 ${isActive ? "font-bold" : "font-medium"}`}>Hóa đơn</span>
               </div>
             )}
           </NavLink>
 
-          {/* 4. Khách thuê */}
-          <NavLink to="/landlord/tenants" className="flex-1 flex justify-center h-full">
+          {/* 3. Sự cố */}
+          <NavLink to="/tenant/incidents" className="flex-1 flex justify-center h-full">
             {({ isActive }) => (
               <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
                 <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
-                  <i className="fa-solid fa-users text-[20px]"></i>
+                  <i className="fa-solid fa-screwdriver-wrench text-[20px]"></i>
                 </div>
-                <span className={`text-[10px] transition-all duration-300 ${isActive ? "font-bold" : "font-medium"}`}>Khách thuê</span>
+                <span className={`text-[10px] transition-all duration-300 ${isActive ? "font-bold" : "font-medium"}`}>Sự cố</span>
+              </div>
+            )}
+          </NavLink>
+
+          {/* 4. Điện nước */}
+          <NavLink to="/tenant/utilities" className="flex-1 flex justify-center h-full">
+            {({ isActive }) => (
+              <div className={`w-full flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? "text-brand" : "text-slate-400 hover:text-slate-600"}`}>
+                <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${isActive ? "bg-green-50 scale-110" : "bg-transparent scale-100"}`}>
+                  <i className="fa-solid fa-droplet text-[20px]"></i>
+                </div>
+                <span className={`text-[10px] transition-all duration-300 ${isActive ? "font-bold" : "font-medium"}`}>Điện nước</span>
               </div>
             )}
           </NavLink>
@@ -471,14 +454,18 @@ export default function LandlordLayout() {
           <button onClick={() => setIsSidebarOpen(true)} className="flex-1 flex justify-center h-full">
             <div className="w-full flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 transition-all duration-300">
               <div className="flex items-center justify-center w-12 h-8 rounded-full bg-transparent scale-100">
-                {/* Đổi icon bars mặc định thành bars-staggered cho hiện đại hơn */}
                 <i className="fa-solid fa-bars-staggered text-[20px]"></i>
               </div>
-              <span className="text-[10px] font-medium">Thêm</span>
+              <span className="text-[10px] font-medium">Menu</span>
             </div>
           </button>
-
         </nav>
+
+        {/* 4. RENDER MODAL CẬP NHẬT TÀI KHOẢN */}
+        <UserProfileModal 
+          open={isProfileModalOpen} 
+          onClose={() => setIsProfileModalOpen(false)} 
+        />
 
       </main>
     </div>

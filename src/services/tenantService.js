@@ -12,6 +12,8 @@ const tenantService = {
   delete: (id) => api.delete(`/tenants/${id}`),
 
   leave: (id, data) => api.patch(`/tenants/${id}/leave`, data),
+
+  resetPassword: (id) => api.post(`/tenants/${id}/reset-password`),
 };
 
 export default tenantService;

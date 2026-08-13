@@ -14,6 +14,9 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
     const [proofFile, setProofFile] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // State  quản lý kết quả hiển thị màn hình thành công
+    const [paymentResult, setPaymentResult] = useState(null); // format: { status: 'full' | 'partial', amount: number }
+
     // Khóa cuộn background khi mở Modal
     useEffect(() => {
         if (open) document.body.style.overflow = "hidden";
@@ -57,7 +60,7 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
         const isAutoConfirmEnabled = paymentConfig?.sepay_config?.auto_confirm === true;
         const bankAccount = paymentConfig?.bank_accounts?.[0];
 
-        if (open && invoiceDetail && bankAccount && isAutoConfirmEnabled) {
+        if (open && invoiceDetail && bankAccount && isAutoConfirmEnabled && !paymentResult) {
             setIsPolling(true);
 
             intervalId = setInterval(async () => {
@@ -68,25 +71,48 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                     const currentPaid = Number(statusData.paid_amount);
                     const oldPaid = Number(invoiceDetail.paid_amount);
 
-                    // Nếu số tiền đã trả tăng lên hoặc trạng thái chuyển thành 'paid' -> Dừng polling
+                    // NẾU CÓ TIỀN VÀO MỚI HOẶC ĐÃ PAID
                     if (currentPaid > oldPaid || statusData.status === 'paid') {
                         clearInterval(intervalId);
                         setIsPolling(false);
 
-                        toast.success("Thanh toán thành công! Hệ thống đã ghi nhận.");
-                        onSuccess?.();
-                        onClose();
+                        const paidJustNow = currentPaid - oldPaid;
+                        const isFullyPaid = statusData.status === 'paid' || currentPaid >= Number(invoiceDetail.total_amount);
+
+                        // 1. Lưu state để bật màn hình Success bên phải
+                        setPaymentResult({
+                            status: isFullyPaid ? 'full' : 'partial',
+                            amount: paidJustNow > 0 ? paidJustNow : Number(invoiceDetail.remaining_amount)
+                        });
+
+                        // 2. Cập nhật lại hóa đơn bên trái (số tiền nợ sẽ tự tụt xuống)
+                        setInvoiceDetail(prev => ({
+                            ...prev,
+                            paid_amount: statusData.paid_amount,
+                            remaining_amount: statusData.remaining_amount || (Number(prev.total_amount) - currentPaid)
+                        }));
+
+                        toast.success("Hệ thống đã nhận được tiền!");
+                        onSuccess?.(); // Trigger reload list bên ngoài
+
+                        // 3. Nếu chỉ thanh toán 1 phần (chưa đủ nợ)
+                        if (!isFullyPaid) {
+                            // Chờ 4 giây cho khách nhìn thấy chữ Thành công, sau đó reset để hiện QR mới
+                            setTimeout(() => {
+                                setPaymentResult(null);
+                            }, 4000);
+                        }
                     }
                 } catch (error) {
                     console.error("Lỗi khi kiểm tra trạng thái thanh toán:", error);
                 }
-            }, 3000); // Check mỗi 3 giây
+            }, 3000);
         } else {
             setIsPolling(false);
         }
 
         return () => { if (intervalId) clearInterval(intervalId); };
-    }, [open, invoiceDetail, paymentConfig, onSuccess, onClose]);
+    }, [open, invoiceDetail, paymentConfig, onSuccess, paymentResult]); // Thêm paymentResult vào dependency
 
     // 3. Hàm sinh URL mã QR VietQR dựa trên template của SePay
     const generateQrCodeUrl = () => {
@@ -157,69 +183,176 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                 {/* Body Content */}
                 <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-1 p-4 sm:p-6 bg-slate-50 flex flex-col sm:flex-row gap-6">
                     {isLoading || !invoiceDetail || !paymentConfig ? (
-                        <div className="w-full h-[300px] flex flex-col justify-center items-center text-primary">
-                            <i className="fa-solid fa-circle-notch fa-spin text-4xl mb-3"></i>
-                            <p className="text-sm font-medium text-slate-500">Đang khởi tạo cổng thanh toán...</p>
+                        // Hiệu ứng Skeleton Loading mô phỏng layout 2 cột
+                        <div className="w-full flex flex-col sm:flex-row gap-6 animate-pulse p-2">
+
+                            {/* NỬA TRÁI: Skeleton Hóa đơn */}
+                            <div className="w-full sm:w-1/2 flex flex-col gap-4 border-b sm:border-b-0 sm:border-r border-slate-200 pb-6 sm:pb-0 sm:pr-6">
+                                {/* Tiêu đề giả */}
+                                <div className="flex justify-between items-center mb-1">
+                                    <div className="h-5 bg-slate-200 rounded w-1/3"></div>
+                                    <div className="h-6 bg-slate-200 rounded w-1/4"></div>
+                                </div>
+
+                                {/* Khối biên lai giả */}
+                                <div className="bg-white rounded-xl border border-slate-100 shadow-sm flex flex-col h-full overflow-hidden">
+                                    <div className="p-4 bg-slate-50 border-b border-slate-100">
+                                        <div className="h-4 bg-slate-200 rounded w-full mb-3"></div>
+                                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                                    </div>
+
+                                    <div className="p-4 space-y-4 flex-1">
+                                        <div className="h-10 bg-slate-100 rounded w-full"></div>
+                                        <div className="h-10 bg-slate-100 rounded w-full"></div>
+                                        <div className="h-10 bg-slate-100 rounded w-5/6"></div>
+                                    </div>
+
+                                    <div className="px-4 py-5 bg-white border-t-2 border-dashed border-slate-100 mt-auto">
+                                        <div className="h-4 bg-slate-200 rounded w-1/2 mb-3"></div>
+                                        <div className="h-8 bg-slate-200 rounded w-1/3 ml-auto"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* NỬA PHẢI: Skeleton QR Code & Thông tin ngân hàng */}
+                            <div className="w-full sm:w-1/2 flex flex-col">
+                                <div className="flex-1 bg-white border border-slate-100 rounded-xl p-5 flex flex-col items-center shadow-sm">
+                                    {/* Tiêu đề giả */}
+                                    <div className="h-5 bg-slate-200 rounded w-2/5 mb-6"></div>
+
+                                    {/* QR Code giả */}
+                                    <div className="w-[200px] h-[200px] bg-slate-100 rounded-2xl mb-6"></div>
+
+                                    {/* Thông tin chuyển khoản giả */}
+                                    <div className="w-full space-y-3 mb-6 bg-slate-50 p-4 rounded-lg">
+                                        <div className="h-4 bg-slate-200 rounded w-full"></div>
+                                        <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+                                        <div className="h-4 bg-slate-200 rounded w-4/5"></div>
+                                        <div className="h-4 bg-slate-200 rounded w-full"></div>
+                                    </div>
+
+                                    {/* Nút bấm giả */}
+                                    <div className="w-full h-[44px] bg-slate-200 rounded-lg mt-auto"></div>
+                                </div>
+                            </div>
                         </div>
                     ) : (
                         <>
-                            {/* NỬA TRÁI: THÔNG TIN HÓA ĐƠN CHI TIẾT */}
-                            <div className="w-full sm:w-1/2 flex flex-col gap-4 border-b sm:border-b-0 sm:border-r border-slate-200 pb-6 sm:pb-0 sm:pr-6">
-                                <h3 className="font-bold text-[15px] text-slate-800 flex items-center gap-2">
-                                    <i className="fa-solid fa-file-invoice text-gray-400"></i> Chi tiết khoản thu
-                                </h3>
-
-                                <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                                    <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
-                                        <span className="text-[13px] text-slate-500 font-medium">Kỳ hóa đơn</span>
-                                        <span className="text-[13px] font-bold text-slate-800">{invoiceDetail.period_from} đến {invoiceDetail.period_to}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[13px] text-slate-500 font-medium">Hạn thanh toán</span>
-                                        <span className="text-[13px] font-bold text-red-500">{invoiceDetail.due_date}</span>
-                                    </div>
+                            {/* NỬA TRÁI: THÔNG TIN HÓA ĐƠN CHI TIẾT (Giao diện Digital Receipt) */}
+                            <div className="w-full sm:w-1/2 flex flex-col gap-4 border-b sm:border-b-0 sm:border-r border-slate-200 pb-6 sm:pb-0 sm:pr-6 relative">
+                                {/* Tiêu đề & Badge trạng thái */}
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-bold text-[16px] text-slate-800 flex items-center gap-2">
+                                        <i className="fa-solid fa-file-invoice text-primary"></i> Chi tiết khoản thu
+                                    </h3>
+                                    {Number(invoiceDetail.remaining_amount) <= 0 ? (
+                                        <span className="px-2.5 py-1 rounded-md bg-green-100 text-green-700 text-[11px] font-bold uppercase tracking-wide">Đã thanh toán</span>
+                                    ) : Number(invoiceDetail.paid_amount) > 0 ? (
+                                        <span className="px-2.5 py-1 rounded-md bg-amber-100 text-amber-700 text-[11px] font-bold uppercase tracking-wide">Thanh toán 1 phần</span>
+                                    ) : (
+                                        <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wide">Chưa thanh toán</span>
+                                    )}
                                 </div>
 
-                                <ul className="bg-white rounded-xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
-                                    {invoiceDetail.items?.map(item => (
-                                        <li key={item.id} className="p-3.5 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                                            <div>
-                                                <p className="font-semibold text-[13px] text-slate-800">{item.description}</p>
-                                                <p className="text-[11px] text-slate-500 mt-0.5">
-                                                    SL: {item.quantity} {item.unit} x {Number(item.unit_price_snapshot).toLocaleString()}đ
-                                                </p>
-                                            </div>
-                                            <span className="font-bold text-[13px] text-slate-800">
-                                                {Number(item.amount).toLocaleString()} đ
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
+                                {/* Khối Biên lai điện tử */}
+                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden">
+                                    {/* Header Biên lai */}
+                                    <div className="p-4 bg-slate-50 border-b border-slate-200">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-[13px] text-slate-500 font-medium">Kỳ hóa đơn</span>
+                                            <span className="text-[13px] font-bold text-slate-800">{invoiceDetail.period_from} - {invoiceDetail.period_to}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[13px] text-slate-500 font-medium">Hạn thanh toán</span>
+                                            <span className="text-[13px] font-bold text-red-500">{invoiceDetail.due_date}</span>
+                                        </div>
+                                    </div>
 
-                                <div className="bg-red-50 border border-red-100 rounded-xl p-4 mt-auto">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="text-[12px] font-semibold text-red-600/70">TỔNG HÓA ĐƠN</span>
-                                        <span className="text-[14px] font-bold text-red-400 line-through">{Number(invoiceDetail.total_amount).toLocaleString()} đ</span>
+                                    {/* Danh sách Item (Scrollable trên Mobile) */}
+                                    <div className="p-4 flex-1 overflow-y-auto max-h-[200px] sm:max-h-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                        <ul className="divide-y divide-slate-100/80">
+                                            {invoiceDetail.items?.map(item => (
+                                                <li key={item.id} className="py-3 first:pt-0 last:pb-0 flex justify-between items-start">
+                                                    <div className="pr-3">
+                                                        <p className="font-bold text-[13px] text-slate-800">{item.description}</p>
+                                                        <p className="text-[12px] text-slate-500 mt-0.5">
+                                                            {item.quantity} {item.unit} x {Number(item.unit_price_snapshot).toLocaleString()}đ
+                                                        </p>
+                                                    </div>
+                                                    <span className="font-bold text-[14px] text-slate-800 whitespace-nowrap">
+                                                        {Number(item.amount).toLocaleString()} đ
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-[12px] font-semibold text-green-600/70">ĐÃ THANH TOÁN</span>
-                                        <span className="text-[14px] font-bold text-green-600">- {Number(invoiceDetail.paid_amount).toLocaleString()} đ</span>
-                                    </div>
-                                    <div className="flex justify-between items-end border-t border-red-200/50 pt-2">
-                                        <span className="text-[13px] font-bold text-red-800">CẦN THANH TOÁN</span>
-                                        <div className="text-right">
-                                            <span className="text-[24px] font-black text-red-600 leading-none block">
-                                                {Number(invoiceDetail.remaining_amount).toLocaleString()}
-                                            </span>
-                                            <span className="text-[11px] font-bold text-red-500">VNĐ</span>
+
+                                    {/* Phần Tổng kết (Có viền đứt quãng chuẩn biên lai) */}
+                                    <div className="px-4 py-4 bg-white border-t-2 border-dashed border-slate-200 mt-auto">
+                                        <div className="flex justify-between items-center mb-1.5">
+                                            <span className="text-[12px] font-medium text-slate-500">TỔNG CỘNG</span>
+                                            <span className="text-[14px] font-semibold text-slate-500">{Number(invoiceDetail.total_amount).toLocaleString()} đ</span>
+                                        </div>
+                                        <div className="flex justify-between items-center mb-3">
+                                            <span className="text-[12px] font-medium text-slate-500">ĐÃ THANH TOÁN</span>
+                                            <span className="text-[14px] font-semibold text-green-600">- {Number(invoiceDetail.paid_amount).toLocaleString()} đ</span>
+                                        </div>
+
+                                        <div className="flex justify-between items-end pt-3 border-t border-slate-100">
+                                            <span className="text-[12px] font-bold text-slate-600 mb-1">CẦN THANH TOÁN</span>
+                                            <div className="text-right flex items-baseline gap-1">
+                                                {/* Dùng màu Primary thay vì màu đỏ rực */}
+                                                <span className="text-[28px] font-black text-primary leading-none tracking-tight">
+                                                    {Number(invoiceDetail.remaining_amount).toLocaleString()}
+                                                </span>
+                                                <span className="text-[14px] font-bold text-primary/80 underline decoration-2 underline-offset-2">đ</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* NỬA PHẢI: QUÉT MÃ QR & UPLOAD MINH CHỨNG */}
-                            <div className="w-full sm:w-1/2 flex flex-col">
-                                {bankAccount ? (
+                            <div className="w-full sm:w-1/2 flex flex-col relative overflow-hidden">
+
+                                {paymentResult ? (
+                                    /* ========================================= */
+                                    /* MÀN HÌNH THÀNH CÔNG (HIỆN KHI CÓ TIỀN VÀO) */
+                                    /* ========================================= */
+                                    <div className="flex-1 bg-white border border-green-200 rounded-xl p-6 flex flex-col items-center justify-center shadow-sm relative animate-[fadeIn_0.4s_ease-out]">
+                                        <div className="absolute top-0 left-0 w-full h-1.5 bg-green-500"></div>
+
+                                        {/* Icon Checkmark */}
+                                        <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-5 border-4 border-green-100">
+                                            <i className="fa-solid fa-check text-4xl text-green-500 animate-[bounce_1s_ease-in-out]"></i>
+                                        </div>
+
+                                        <h3 className="text-[18px] font-bold text-slate-800 mb-1">Giao dịch thành công!</h3>
+                                        <p className="text-[13px] text-slate-500 mb-6">Hệ thống vừa ghi nhận khoản tiền</p>
+
+                                        <div className="text-[32px] font-black text-green-600 mb-8 tracking-tight">
+                                            + {Number(paymentResult.amount).toLocaleString()} <span className="text-[18px] font-bold">đ</span>
+                                        </div>
+
+                                        {paymentResult.status === 'partial' ? (
+                                            <div className="flex flex-col items-center gap-2 mt-auto p-3 bg-amber-50 rounded-lg border border-amber-100 w-full">
+                                                <i className="fa-solid fa-circle-notch fa-spin text-amber-500"></i>
+                                                <p className="text-[12px] font-medium text-amber-700 text-center">
+                                                    Hóa đơn vẫn còn nợ.<br />Đang tạo lại mã QR cho số dư còn lại...
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <button onClick={onClose} className="mt-auto w-full py-3.5 bg-green-500 text-white rounded-lg text-[14px] font-bold hover:bg-green-600 transition-colors shadow-lg shadow-green-500/20">
+                                                Hoàn tất & Đóng
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : bankAccount ? (
+
+                                    /* ========================================= */
+                                    /* GIAO DIỆN QUÉT QR MẶC ĐỊNH CỦA BẠN        */
+                                    /* (Giữ nguyên phần code bạn đang có ở đây)   */
+                                    /* ========================================= */
                                     <div className="flex-1 bg-white border border-slate-200 rounded-xl p-5 flex flex-col items-center shadow-sm relative overflow-hidden">
                                         {/* Thanh màu trang trí phía trên */}
                                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-green-300"></div>
@@ -238,7 +371,6 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                                                         alt="QR Code"
                                                         className="w-[200px] h-[200px] object-contain animate-[fadeIn_0.5s_ease-out]"
                                                     />
-                                                    {/* Tia quét xanh lá mờ ảo khi auto confirm đang bật */}
                                                     {isPolling && (
                                                         <div className="absolute top-0 left-0 w-full h-[3px] bg-green-400 shadow-[0_0_12px_3px_#4ade80] opacity-70 animate-[scanQR_2s_ease-in-out_infinite]"></div>
                                                     )}

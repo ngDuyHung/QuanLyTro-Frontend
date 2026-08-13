@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import notificationService from "@/services/notificationService";
 import incidentService from "@/services/incidentService"; // Import service để lấy số lượng sự cố
 import invoiceService from "@/services/invoiceService"; // Import service để lấy số lượng hóa đơn
+import UserProfileModal from "@/components/user/UserProfileModal";
 import api from "@/services/api";
 
 export default function LandlordLayout() {
@@ -21,6 +22,22 @@ export default function LandlordLayout() {
   const [activeIncidentCount, setActiveIncidentCount] = useState(0);
   // 3. Thêm state lưu số lượng hóa đơn
   const [activeInvoiceCount, setActiveInvoiceCount] = useState(0);
+
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+
+  //  useEffect để tắt UserMenu khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const fetchActiveIncidentsCount = async () => {
@@ -489,16 +506,54 @@ export default function LandlordLayout() {
               )}
             </div>
 
-            <div className="flex items-center gap-2 cursor-pointer pl-1 border-l border-slate-200 ml-1">
-              <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 text-lg shrink-0 overflow-hidden">
-                <i className="fa-solid fa-user"></i>
+            {/* KHU VỰC USER AVATAR & DROPDOWN */}
+            <div className="relative ml-1 pl-1 border-l border-slate-200" ref={userMenuRef}>
+              <div
+                className="flex items-center gap-2 cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition-colors"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              >
+                <div className="w-9 h-9 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-sm">
+                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+                <div className="hidden sm:flex flex-col pr-1">
+                  <span className="text-[14px] font-bold text-slate-800 leading-tight">
+                    {user?.name || "Chủ Trọ"}
+                  </span>
+                  <span className="text-[13px] text-slate-500">{user?.phone || 'Chủ trọ'}</span>
+                </div>
               </div>
-              <div className="hidden sm:flex flex-col">
-                <span className="text-[14px] font-bold text-slate-800 leading-tight">
-                  {user?.name || "Chủ Trọ"}
-                </span>
-                <span className="text-[12px] text-slate-500">Chủ trọ</span>
-              </div>
+
+              {/* USER MENU DROPDOWN */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-[220px] bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden z-[100] animate-[fadeIn_0.2s_ease-out]">
+                  <div className="px-4 py-3 border-b border-slate-50 sm:hidden">
+                    <p className="font-bold text-slate-800 text-[14px]">{user?.name}</p>
+                    <p className="text-[12px] text-slate-500">{user?.phone}</p>
+                  </div>
+
+                  <div className="p-2 flex flex-col gap-1">
+                    <button
+                      onClick={() => { setIsUserMenuOpen(false); setIsProfileModalOpen(true); }}
+                      className="w-full text-left px-3 py-2 text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-brand rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <i className="fa-regular fa-id-badge w-4"></i> Tài khoản của tôi
+                    </button>
+                    <button
+                      onClick={() => { setIsUserMenuOpen(false); /* Thêm hàm hướng dẫn HDSD nếu cần */ }}
+                      className="w-full text-left px-3 py-2 text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-brand rounded-lg transition-colors flex items-center gap-2 sm:hidden"
+                    >
+                      <i className="fa-regular fa-circle-question w-4"></i> Hướng dẫn sử dụng
+                    </button>
+                    <div className="h-px bg-slate-100 my-1"></div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-3 py-2 text-[13px] font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <i className="fa-solid fa-arrow-right-from-bracket w-4"></i> Đăng xuất
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -584,6 +639,12 @@ export default function LandlordLayout() {
           </button>
 
         </nav>
+
+        {/* MODAL TÀI KHOẢN */}
+        <UserProfileModal
+          open={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+        />
 
       </main>
     </div>
