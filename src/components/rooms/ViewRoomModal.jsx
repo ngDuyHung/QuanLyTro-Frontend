@@ -226,7 +226,7 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
         onClick={onClose}
       >
         <div
-          className="bg-slate-50 w-full h-[90vh] lg:max-w-[1200px] xl:max-w-[1300px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out]"
+          className="bg-slate-50 w-full h-[95vh] lg:max-w-[1200px] xl:max-w-[1300px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* --- HEADER --- */}

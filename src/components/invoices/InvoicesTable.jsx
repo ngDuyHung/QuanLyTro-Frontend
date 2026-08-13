@@ -13,6 +13,17 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString("vi-VN");
 };
 
+const calculateOverdueDays = (dueDate) => {
+  if (!dueDate) return 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Đưa về đầu ngày hiện tại
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);   // Đưa về đầu ngày hết hạn
+  const diffTime = today.getTime() - due.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays > 0 ? diffDays : 0;
+};
+
 // Cấu hình hiển thị Badge cho Trạng thái
 const getStatusConfig = (status) => {
   switch (status) {
@@ -356,9 +367,18 @@ export default function InvoicesTable({
                       <span className="font-bold text-slate-800 text-[14px] leading-none">{invoice.room?.name || "—"}</span>
                       <span className="text-[11px] text-slate-500 mt-1">{invoice.property?.name || "—"}</span>
                     </div>
-                    <span className={`px-2.5 py-1 border text-[10px] font-semibold rounded-md flex items-center gap-1.5 w-fit ${statusConf.className}`}>
-                      <i className={`fa-solid ${statusConf.icon} text-[10px]`}></i> {statusConf.label}
-                    </span>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={`px-2.5 py-1 border text-[10px] font-semibold rounded-md flex items-center gap-1.5 w-fit ${statusConf.className}`}>
+                        <i className={`fa-solid ${statusConf.icon} text-[10px]`}></i> {statusConf.label}
+                      </span>
+                      {(invoice.status == 'issued' || invoice.status == 'partially_paid')
+                        && invoice.due_date
+                        && calculateOverdueDays(invoice.due_date) > 0 && (
+                          <span className="text-[10px] text-red-500 font-semibold italic">
+                            Trễ {calculateOverdueDays(invoice.due_date)} ngày
+                          </span>
+                        )}
+                    </div>
                   </div>
 
                   {/* Body: Chi tiết Hóa đơn */}
@@ -577,11 +597,18 @@ export default function InvoicesTable({
                       </td>
 
                       {/* Trạng thái */}
-                      <td className="py-3 px-4 text-center">
-                        <span className={`px-2.5 py-1 border text-[11px] font-semibold rounded-md inline-flex items-center gap-1.5 ${statusConf.className}`}>
-                          <i className={`fa-solid ${statusConf.icon} text-[10px]`}></i>
-                          {statusConf.label}
-                        </span>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col items-center justify-center gap-1.5">
+                          <span className={`px-2.5 py-1 border text-[11px] font-semibold rounded-md inline-flex items-center gap-1.5 ${statusConf.className}`}>
+                            <i className={`fa-solid ${statusConf.icon} text-[10px]`}></i>
+                            {statusConf.label}
+                          </span>
+                          {(invoice.status === 'issued' || invoice.status === 'partially_paid') && invoice.due_date && calculateOverdueDays(invoice.due_date) > 0 && (
+                            <span className="text-[10px] text-red-500 font-semibold bg-red-50 px-2 py-0.5 rounded-full">
+                              Trễ {calculateOverdueDays(invoice.due_date)} ngày
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Thao tác (Tự động thích ứng trạng thái) */}
