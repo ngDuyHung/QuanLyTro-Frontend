@@ -819,22 +819,43 @@ export default function CreateInvoiceModal({
                                                     </div>
                                                 </div>
 
-                                                {/* Đơn giá & Miễn phí */}
-                                                <div className="mt-3 pt-3 border-t border-dashed border-slate-200 flex flex-wrap gap-2">
-                                                    <div className="flex-1 min-w-[120px] flex items-center justify-between bg-slate-50 rounded-md px-2 py-1 border border-slate-100">
-                                                        <span className="text-[14px] text-slate-500 font-medium whitespace-nowrap">Đơn giá:</span>
-                                                        <div className="flex items-center ml-2">
-                                                            <input type="text" inputMode="numeric" value={item.state.price === 0 ? "" : Number(item.state.price).toLocaleString("vi-VN")} placeholder="0" onChange={(e) => { const rawValue = e.target.value.replace(/[^\d]/g, ""); handleUtilityChange(item.type, 'price', rawValue ? Number(rawValue) : 0); }} className="w-full min-w-[50px] max-w-[80px] bg-transparent text-[12px] font-bold text-slate-700 outline-none text-right" />
-                                                            <span className="text-[14px] text-slate-400 ml-1 whitespace-nowrap">đ/{item.unit}</span>
+                                               {/* Đơn giá & Miễn phí (Xếp ngang 2 ô, nhưng nội dung bên trong xếp dọc) */}
+                                                <div className="mt-3 pt-3 border-t border-dashed border-slate-200 flex flex-nowrap gap-2">
+                                                    
+                                                    {/* Ô ĐƠN GIÁ */}
+                                                    <label className="flex-1 flex flex-col justify-center bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 cursor-text transition-colors focus-within:border-brand focus-within:bg-white shadow-sm overflow-hidden">
+                                                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mb-0.5">Đơn giá</span>
+                                                        <div className="flex items-center min-w-0">
+                                                            <input 
+                                                                type="text" 
+                                                                inputMode="numeric" 
+                                                                value={item.state.price === 0 ? "" : Number(item.state.price).toLocaleString("vi-VN")} 
+                                                                placeholder="0" 
+                                                                onChange={(e) => { 
+                                                                    const rawValue = e.target.value.replace(/[^\d]/g, ""); 
+                                                                    handleUtilityChange(item.type, 'price', rawValue ? Number(rawValue) : 0); 
+                                                                }} 
+                                                                // Căn trái text để đồng bộ với tiêu đề ở trên, tăng size chữ lên 14px cho dễ nhìn
+                                                                className="w-full min-w-0 bg-transparent text-[14px] font-bold text-slate-800 outline-none" 
+                                                            />
+                                                            <span className="text-[11px] text-slate-400 ml-1 whitespace-nowrap shrink-0">đ/{item.unit}</span>
                                                         </div>
-                                                    </div>
-                                                    <div className="flex-1 min-w-[120px] flex items-center justify-between bg-emerald-50/50 rounded-md px-2 py-1 border border-emerald-100/50">
-                                                        <span className="text-[14px] text-emerald-600 font-medium whitespace-nowrap">Miễn phí:</span>
-                                                        <div className="flex items-center ml-2">
-                                                            <input type="number" min="0" value={item.state.free} onChange={(e) => handleUtilityChange(item.type, 'free', e.target.value)} className="w-full min-w-[30px] max-w-[50px] bg-transparent text-[12px] font-bold text-emerald-700 outline-none text-right" />
-                                                            <span className="text-[14px] text-emerald-600 ml-1 whitespace-nowrap">{item.unit}</span>
+                                                    </label>
+
+                                                    {/* Ô MIỄN PHÍ */}
+                                                    <label className="flex-1 flex flex-col justify-center bg-emerald-50/50 rounded-lg px-2.5 py-1.5 border border-emerald-200 cursor-text transition-colors focus-within:border-emerald-400 focus-within:bg-emerald-50 shadow-sm overflow-hidden">
+                                                        <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wide mb-0.5">Miễn phí</span>
+                                                        <div className="flex items-center min-w-0">
+                                                            <input 
+                                                                type="number" 
+                                                                min="0" 
+                                                                value={item.state.free} 
+                                                                onChange={(e) => handleUtilityChange(item.type, 'free', e.target.value)} 
+                                                                className="w-full min-w-0 bg-transparent text-[14px] font-bold text-emerald-700 outline-none" 
+                                                            />
+                                                            <span className="text-[11px] text-emerald-600 ml-1 whitespace-nowrap shrink-0">{item.unit}</span>
                                                         </div>
-                                                    </div>
+                                                    </label>
                                                 </div>
                                             </div>
                                         </div>
