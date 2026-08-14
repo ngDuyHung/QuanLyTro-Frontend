@@ -784,18 +784,7 @@ export default function CreateInvoiceModal({
                                                 <div className="flex items-start gap-3 w-full">
                                                     {/* Nhập Số cũ / Số mới */}
                                                     <div className="flex-1 flex gap-2 relative">
-                                                        <div className="flex-1 border border-slate-200 rounded-lg p-2 transition-colors bg-slate-50 focus-within:border-brand focus-within:bg-white">
-                                                            <div className="flex justify-between items-center mb-1">
-                                                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Số cũ</label>
-                                                            </div>
-                                                            <input
-                                                                type="number"
-                                                                value={item.state.prev}
-                                                                onChange={(e) => handleUtilityChange(item.type, 'prev', e.target.value)}
-                                                                className="w-full bg-transparent text-[15px] font-bold text-slate-700 outline-none"
-                                                                placeholder="0"
-                                                            />
-                                                        </div>
+
 
                                                         <div className="flex-1 border border-brand/30 rounded-lg p-2 transition-colors bg-brand/5 focus-within:border-brand focus-within:bg-white">
                                                             <div className="flex justify-between items-center mb-1">
@@ -806,6 +795,19 @@ export default function CreateInvoiceModal({
                                                                 value={item.state.current}
                                                                 onChange={(e) => handleUtilityChange(item.type, 'current', e.target.value)}
                                                                 className="w-full bg-transparent text-[15px] font-black outline-none text-brand"
+                                                                placeholder="0"
+                                                            />
+                                                        </div>
+
+                                                        <div className="flex-1 border border-slate-200 rounded-lg p-2 transition-colors bg-slate-50 focus-within:border-brand focus-within:bg-white">
+                                                            <div className="flex justify-between items-center mb-1">
+                                                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Số cũ</label>
+                                                            </div>
+                                                            <input
+                                                                type="number"
+                                                                value={item.state.prev}
+                                                                onChange={(e) => handleUtilityChange(item.type, 'prev', e.target.value)}
+                                                                className="w-full bg-transparent text-[15px] font-bold text-slate-700 outline-none"
                                                                 placeholder="0"
                                                             />
                                                         </div>
