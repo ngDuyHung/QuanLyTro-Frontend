@@ -396,6 +396,87 @@ function MobileRoomActionSheet({ room, open, onClose, onAction }) {
         </div>
 
         <div className="p-3">
+
+          {/* --- CÁC NÚT THAO TÁC THEO TRẠNG THÁI (Đưa từ Footer lên) --- */}
+          {room.status === "available" && (
+            <>
+              <button
+                type="button"
+                onClick={() => { onClose(); onAction("reserve", room); }}
+                className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-amber-600 hover:bg-amber-50 flex items-center gap-3"
+              >
+                <span className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <i className="fa-solid fa-hand-holding-dollar text-[15px]"></i>
+                </span>
+                <span>Nhận đặt cọc</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { onClose(); onAction("createLease", room); }}
+                className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-brand hover:bg-brand/5 flex items-center gap-3"
+              >
+                <span className="w-9 h-9 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                  <i className="fa-solid fa-file-signature text-[15px]"></i>
+                </span>
+                <span>Tạo hợp đồng mới</span>
+              </button>
+            </>
+          )}
+
+          {room.status === "reserved" && (
+            <>
+              <button
+                type="button"
+                onClick={() => { onClose(); onAction("createLease", room); }}
+                className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-brand hover:bg-brand/5 flex items-center gap-3"
+              >
+                <span className="w-9 h-9 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                  <i className="fa-solid fa-check-double text-[15px]"></i>
+                </span>
+                <span>Nhận phòng (Lập HĐ)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { onClose(); onAction("cancelReserve", room); }}
+                className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-3"
+              >
+                <span className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                  <i className="fa-solid fa-ban text-[15px]"></i>
+                </span>
+                <span>Hủy đặt cọc</span>
+              </button>
+            </>
+          )}
+
+          {room.status === "occupied" && (
+            <button
+              type="button"
+              onClick={() => { onClose(); onAction("invoice", room); }}
+              className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-blue-600 hover:bg-blue-50 flex items-center gap-3"
+            >
+              <span className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <i className="fa-solid fa-file-invoice-dollar text-[15px]"></i>
+              </span>
+              <span>Lập hóa đơn tháng</span>
+            </button>
+          )}
+
+          {room.status === "maintenance" && (
+            <button
+              type="button"
+              onClick={() => { onClose(); onAction("available", room); }}
+              className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-orange-600 hover:bg-orange-50 flex items-center gap-3"
+            >
+              <span className="w-9 h-9 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                <i className="fa-solid fa-wrench text-[15px]"></i>
+              </span>
+              <span>Bảo trì xong</span>
+            </button>
+          )}
+
+          {/* Đường kẻ ngang phân cách nhóm thao tác chính và phụ */}
+          <div className="w-full h-px bg-slate-100 my-1"></div>
+
           <button
             type="button"
             onClick={() => { onClose(); onAction("view", room); }}
