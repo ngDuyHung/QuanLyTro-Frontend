@@ -411,10 +411,20 @@ export default function CreateInvoiceModal({
 
             // -- LẤY CÁC DỊCH VỤ KHÁC --
             dynamicItems.forEach(item => {
-                if (item.description && item.unit_price_snapshot >= 0) { //  >= 0 để lỡ có dịch vụ giá 0đ vẫn hiện
+                if (item.unit_price_snapshot >= 0) {
+                    // Tự động tạo mô tả mặc định nếu chủ nhà bỏ trống
+                    let desc = item.description;
+                    if (!desc || desc.trim() === "") {
+                        if (item.charge_type === 'discount') desc = 'Giảm trừ';
+                        else if (item.charge_type === 'surcharge') desc = 'Phụ thu';
+                        else if (item.charge_type === 'damage_fee') desc = 'Phí hư hỏng/phát sinh';
+                        else if (item.charge_type === 'deposit') desc = 'Tiền cọc/thế chân';
+                        else desc = 'Khoản khác';
+                    }
+
                     items.push({
                         charge_type: item.charge_type,
-                        description: item.description,
+                        description: desc,
                         unit: item.unit || (item.charge_type === 'discount' ? 'Lần' : 'Tháng/Lần'),
                         quantity: Number(item.quantity) || 1,
                         unit_price_snapshot: Number(item.unit_price_snapshot),
