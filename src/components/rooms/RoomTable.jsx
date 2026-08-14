@@ -151,10 +151,8 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
 
   return (
     <div
-      key={room.id}
-      className={`bg-white border-2 rounded-2xl shadow-sm overflow-visible transition-colors ${hasDebt
-        ? "border-red-500 shadow-red-50"
-        : "border-emerald-400"
+      onClick={() => onToggleMenu?.(room.id)}
+      className={`bg-white border-2 rounded-2xl shadow-sm overflow-visible transition-all cursor-pointer active:scale-[0.99] ${hasDebt ? "border-red-500 shadow-red-50" : "border-emerald-400"
         }`}
     >
       {/* Header */}
@@ -189,7 +187,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
           <div className="relative">
             <button
               type="button"
-              onClick={() => onToggleMenu?.(room.id)}
+              onClick={(e) => { e.stopPropagation(); onToggleMenu?.(room.id); }}
               className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 bg-white active:bg-slate-50"
               title="Thao tác"
             >
@@ -284,14 +282,14 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
           <>
             <button
               type="button"
-              onClick={() => onAction?.("reserve", room)}
+              onClick={(e) => { e.stopPropagation(); onAction?.("reserve", room); }}
               className="flex-1 py-2 rounded-lg border border-amber-200 bg-amber-50 text-[12px] font-semibold text-amber-600 flex items-center justify-center gap-1.5 active:bg-amber-100"
             >
               <i className="fa-solid fa-hand-holding-dollar"></i> Nhận cọc
             </button>
             <button
               type="button"
-              onClick={() => onAction?.("createLease", room)}
+              onClick={(e) => { e.stopPropagation(); onAction?.("createLease", room); }}
               className="flex-1 py-2 rounded-lg border border-brand bg-brand text-[12px] font-semibold text-white flex items-center justify-center gap-1.5 active:bg-brand-dark"
             >
               <i className="fa-solid fa-file-signature"></i> Tạo hợp đồng
@@ -301,14 +299,14 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
           <>
             <button
               type="button"
-              onClick={() => onAction?.("createLease", room)}
+              onClick={(e) => { e.stopPropagation(); onAction?.("createLease", room); }}
               className="flex-1 py-2 rounded-lg border border-brand bg-brand text-[12px] font-semibold text-white flex items-center justify-center gap-1.5 active:bg-brand-dark"
             >
               <i className="fa-solid fa-check-double"></i> Nhận phòng
             </button>
             <button
               type="button"
-              onClick={() => onAction?.("cancelReserve", room)}
+              onClick={(e) => { e.stopPropagation(); onAction?.("cancelReserve", room); }}
               className="flex-1 py-2 rounded-lg border border-red-200 bg-red-50 text-[12px] font-semibold text-red-600 flex items-center justify-center gap-1.5 active:bg-red-100"
             >
               <i className="fa-solid fa-ban"></i> Hủy cọc
@@ -317,7 +315,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
         ) : room.status === "maintenance" ? (
           <button
             type="button"
-            onClick={() => onAction?.("available", room)}
+            onClick={(e) => { e.stopPropagation(); onAction?.("available", room); }}
             className="flex-1 py-2 rounded-lg border border-orange-200 bg-orange-50 text-[12px] font-semibold text-orange-600 flex items-center justify-center gap-1.5 active:bg-orange-100"
           >
             <i className="fa-solid fa-wrench"></i> Bảo trì xong
@@ -326,7 +324,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
           <>
             <button
               type="button"
-              onClick={() => onAction?.("view", room)}
+              onClick={(e) => { e.stopPropagation(); onAction?.("view", room); }}
               className="flex-1 py-2 rounded-lg border border-slate-200 bg-white text-[12px] font-medium text-slate-600 flex items-center justify-center gap-1.5 active:bg-slate-100"
             >
               <i className="fa-regular fa-eye text-slate-400"></i>
@@ -334,7 +332,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
             </button>
             <button
               type="button"
-              onClick={() => onAction?.("invoice", room)}
+              onClick={(e) => { e.stopPropagation(); onAction?.("invoice", room); }}
               className="flex-1 py-2 rounded-lg border border-green-200 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100"
             >
               <i className="fa-solid fa-file-invoice-dollar"></i> Lập hóa đơn
