@@ -585,7 +585,7 @@ export default function CreateInvoiceModal({
 
                                         {/* BẢNG DANH SÁCH XỔ XUỐNG KÈM BADGE TRẠNG THÁI */}
                                         {isLeaseDropdownOpen && (
-                                            <div className="absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 animate-[fadeIn_0.15s_ease-out] no-scrollbar">
+                                            <div className="absolute top-full left-0 right-0 mt-1 max-h-72 overflow-y-auto bg-white border border-emerald-500 rounded-xl shadow-xl z-50 animate-[fadeIn_0.15s_ease-out] no-scrollbar">
                                                 {leases.length === 0 ? (
                                                     <div className="p-3 text-center text-[12px] text-slate-500">Chưa có phòng nào đang thuê.</div>
                                                 ) : (
@@ -600,7 +600,7 @@ export default function CreateInvoiceModal({
                                                                     handleChange("lease_id")({ target: { value: l.id } });
                                                                     setIsLeaseDropdownOpen(false);
                                                                 }}
-                                                                className={`px-3 py-2.5 border-b border-slate-50 cursor-pointer hover:bg-slate-50 transition-colors flex items-center justify-between ${form.lease_id === l.id ? 'bg-brand/5' : ''}`}
+                                                                className={`px-3 py-2.5 border-b border-emerald-100 cursor-pointer hover:bg-slate-100 transition-colors flex items-center justify-between ${form.lease_id === l.id ? 'bg-brand/10' : ''}`}
                                                             >
                                                                 <div className="flex flex-col min-w-0 pr-2">
                                                                     <span className="font-bold text-[13px] text-slate-800 truncate">{l.room?.name || 'Phòng trống'}</span>
@@ -819,24 +819,24 @@ export default function CreateInvoiceModal({
                                                     </div>
                                                 </div>
 
-                                               {/* Đơn giá & Miễn phí (Xếp ngang 2 ô, nhưng nội dung bên trong xếp dọc) */}
+                                                {/* Đơn giá & Miễn phí (Xếp ngang 2 ô, nhưng nội dung bên trong xếp dọc) */}
                                                 <div className="mt-3 pt-3 border-t border-dashed border-slate-200 flex flex-nowrap gap-2">
-                                                    
+
                                                     {/* Ô ĐƠN GIÁ */}
                                                     <label className="flex-1 flex flex-col justify-center bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 cursor-text transition-colors focus-within:border-brand focus-within:bg-white shadow-sm overflow-hidden">
                                                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mb-0.5">Đơn giá</span>
                                                         <div className="flex items-center min-w-0">
-                                                            <input 
-                                                                type="text" 
-                                                                inputMode="numeric" 
-                                                                value={item.state.price === 0 ? "" : Number(item.state.price).toLocaleString("vi-VN")} 
-                                                                placeholder="0" 
-                                                                onChange={(e) => { 
-                                                                    const rawValue = e.target.value.replace(/[^\d]/g, ""); 
-                                                                    handleUtilityChange(item.type, 'price', rawValue ? Number(rawValue) : 0); 
-                                                                }} 
+                                                            <input
+                                                                type="text"
+                                                                inputMode="numeric"
+                                                                value={item.state.price === 0 ? "" : Number(item.state.price).toLocaleString("vi-VN")}
+                                                                placeholder="0"
+                                                                onChange={(e) => {
+                                                                    const rawValue = e.target.value.replace(/[^\d]/g, "");
+                                                                    handleUtilityChange(item.type, 'price', rawValue ? Number(rawValue) : 0);
+                                                                }}
                                                                 // Căn trái text để đồng bộ với tiêu đề ở trên, tăng size chữ lên 14px cho dễ nhìn
-                                                                className="w-full min-w-0 bg-transparent text-[14px] font-bold text-slate-800 outline-none" 
+                                                                className="w-full min-w-0 bg-transparent text-[14px] font-bold text-slate-800 outline-none"
                                                             />
                                                             <span className="text-[11px] text-slate-400 ml-1 whitespace-nowrap shrink-0">đ/{item.unit}</span>
                                                         </div>
@@ -846,12 +846,12 @@ export default function CreateInvoiceModal({
                                                     <label className="flex-1 flex flex-col justify-center bg-emerald-50/50 rounded-lg px-2.5 py-1.5 border border-emerald-200 cursor-text transition-colors focus-within:border-emerald-400 focus-within:bg-emerald-50 shadow-sm overflow-hidden">
                                                         <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wide mb-0.5">Miễn phí</span>
                                                         <div className="flex items-center min-w-0">
-                                                            <input 
-                                                                type="number" 
-                                                                min="0" 
-                                                                value={item.state.free} 
-                                                                onChange={(e) => handleUtilityChange(item.type, 'free', e.target.value)} 
-                                                                className="w-full min-w-0 bg-transparent text-[14px] font-bold text-emerald-700 outline-none" 
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={item.state.free}
+                                                                onChange={(e) => handleUtilityChange(item.type, 'free', e.target.value)}
+                                                                className="w-full min-w-0 bg-transparent text-[14px] font-bold text-emerald-700 outline-none"
                                                             />
                                                             <span className="text-[11px] text-emerald-600 ml-1 whitespace-nowrap shrink-0">{item.unit}</span>
                                                         </div>
@@ -1095,27 +1095,25 @@ export default function CreateInvoiceModal({
                                                     />
                                                 </div>
 
-                                                {/* 3. Wrapper cho SL, Giá, Thành tiền: Nằm ngang 1 hàng trên Mobile, dùng `contents` trên PC để giữ cột */}
-                                                <div className="flex items-center justify-between sm:contents w-full pt-0.5 sm:pt-0 gap-2">
+                                                {/* 3. Wrapper cho SL, Giá, Thành tiền: Mobile xếp dạng lưới, PC dùng `contents` để giữ nguyên cột */}
+                                                <div className="flex flex-col sm:contents w-full gap-2 mt-2 sm:mt-0">
 
-                                                    {/* Nhóm SL và Đơn Giá (Mobile) */}
-                                                    <div className="flex items-center gap-1.5 sm:contents">
+                                                    {/* Nhóm SL và Đơn Giá (Mobile xếp ngang 2 ô) */}
+                                                    <div className="flex gap-2 sm:contents w-full">
                                                         {/* Ô Số lượng */}
-                                                        <div className="flex items-center gap-1 sm:w-[70px] shrink-0">
-                                                            <span className="text-[11px] text-slate-500 sm:hidden">SL:</span>
+                                                        <label className="flex-[1] sm:flex-none flex flex-col justify-center sm:block sm:w-[70px] shrink-0 bg-slate-50 sm:bg-transparent rounded-lg sm:rounded-none px-2.5 py-1.5 sm:p-0 border border-slate-200 sm:border-0 cursor-text focus-within:border-brand focus-within:bg-white shadow-sm sm:shadow-none transition-colors">
+                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mb-0.5 sm:hidden">Số lượng</span>
                                                             <input
                                                                 type="number"
                                                                 value={item.quantity}
                                                                 onChange={(e) => handleUpdateDynamicItem(item.id, 'quantity', e.target.value)}
-                                                                className="w-[60px] sm:w-full px-1 py-1.5 bg-slate-50 sm:bg-white border border-slate-200 rounded-lg text-[16px] sm:text-[13px] font-medium text-center outline-none focus:border-brand text-slate-700"
+                                                                className="w-full min-w-0 bg-transparent text-[14px] sm:text-[13px] font-bold sm:font-medium sm:text-center outline-none text-slate-800"
                                                             />
-                                                        </div>
-
-                                                        <span className="text-[10px] text-slate-400 sm:hidden mx-0.5">x</span>
+                                                        </label>
 
                                                         {/* Ô Đơn giá */}
-                                                        <div className="flex items-center gap-1 sm:w-[115px] shrink-0">
-                                                            <span className="text-[11px] text-slate-500 sm:hidden">Giá:</span>
+                                                        <label className="flex-[2] sm:flex-none flex flex-col justify-center sm:block sm:w-[115px] shrink-0 bg-slate-50 sm:bg-transparent rounded-lg sm:rounded-none px-2.5 py-1.5 sm:p-0 border border-slate-200 sm:border-0 cursor-text focus-within:border-brand focus-within:bg-white shadow-sm sm:shadow-none transition-colors min-w-0">
+                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mb-0.5 sm:hidden">Đơn giá (đ)</span>
                                                             <input
                                                                 type="text"
                                                                 inputMode="numeric"
@@ -1125,16 +1123,16 @@ export default function CreateInvoiceModal({
                                                                     const rawValue = e.target.value.replace(/[^\d]/g, "");
                                                                     handleUpdateDynamicItem(item.id, 'unit_price_snapshot', rawValue ? Number(rawValue) : 0);
                                                                 }}
-                                                                className="w-[100px] sm:w-full px-2 py-1.5 bg-slate-50 sm:bg-white border border-slate-200 rounded-lg text-[16px] sm:text-[13px] font-medium text-right outline-none focus:border-brand text-slate-700"
+                                                                // Căn trái trên Mobile để đồng bộ với tiêu đề, căn phải trên PC
+                                                                className="w-full min-w-0 bg-transparent text-[14px] sm:text-[13px] font-bold sm:font-medium text-left sm:text-right outline-none text-slate-800"
                                                             />
-                                                        </div>
+                                                        </label>
                                                     </div>
 
-                                                    {/* Nhóm Thành tiền (Mobile) */}
-                                                    <div className="flex items-center justify-end sm:contents">
-                                                        <span className="text-[10px] text-slate-400 sm:hidden mr-1.5">=</span>
-                                                        {/* THAY ĐỔI Ở ĐÂY: text-[16px] sm:text-[13px] */}
-                                                        <div className={`text-[16px] sm:text-[13px] font-bold text-right sm:w-[115px] shrink-0 ${item.charge_type === 'discount' ? 'text-red-500' : 'text-slate-800'}`}>
+                                                    {/* Nhóm Thành tiền (Mobile tự động xuống dòng và có vạch mờ phân cách) */}
+                                                    <div className="flex items-center justify-between sm:justify-end sm:contents pt-1.5 sm:pt-0 mt-1 sm:mt-0 border-t border-slate-100 border-dashed sm:border-0">
+                                                        <span className="text-[12px] text-slate-500 font-medium sm:hidden">Thành tiền:</span>
+                                                        <div className={`text-[16px] sm:text-[13px] font-black sm:font-bold text-right sm:w-[115px] shrink-0 truncate ${item.charge_type === 'discount' ? 'text-red-500' : 'text-slate-800'}`}>
                                                             {item.charge_type === 'discount' ? '-' : ''}{((Number(item.quantity) || 0) * (Number(item.unit_price_snapshot) || 0)).toLocaleString()} <span className="text-[12px] underline decoration-slate-300 ml-0.5">đ</span>
                                                         </div>
                                                     </div>
