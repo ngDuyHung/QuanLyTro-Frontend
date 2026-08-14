@@ -42,6 +42,21 @@ export default function CreateInvoiceModal({
     const [preparedHeader, setPreparedHeader] = useState({ tenantName: "" });
     const [zoomImage, setZoomImage] = useState(null);
     const scrollContainerRef = useRef(null);
+
+    const [isLeaseDropdownOpen, setIsLeaseDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    // Xử lý click ra ngoài để đóng dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsLeaseDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     // 2. Lắng nghe clientError, nếu có lỗi thì cuộn lên top
     useEffect(() => {
         if (clientError && scrollContainerRef.current) {
@@ -197,6 +212,54 @@ export default function CreateInvoiceModal({
         const timeout = setTimeout(fetchPrepareData, 300);
         return () => clearTimeout(timeout);
     }, [open, form.lease_id, form.period_to]);
+
+    // --- TỰ ĐỘNG TÍNH LẠI NGÀY KHI NGƯỜI DÙNG CHỌN/ĐỔI HỢP ĐỒNG ---
+    useEffect(() => {
+        // Bỏ qua nếu modal đang đóng, chưa chọn phòng hoặc danh sách hợp đồng chưa tải xong
+        if (!open || !form.lease_id || leases.length === 0) return;
+
+        // Tìm chi tiết hợp đồng đang được chọn
+        const selectedLease = leases.find(l => String(l.id) === String(form.lease_id));
+        if (!selectedLease) return;
+
+        const today = new Date();
+        let fromDate, toDate, dueDate;
+
+        // Lấy ngày lập hóa đơn (ưu tiên từ hợp đồng, nếu không có thì lấy từ phòng)
+        const billingDay = parseInt(selectedLease.billing_day || selectedLease.room?.billing_day, 10);
+
+        if (billingDay && !isNaN(billingDay) && billingDay > 0) {
+            fromDate = new Date(today.getFullYear(), today.getMonth(), billingDay);
+            toDate = new Date(today.getFullYear(), today.getMonth() + 1, billingDay);
+            toDate.setDate(toDate.getDate() - 1);
+        } else {
+            // Mặc định nếu không cài đặt ngày
+            fromDate = new Date();
+            toDate = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+            toDate.setDate(toDate.getDate() - 1);
+        }
+
+        // Hạn thanh toán mặc định +10 ngày
+        dueDate = new Date(fromDate.getTime());
+        dueDate.setDate(dueDate.getDate() + 10);
+
+        const formatDateLocal = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        // Cập nhật lại State của form
+        setForm(prev => ({
+            ...prev,
+            period_from: formatDateLocal(fromDate),
+            period_to: formatDateLocal(toDate),
+            due_date: formatDateLocal(dueDate),
+        }));
+
+    }, [form.lease_id, leases, open]);
+    // -----------------------------------------------------------------------
 
     const handleChange = (field) => (e) => {
         setForm(prev => ({ ...prev, [field]: e.target.value, ...(field === "property_id" ? { lease_id: "" } : {}) }));
@@ -461,7 +524,7 @@ export default function CreateInvoiceModal({
                         )}
 
                         {/* SECTION 1: Thông tin chung (Giao diện Header Biên lai) */}
-                        <div className="bg-white px-4 py-5 border-b border-slate-200 mt-1 relative overflow-hidden">
+                        <div className="bg-white px-4 py-5 border-b border-slate-200 mt-1 relative z-30">
                             {/* Tem trang trí góc (Tùy chọn cho đẹp) */}
                             <div className="absolute top-0 right-0 w-16 h-16 bg-brand/5 rounded-bl-full -z-0"></div>
 
@@ -501,17 +564,69 @@ export default function CreateInvoiceModal({
                                         </select>
                                         <i className="fa-solid fa-chevron-down absolute right-1 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
                                     </div>
-                                    <div className="relative">
-                                        <select
-                                            value={form.lease_id}
-                                            onChange={handleChange("lease_id")}
-                                            disabled={!form.property_id || isLoadingLeases}
-                                            className="w-full bg-transparent border-b border-slate-300 py-1.5 text-[13px] font-medium text-slate-700 outline-none focus:border-brand appearance-none pr-6 disabled:opacity-50"
+                                    {/* CUSTOM DROPDOWN CHỌN PHÒNG */}
+                                    <div className="relative" ref={dropdownRef}>
+                                        <div
+                                            className={`w-full bg-transparent border-b border-slate-300 py-1.5 text-[13px] font-medium text-slate-700 outline-none cursor-pointer flex items-center justify-between ${(!form.property_id || isLoadingLeases) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            onClick={() => {
+                                                if (form.property_id && !isLoadingLeases) {
+                                                    setIsLeaseDropdownOpen(!isLeaseDropdownOpen);
+                                                }
+                                            }}
                                         >
-                                            <option value="">{isLoadingLeases ? "Đang tải..." : "-- Chọn phòng thuê --"}</option>
-                                            {leases.map(l => <option key={l.id} value={l.id}>{l.room?.name} - {l.tenant?.full_name}</option>)}
-                                        </select>
-                                        <i className="fa-solid fa-chevron-down absolute right-1 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
+                                            <span className="truncate pr-4">
+                                                {isLoadingLeases ? "Đang tải..." : form.lease_id ? (() => {
+                                                    const l = leases.find(l => l.id === form.lease_id);
+                                                    return l ? `${l.room?.name} - ${l.tenant?.full_name}` : "-- Chọn phòng thuê --";
+                                                })() : "-- Chọn phòng thuê --"}
+                                            </span>
+                                            <i className={`fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform ${isLeaseDropdownOpen ? 'rotate-180' : ''}`}></i>
+                                        </div>
+
+                                        {/* BẢNG DANH SÁCH XỔ XUỐNG KÈM BADGE TRẠNG THÁI */}
+                                        {isLeaseDropdownOpen && (
+                                            <div className="absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 animate-[fadeIn_0.15s_ease-out] no-scrollbar">
+                                                {leases.length === 0 ? (
+                                                    <div className="p-3 text-center text-[12px] text-slate-500">Chưa có phòng nào đang thuê.</div>
+                                                ) : (
+                                                    leases.map(l => {
+                                                        const status = l.payment_status || 'none';
+                                                        const unpaidAmount = l.unpaid_amount || 0;
+
+                                                        return (
+                                                            <div
+                                                                key={l.id}
+                                                                onClick={() => {
+                                                                    handleChange("lease_id")({ target: { value: l.id } });
+                                                                    setIsLeaseDropdownOpen(false);
+                                                                }}
+                                                                className={`px-3 py-2.5 border-b border-slate-50 cursor-pointer hover:bg-slate-50 transition-colors flex items-center justify-between ${form.lease_id === l.id ? 'bg-brand/5' : ''}`}
+                                                            >
+                                                                <div className="flex flex-col min-w-0 pr-2">
+                                                                    <span className="font-bold text-[13px] text-slate-800 truncate">{l.room?.name || 'Phòng trống'}</span>
+                                                                    <span className="text-[11px] text-slate-500 truncate">{l.tenant?.full_name}</span>
+                                                                </div>
+                                                                <div className="shrink-0 flex items-center">
+                                                                    {status === 'debt' ? (
+                                                                        <span className="inline-block px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-md text-[10px] font-bold whitespace-nowrap shadow-sm">
+                                                                            Nợ {Number(unpaidAmount).toLocaleString('vi-VN')}đ
+                                                                        </span>
+                                                                    ) : status === 'unbilled' ? (
+                                                                        <span className="inline-block px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-md text-[10px] font-bold whitespace-nowrap shadow-sm">
+                                                                            Chưa lập HĐ
+                                                                        </span>
+                                                                    ) : status === 'paid' ? (
+                                                                        <span className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-md text-[10px] font-bold whitespace-nowrap shadow-sm">
+                                                                            Đã thu đủ
+                                                                        </span>
+                                                                    ) : null}
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -706,18 +821,18 @@ export default function CreateInvoiceModal({
 
                                                 {/* Đơn giá & Miễn phí */}
                                                 <div className="mt-3 pt-3 border-t border-dashed border-slate-200 flex flex-wrap gap-2">
-                                                    <div className="flex-1 min-w-[120px] flex items-center justify-between bg-slate-50 rounded-md px-2.5 py-1.5 border border-slate-100">
-                                                        <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">Đơn giá:</span>
+                                                    <div className="flex-1 min-w-[120px] flex items-center justify-between bg-slate-50 rounded-md px-2 py-1 border border-slate-100">
+                                                        <span className="text-[14px] text-slate-500 font-medium whitespace-nowrap">Đơn giá:</span>
                                                         <div className="flex items-center ml-2">
                                                             <input type="text" inputMode="numeric" value={item.state.price === 0 ? "" : Number(item.state.price).toLocaleString("vi-VN")} placeholder="0" onChange={(e) => { const rawValue = e.target.value.replace(/[^\d]/g, ""); handleUtilityChange(item.type, 'price', rawValue ? Number(rawValue) : 0); }} className="w-full min-w-[50px] max-w-[80px] bg-transparent text-[12px] font-bold text-slate-700 outline-none text-right" />
-                                                            <span className="text-[11px] text-slate-400 ml-1 whitespace-nowrap">đ/{item.unit}</span>
+                                                            <span className="text-[14px] text-slate-400 ml-1 whitespace-nowrap">đ/{item.unit}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-[120px] flex items-center justify-between bg-emerald-50/50 rounded-md px-2.5 py-1.5 border border-emerald-100/50">
-                                                        <span className="text-[11px] text-emerald-600 font-medium whitespace-nowrap">Miễn phí:</span>
+                                                    <div className="flex-1 min-w-[120px] flex items-center justify-between bg-emerald-50/50 rounded-md px-2 py-1 border border-emerald-100/50">
+                                                        <span className="text-[14px] text-emerald-600 font-medium whitespace-nowrap">Miễn phí:</span>
                                                         <div className="flex items-center ml-2">
                                                             <input type="number" min="0" value={item.state.free} onChange={(e) => handleUtilityChange(item.type, 'free', e.target.value)} className="w-full min-w-[30px] max-w-[50px] bg-transparent text-[12px] font-bold text-emerald-700 outline-none text-right" />
-                                                            <span className="text-[11px] text-emerald-600 ml-1 whitespace-nowrap">{item.unit}</span>
+                                                            <span className="text-[14px] text-emerald-600 ml-1 whitespace-nowrap">{item.unit}</span>
                                                         </div>
                                                     </div>
                                                 </div>
