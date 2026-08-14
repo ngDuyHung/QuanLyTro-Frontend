@@ -688,7 +688,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                 <div
                   key={room.id}
                   onClick={() => setActiveActionRoomId((currentId) => currentId === room.id ? null : room.id)}
-                  className={`bg-white border-2 rounded-2xl shadow-sm overflow-visible transition-all cursor-pointer active:scale-[0.99] ${hasDebt ? "border-red-500 shadow-red-50" : "border-emerald-400"
+                  className={`bg-white border-2 rounded-2xl shadow-sm overflow-visible transition-all cursor-pointer active:scale-[0.99] ${hasDebt ? "border-red-500 shadow-red-50" : "border-emerald-500"
                     }`}
                 >
                   {/* Header */}
