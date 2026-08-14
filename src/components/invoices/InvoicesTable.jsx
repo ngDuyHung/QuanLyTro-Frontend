@@ -391,7 +391,7 @@ export default function InvoicesTable({
                         <span className="text-[12px] font-bold text-slate-600 flex items-center gap-1.5">
                           <i className="fa-regular fa-file-lines text-slate-400 text-[13px]"></i> {invoice.invoice_code}
                         </span>
-                        <span className="text-[12px] font-bold text-slate-600">Kỳ: {formatDate(invoice.period_to)}</span>
+                        <span className="text-[12px] font-bold text-slate-600">Kỳ: {formatDate(invoice.period_from)}</span>
                       </div>
 
                       {/* Dòng dưới: Khối Tiền (Trái: Cần thu | Phải: Tóm tắt) */}
