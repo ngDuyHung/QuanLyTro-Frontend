@@ -390,7 +390,7 @@ export default function CreateInvoiceModal({
             if (elecUsage >= 0 && electricity.current !== "") {
                 items.push({
                     charge_type: "electricity",
-                    description: `Tiền điện ( ${electricity.prev} - ${electricity.current})`,
+                    description: `Tiền điện (${electricity.current} - ${electricity.prev}  )`,
                     unit: "kWh",
                     quantity: elecUsage,
                     unit_price_snapshot: electricity.price,
@@ -401,7 +401,7 @@ export default function CreateInvoiceModal({
             if (waterUsage >= 0 && water.current !== "") {
                 items.push({
                     charge_type: "water",
-                    description: `Tiền nước (${water.prev} - ${water.current})`,
+                    description: `Tiền nước (${water.current} - ${water.prev}  )`,
                     unit: "m³",
                     quantity: waterUsage,
                     unit_price_snapshot: water.price,

@@ -559,11 +559,30 @@ export default function AddLeaseModal({
                   </h3>
                 </div>
 
+                {/* --- BẮT ĐẦU KHỐI THÔNG BÁO LỖI --- */}
                 {clientError && (
-                  <div className="mb-4 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-lg text-[13px]">
-                    {clientError}
+                  <div className="mb-5 bg-red-50 border-l-[4px] border-red-500 rounded-r-xl p-3.5 sm:p-4 shadow-sm flex items-start gap-3 animate-[fadeIn_0.3s_ease-out]">
+                    <div className="w-8 h-8 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0 mt-0.5 border border-red-200">
+                      <i className="fa-solid fa-triangle-exclamation text-[14px]"></i>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-[14px] font-bold text-red-700 mb-0.5">
+                        Thiếu thông tin hoặc sai định dạng
+                      </h4>
+                      <p className="text-[13px] text-red-600 leading-relaxed">
+                        {clientError}
+                      </p>
+                    </div>
+                    {/* Nút tắt nhanh thông báo lỗi (Tùy chọn) */}
+                    <button
+                      onClick={() => setClientError("")}
+                      className="w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-colors"
+                    >
+                      <i className="fa-solid fa-xmark text-[13px]"></i>
+                    </button>
                   </div>
                 )}
+                {/* --- KẾT THÚC KHỐI THÔNG BÁO LỖI --- */}
 
 
                 <div className="flex flex-col gap-4">
@@ -923,10 +942,11 @@ export default function AddLeaseModal({
                   </h3>
                 </div>
 
+                {/* --- BẮT ĐẦU KHỐI CHỈ SỐ ĐIỆN/NƯỚC --- */}
                 <div className="grid grid-cols-1 gap-4">
-
                   <div className="grid grid-cols-1 gap-5">
-                    {/* Điện */}
+
+                    {/* === Chỉ số Điện === */}
                     <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm">
                       <label className="flex items-center gap-2 text-[14px] font-bold text-slate-700 mb-3">
                         <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
@@ -935,36 +955,40 @@ export default function AddLeaseModal({
                         Chỉ số điện ban đầu <span className="text-red-500">*</span>
                       </label>
 
-                      <div className="flex flex-col sm:flex-row gap-3">
+                      {/* Flex row cho cả Mobile và PC */}
+                      <div className="flex flex-row gap-2.5 sm:gap-3">
+
+                        {/* Ô nhập số (Căn trái) */}
                         <div className="relative flex-1">
                           <input
-                            type="text" // Dùng text kết hợp onlyDigits để loại bỏ 2 nút mũi tên tăng giảm vướng víu
+                            type="text"
                             inputMode="numeric"
                             value={form.electricity_reading}
                             onChange={(e) => setForm(prev => ({ ...prev, electricity_reading: onlyDigits(e.target.value) }))}
                             placeholder="Nhập số điện..."
                             required
-                            className="w-full pl-3.5 pr-14 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[16px] font-bold text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand focus:bg-white transition-colors"
+                            className="w-full pl-3.5 pr-12 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[15px] sm:text-[16px] font-bold text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
                           />
-                          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-[13px] pointer-events-none">
+                          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-[12px] sm:text-[13px] pointer-events-none">
                             kWh
                           </span>
                         </div>
 
-                        <label className="sm:w-[130px] h-[48px] border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-brand hover:bg-brand/5 transition-all group relative overflow-hidden shrink-0 bg-slate-50">
+                        {/* Nút chụp ảnh (Căn phải) */}
+                        <label className="w-[85px] sm:w-[130px] h-[48px] sm:h-[48px] border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-brand hover:bg-brand/5 transition-all group relative overflow-hidden shrink-0 bg-slate-50">
                           {electricityImagePreview ? (
                             <>
                               <img src={electricityImagePreview} alt="Điện" className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span className="text-white text-[12px] font-semibold flex items-center gap-1.5">
-                                  <i className="fa-solid fa-camera"></i> Đổi ảnh
+                                <span className="text-white text-[11px] sm:text-[12px] font-semibold flex items-center gap-1">
+                                  <i className="fa-solid fa-camera"></i> <span className="hidden sm:inline">Đổi ảnh</span>
                                 </span>
                               </div>
                             </>
                           ) : (
-                            <div className="flex items-center gap-2 text-slate-500 group-hover:text-brand">
-                              <i className="fa-solid fa-camera text-[16px]"></i>
-                              <span className="text-[13px] font-semibold">Chụp ảnh</span>
+                            <div className="flex items-center gap-1.5 text-slate-500 group-hover:text-brand">
+                              <i className="fa-solid fa-camera text-[15px] sm:text-[16px]"></i>
+                              <span className="text-[12px] sm:text-[13px] font-semibold hidden sm:inline">Chụp ảnh</span>
                             </div>
                           )}
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => setElectricityImage(e.target.files?.[0] || null)} />
@@ -972,7 +996,7 @@ export default function AddLeaseModal({
                       </div>
                     </div>
 
-                    {/* Nước */}
+                    {/* === Chỉ số Nước === */}
                     <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm">
                       <label className="flex items-center gap-2 text-[14px] font-bold text-slate-700 mb-3">
                         <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
@@ -981,7 +1005,10 @@ export default function AddLeaseModal({
                         Chỉ số nước ban đầu <span className="text-red-500">*</span>
                       </label>
 
-                      <div className="flex flex-col sm:flex-row gap-3">
+                      {/* Flex row cho cả Mobile và PC */}
+                      <div className="flex flex-row gap-2.5 sm:gap-3">
+
+                        {/* Ô nhập số (Căn trái) */}
                         <div className="relative flex-1">
                           <input
                             type="text"
@@ -990,42 +1017,37 @@ export default function AddLeaseModal({
                             onChange={(e) => setForm(prev => ({ ...prev, water_reading: onlyDigits(e.target.value) }))}
                             placeholder="Nhập số nước..."
                             required
-                            className="w-full pl-3.5 pr-14 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[16px] font-bold text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand focus:bg-white transition-colors"
+                            className="w-full pl-3.5 pr-12 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[15px] sm:text-[16px] font-bold text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
                           />
-                          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-[13px] pointer-events-none">
+                          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-[12px] sm:text-[13px] pointer-events-none">
                             Khối
                           </span>
                         </div>
 
-                        <label className="sm:w-[130px] h-[48px] border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-brand hover:bg-brand/5 transition-all group relative overflow-hidden shrink-0 bg-slate-50">
+                        {/* Nút chụp ảnh (Căn phải) */}
+                        <label className="w-[85px] sm:w-[130px] h-[48px] sm:h-[48px] border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-brand hover:bg-brand/5 transition-all group relative overflow-hidden shrink-0 bg-slate-50">
                           {waterImagePreview ? (
                             <>
                               <img src={waterImagePreview} alt="Nước" className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span className="text-white text-[12px] font-semibold flex items-center gap-1.5">
-                                  <i className="fa-solid fa-camera"></i> Đổi ảnh
+                                <span className="text-white text-[11px] sm:text-[12px] font-semibold flex items-center gap-1">
+                                  <i className="fa-solid fa-camera"></i> <span className="hidden sm:inline">Đổi ảnh</span>
                                 </span>
                               </div>
                             </>
                           ) : (
-                            <div className="flex items-center gap-2 text-slate-500 group-hover:text-brand">
-                              <i className="fa-solid fa-camera text-[16px]"></i>
-                              <span className="text-[13px] font-semibold">Chụp ảnh</span>
+                            <div className="flex items-center gap-1.5 text-slate-500 group-hover:text-brand">
+                              <i className="fa-solid fa-camera text-[15px] sm:text-[16px]"></i>
+                              <span className="text-[12px] sm:text-[13px] font-semibold hidden sm:inline">Chụp ảnh</span>
                             </div>
                           )}
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => setWaterImage(e.target.files?.[0] || null)} />
                         </label>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="bg-orange-50 border border-orange-100 p-3.5 rounded-xl text-[13px] text-orange-800 flex items-start gap-3">
-                    <i className="fa-solid fa-circle-exclamation mt-0.5 text-orange-500 shrink-0"></i>
-                    <div className="leading-relaxed">
-                      <p className="font-semibold mb-0.5">Dữ liệu này dùng để tính hóa đơn kỳ đầu.</p>
-                      <p>Chỉ số ban đầu sẽ được lưu thành bản ghi điện/nước đầu tiên của hợp đồng.</p>
-                    </div>
                   </div>
+                  {/* --- KẾT THÚC KHỐI CHỈ SỐ ĐIỆN/NƯỚC --- */}
                 </div>
               </div>
 
