@@ -565,162 +565,144 @@ export default function AddLeaseModal({
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Khu nhà <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={form.property_id}
-                      onChange={(event) => {
-                        setClientError("");
-                        setRoomNotice("");
-                        setForm((prev) => ({
-                          ...prev,
-                          property_id: event.target.value,
-                          room_id: "",
-                        }));
-                      }}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] outline-none focus:border-brand"
-                    >
-                      <option value="">Chọn khu nhà</option>
-                      {properties.map((property) => (
-                        <option key={property.id} value={property.id}>
-                          {property.name}
+
+                <div className="flex flex-col gap-4">
+
+                  {/* HÀNG 1: Khu nhà & Phòng (Mobile 1 cột, PC 2 cột) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                        Khu nhà <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={form.property_id}
+                        onChange={(event) => {
+                          setClientError("");
+                          setRoomNotice("");
+                          setForm((prev) => ({ ...prev, property_id: event.target.value, room_id: "" }));
+                        }}
+                        className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
+                      >
+                        <option value="">Chọn khu nhà</option>
+                        {properties.map((property) => (
+                          <option key={property.id} value={property.id}>{property.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                        Phòng trống <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={form.room_id}
+                        onChange={handleRoomChange}
+                        disabled={!form.property_id || isLoadingRooms}
+                        className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all disabled:opacity-60 disabled:bg-slate-100"
+                      >
+                        <option value="">
+                          {isLoadingRooms ? "Đang tải phòng..." : form.property_id ? "Chọn phòng trống" : "Chọn khu nhà trước"}
                         </option>
-                      ))}
-                    </select>
+                        {rooms.map((room) => (
+                          <option key={room.id} value={room.id}>
+                            {room.name} {room.current_price ? ` - ${Number(room.current_price).toLocaleString("vi-VN")}đ/th` : ""}
+                          </option>
+                        ))}
+                      </select>
+                      {roomNotice && <p className="mt-1.5 text-[12px] text-orange-600">{roomNotice}</p>}
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Phòng trống <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={form.room_id}
-                      onChange={handleRoomChange}
-                      disabled={!form.property_id || isLoadingRooms}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] outline-none focus:border-brand disabled:bg-slate-50 disabled:text-slate-400"
-                    >
-                      <option value="">
-                        {isLoadingRooms
-                          ? "Đang tải phòng..."
-                          : form.property_id
-                            ? "Chọn phòng trống"
-                            : "Chọn khu nhà trước"}
-                      </option>
-                      {rooms.map((room) => (
-                        <option key={room.id} value={room.id}>
-                          {room.name}
-                          {room.current_price
-                            ? ` - ${Number(room.current_price).toLocaleString("vi-VN")}đ/tháng`
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {roomNotice && (
-                      <p className="mt-1.5 text-[12px] text-orange-600 leading-relaxed">
-                        {roomNotice}
-                      </p>
-                    )}
+                  {/* HÀNG 2: Ngày tháng (Luôn 2 cột trên Mobile) */}
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                        Ngày bắt đầu <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={form.start_date}
+                        onChange={handleChange("start_date")}
+                        className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5 whitespace-nowrap truncate">
+                        Kết thúc <span className="text-slate-400 font-normal hidden sm:inline">(tùy chọn)</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={form.end_date}
+                        onChange={handleChange("end_date")}
+                        min={form.start_date}
+                        className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Ngày bắt đầu <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={form.start_date}
-                      onChange={handleChange("start_date")}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-                    />
+                  {/* HÀNG 3: Tiền bạc (Luôn 2 cột + Thêm hậu tố "đ") */}
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Giá phòng</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={form.room_price}
+                          onChange={(e) => setForm(prev => ({ ...prev, room_price: formatMoneyInput(e.target.value) }))}
+                          placeholder="0" inputMode="numeric"
+                          className="w-full pl-3.5 pr-8 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-semibold text-brand outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
+                        />
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium pointer-events-none">đ</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Thế chân</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={form.deposit}
+                          onChange={(e) => setForm(prev => ({ ...prev, deposit: formatMoneyInput(e.target.value) }))}
+                          placeholder="0" inputMode="numeric"
+                          className="w-full pl-3.5 pr-8 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-semibold text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
+                        />
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium pointer-events-none">đ</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Ngày kết thúc <span className="text-slate-400 font-normal">(tùy chọn)</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={form.end_date}
-                      onChange={handleChange("end_date")}
-                      min={form.start_date} // Ràng buộc UI không cho chọn trước ngày bắt đầu
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-                    />
-                    <p className="mt-1.5 text-[12px] text-slate-500">
-                      Để trống nếu là hợp đồng không thời hạn.
-                    </p>
+                  {/* HÀNG 4: Ngày thu & Người ở (Luôn 2 cột) */}
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Thu tiền (ngày)</label>
+                      <input
+                        type="number" min="1" max="28" inputMode="numeric"
+                        value={form.billing_day}
+                        onChange={handleChange("billing_day")}
+                        className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5 whitespace-nowrap truncate">
+                        Số người <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number" min="1" inputMode="numeric"
+                        value={form.occupants_count}
+                        onChange={handleChange("occupants_count")}
+                        placeholder="VD: 2"
+                        className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Ngày thu tiền
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="28"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={form.billing_day}
-                      onChange={handleChange("billing_day")}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-                    />
+                  {/* Bảng nhắc nhở giữ nguyên */}
+                  <div className="bg-blue-50 border border-blue-100 text-blue-700 px-4 py-3 rounded-lg text-[13px] flex items-start gap-3 mt-1">
+                    <i className="fa-solid fa-circle-info text-blue-500 mt-0.5 shrink-0"></i>
+                    <p>Chú ý điền đúng số lượng người đang ở để tính hóa đơn chính xác.</p>
                   </div>
 
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Giá tiền phòng
-                    </label>
-                    <input
-                      type="text"
-                      value={form.room_price}
-                      // readOnly
-                      onChange={(e) => setForm(prev => ({ ...prev, room_price: formatMoneyInput(e.target.value) }))}
-                      placeholder="VD: 1.000.000"
-                      inputMode="numeric"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Tiền thế chân
-                    </label>
-                    <input
-                      type="text"
-                      value={form.deposit}
-                      onChange={(e) => setForm(prev => ({ ...prev, deposit: formatMoneyInput(e.target.value) }))}
-                      placeholder="VD: 1000000"
-                      inputMode="numeric"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Số lượng người ở <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={form.occupants_count}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      onChange={handleChange("occupants_count")}
-                      placeholder="Nhập số người ở dự kiến"
-                      className="w-full px-3.5 py-2.5 bg-white border bg-blue-50 border border-blue-400 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-                    />
-                  </div>
-
-                  <div className="bg-blue-50 border border-blue-100 text-blue-700 px-4 py-3 rounded-lg text-[13px] flex items-start gap-3">
-                    <i className="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
-                    <p>
-                      Chú ý điền đúng số lượng người đang ở để dựa vào đây tính hóa đơn và các khoản phí khác.
-                    </p>
-                  </div>
                 </div>
+
               </div>
 
               <div className="h-px w-full bg-slate-100"></div>
@@ -733,30 +715,25 @@ export default function AddLeaseModal({
                   </h3>
                 </div>
 
-                {/* CẬP NHẬT LẠI KHỐI MÃ JSX NÀY */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  {/* Mặt trước CCCD */}
-                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center transition-all min-h-[170px] relative bg-white">
-                    <p className="text-[13px] font-semibold text-slate-700 mb-3 relative z-10 w-full text-center">
+                {/* ---  KHỐI CCCD --- */}
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
+
+                  {/* === Mặt trước CCCD === */}
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all min-h-[130px] sm:min-h-[170px] relative bg-slate-50 hover:bg-brand/5 hover:border-brand group">
+                    <p className="text-[12px] sm:text-[13px] font-semibold text-slate-700 mb-2 relative z-10 w-full text-center">
                       Mặt trước CCCD
                     </p>
 
                     {frontImagePreview ? (
-                      // KHI CÓ ẢNH
-                      <div className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-black mb-2 shadow-inner">
-
-                        {/* LỚP 1: ẢNH NỀN (Nhấp vào để zoom) */}
+                      // KHI CÓ ẢNH (Thu nhỏ chiều cao trên mobile h-[70px])
+                      <div className="relative w-full h-[70px] sm:h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-black mb-1.5 shadow-inner">
                         <img
                           src={frontImagePreview}
                           alt="Mặt trước CCCD"
                           className="absolute inset-0 w-full h-full object-cover cursor-pointer"
                           onClick={() => setFullScreenImage(frontImagePreview)}
                         />
-
-                        {/* LỚP 2: OVERLAY QUÉT (Nằm đè lên ảnh) */}
                         <EkycOverlay status={scanStatusFront} />
-
-                        {/* LỚP 3: NÚT XÓA ẢNH (Nằm trên cùng) */}
                         <button
                           type="button"
                           onClick={(event) => {
@@ -764,24 +741,23 @@ export default function AddLeaseModal({
                             setFrontImage(null);
                             setScanStatusFront("idle");
                           }}
-                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 text-white hover:bg-red-500 flex items-center justify-center backdrop-blur-sm transition-colors shadow-md z-20"
+                          className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-6 h-6 rounded-full bg-black/50 text-white hover:bg-red-500 flex items-center justify-center backdrop-blur-sm transition-colors shadow-md z-20"
                         >
                           <i className="fa-solid fa-xmark text-[11px]"></i>
                         </button>
                       </div>
                     ) : (
                       // KHI CHƯA CÓ ẢNH
-                      <label className="w-full h-[110px] flex flex-col items-center justify-center cursor-pointer mb-2 group-hover:border-brand transition-colors">
-                        <div className="w-12 h-10 border border-slate-300 rounded flex items-center justify-center text-slate-400 mb-2 group-hover:border-brand group-hover:text-brand transition-colors relative z-10">
-                          <i className="fa-regular fa-address-card text-xl"></i>
+                      <label className="w-full h-[70px] sm:h-[110px] flex flex-col items-center justify-center cursor-pointer mb-1.5 relative z-10">
+                        <div className="w-10 h-8 sm:w-12 sm:h-10 border border-slate-300 bg-white rounded flex items-center justify-center text-slate-400 mb-1.5 group-hover:border-brand group-hover:text-brand transition-colors shadow-sm">
+                          <i className="fa-regular fa-address-card text-lg sm:text-xl"></i>
                         </div>
-                        <span className="text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center line-clamp-1 max-w-full relative z-10">
-                          Chụp hoặc tải ảnh lên
+                        <span className="text-[11px] sm:text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center line-clamp-1 max-w-full">
+                          <span className="hidden sm:inline">Chụp hoặc tải ảnh lên</span>
+                          <span className="sm:hidden">Tải ảnh lên</span>
                         </span>
                         <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
+                          type="file" accept="image/*" className="hidden"
                           onChange={(event) => {
                             const file = event.target.files?.[0];
                             if (file) {
@@ -794,35 +770,28 @@ export default function AddLeaseModal({
                       </label>
                     )}
 
-                    {/* Tên file */}
                     {frontImage && (
-                      <span className="text-[12px] text-slate-500 text-center line-clamp-1 max-w-full relative z-10 mt-1 w-full block">
+                      <span className="text-[10px] sm:text-[12px] text-slate-500 text-center line-clamp-1 max-w-full relative z-10 mt-0.5 w-full block px-1">
                         {frontImage.name}
                       </span>
                     )}
                   </div>
 
-                  {/* Mặt sau CCCD */}
-                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center transition-all min-h-[170px] relative bg-white">
-                    <p className="text-[13px] font-semibold text-slate-700 mb-3 relative z-10 w-full text-center">
+                  {/* === Mặt sau CCCD === */}
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all min-h-[130px] sm:min-h-[170px] relative bg-slate-50 hover:bg-brand/5 hover:border-brand group">
+                    <p className="text-[12px] sm:text-[13px] font-semibold text-slate-700 mb-2 relative z-10 w-full text-center">
                       Mặt sau CCCD
                     </p>
 
                     {backImagePreview ? (
-                      <div className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-black mb-2 shadow-inner">
-
-                        {/* LỚP 1: ẢNH NỀN (Nhấp vào để zoom) */}
+                      <div className="relative w-full h-[70px] sm:h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-black mb-1.5 shadow-inner">
                         <img
                           src={backImagePreview}
                           alt="Mặt sau CCCD"
                           className="absolute inset-0 w-full h-full object-cover cursor-pointer"
                           onClick={() => setFullScreenImage(backImagePreview)}
                         />
-
-                        {/* LỚP 2: OVERLAY QUÉT (Nằm đè lên ảnh) */}
                         <EkycOverlay status={scanStatusBack} />
-
-                        {/* LỚP 3: NÚT XÓA ẢNH (Nằm trên cùng) */}
                         <button
                           type="button"
                           onClick={(event) => {
@@ -830,23 +799,22 @@ export default function AddLeaseModal({
                             setBackImage(null);
                             setScanStatusBack("idle");
                           }}
-                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 text-white hover:bg-red-500 flex items-center justify-center backdrop-blur-sm transition-colors shadow-md z-20"
+                          className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-6 h-6 rounded-full bg-black/50 text-white hover:bg-red-500 flex items-center justify-center backdrop-blur-sm transition-colors shadow-md z-20"
                         >
                           <i className="fa-solid fa-xmark text-[11px]"></i>
                         </button>
                       </div>
                     ) : (
-                      <label className="w-full h-[110px] flex flex-col items-center justify-center cursor-pointer mb-2 group-hover:border-brand transition-colors">
-                        <div className="w-12 h-10 border border-slate-300 rounded flex items-center justify-center text-slate-400 mb-2 group-hover:border-brand group-hover:text-brand transition-colors relative z-10">
-                          <i className="fa-regular fa-address-card text-xl"></i>
+                      <label className="w-full h-[70px] sm:h-[110px] flex flex-col items-center justify-center cursor-pointer mb-1.5 relative z-10">
+                        <div className="w-10 h-8 sm:w-12 sm:h-10 border border-slate-300 bg-white rounded flex items-center justify-center text-slate-400 mb-1.5 group-hover:border-brand group-hover:text-brand transition-colors shadow-sm">
+                          <i className="fa-regular fa-address-card text-lg sm:text-xl"></i>
                         </div>
-                        <span className="text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center line-clamp-1 max-w-full relative z-10">
-                          Chụp hoặc tải ảnh lên
+                        <span className="text-[11px] sm:text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center line-clamp-1 max-w-full">
+                          <span className="hidden sm:inline">Chụp hoặc tải ảnh lên</span>
+                          <span className="sm:hidden">Tải ảnh lên</span>
                         </span>
                         <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
+                          type="file" accept="image/*" className="hidden"
                           onChange={(event) => {
                             const file = event.target.files?.[0];
                             if (file) {
@@ -858,14 +826,15 @@ export default function AddLeaseModal({
                       </label>
                     )}
 
-                    {/* Tên file */}
                     {backImage && (
-                      <span className="text-[12px] text-slate-500 text-center line-clamp-1 max-w-full relative z-10 mt-1 w-full block">
+                      <span className="text-[10px] sm:text-[12px] text-slate-500 text-center line-clamp-1 max-w-full relative z-10 mt-0.5 w-full block px-1">
                         {backImage.name}
                       </span>
                     )}
                   </div>
+
                 </div>
+                {/* --- KẾT THÚC KHỐI CCCD --- */}
 
                 {/* Scan Message */}
                 {(isScanning || scanMessage.text) && (
@@ -900,7 +869,7 @@ export default function AddLeaseModal({
                       value={form.full_name}
                       onChange={handleChange("full_name")}
                       placeholder="Nhập họ và tên"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
                     />
                   </div>
                   <div>
@@ -913,7 +882,7 @@ export default function AddLeaseModal({
                       onChange={handleChange("phone")}
                       placeholder="Nhập số điện thoại"
                       inputMode="numeric"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
                     />
                   </div>
                   <div>
@@ -926,7 +895,7 @@ export default function AddLeaseModal({
                       onChange={handleChange("id_card_number")}
                       placeholder="Nhập số CCCD/CMND"
                       inputMode="numeric"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
                     />
                   </div>
                   <div>
@@ -938,7 +907,7 @@ export default function AddLeaseModal({
                       value={form.email}
                       onChange={handleChange("email")}
                       placeholder="VD: khachthue@gmail.com"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand hover:border-slate-300 transition-all"
                     />
                   </div>
                 </div>

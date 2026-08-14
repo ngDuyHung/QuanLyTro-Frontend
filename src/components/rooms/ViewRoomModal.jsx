@@ -306,8 +306,9 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                         {recentInvoices.map((invoice) => {
                           const invStatus = getInvoiceStatusConfig(invoice.status);
                           const periodLabel = invoice.period_from
-                            ? `Tháng ${new Date(invoice.period_from).getMonth() + 1}/${new Date(invoice.period_from).getFullYear()}`
+                            ? `${new Date(invoice.period_from).getDate()} tháng ${new Date(invoice.period_from).getMonth() + 1} /${new Date(invoice.period_from).getFullYear()}`
                             : "---";
+
 
                           return (
                             <div key={invoice.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-colors hover:border-brand/30">
@@ -316,7 +317,7 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                               <div className="flex items-center justify-between p-3 border-b border-slate-100 bg-slate-50/50">
                                 <div>
                                   <p className="text-[13px] font-bold text-slate-800">{invoice.invoice_code}</p>
-                                  <p className="text-[11px] text-slate-500 mt-0.5">
+                                  <p className="text-[11px] text-slate-800 mt-0.5">
                                     <i className="fa-regular fa-calendar text-[10px] mr-1"></i>Kỳ: {periodLabel}
                                   </p>
                                 </div>
@@ -351,7 +352,7 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                                       <div className="flex-1 pr-2">
                                         <span className="font-semibold text-slate-700">{item.description}</span>
                                         {subText && (
-                                          <span className="block text-[11px] text-slate-400 mt-0.5">
+                                          <span className="block text-[11px] text-slate-800 mt-0.5">
                                             {subText}
                                           </span>
                                         )}
