@@ -11,6 +11,15 @@ const getCurrentDateTimeLocal = () => {
     return now.toISOString().slice(0, 19); // Lấy đến giây: YYYY-MM-DDThh:mm:ss
 };
 
+// Hàm chuyển đổi ngày bất kỳ thành datetime-local (đặt mặc định 12:00 trưa)
+const formatToDateTimeLocal = (dateString) => {
+    if (!dateString) return getCurrentDateTimeLocal();
+    const date = new Date(dateString);
+    date.setHours(12, 0, 0, 0); // Đặt mặc định 12h trưa cho các giao dịch quá khứ
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0, 19);
+};
+
 
 export default function PaymentInvoiceModal({
     open,
@@ -46,6 +55,42 @@ export default function PaymentInvoiceModal({
         (a) => a.financial_transaction?.status === 'pending'
     );
     const pendingTx = pendingAllocation?.financial_transaction;
+
+
+    // Xác định ngày làm mốc (Ưu tiên Hạn thanh toán, nếu không có thì lấy Ngày chốt kỳ)
+    const targetDateStr = invoice?.due_date || invoice?.period_to;
+
+    // Kiểm tra xem hóa đơn này có phải là hóa đơn cũ (trong quá khứ) hay không
+    //useMemo để tránh tính toán lại mỗi lần render, chỉ khi targetDateStr thay đổi mới tính toán lại
+    const isOldInvoice = React.useMemo(() => {
+        if (!targetDateStr) return false;
+
+        const targetDate = new Date(targetDateStr);
+        const today = new Date();
+
+        // Đưa cả 2 về đầu ngày (00:00:00) để so sánh thuần túy theo lịch (bỏ qua giờ phút)
+        targetDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        return targetDate.getTime() < today.getTime();
+    }, [targetDateStr]);
+
+    // Hàm set ngày về hiện tại
+    const setDateToNow = () => {
+        setTransactionDate(getCurrentDateTimeLocal());
+    };
+
+    // Hàm set ngày lùi về hạn chót hóa đơn
+    const setDateToInvoiceDue = () => {
+        // Nên lấy issue_date làm chuẩn, nếu không có thì lấy due_date
+        const targetDate = invoice?.issue_date || invoice?.due_date || invoice?.period_to;
+        if (targetDate) {
+            const date = new Date(targetDate);
+            date.setHours(12, 0, 0, 0); // Đặt 12h trưa
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            setTransactionDate(date.toISOString().slice(0, 19));
+        }
+    };
 
     const handleApprovePending = async () => {
         try {
@@ -197,6 +242,19 @@ export default function PaymentInvoiceModal({
         if (payAmount <= 0) return setClientError("Số tiền thu phải lớn hơn 0.");
         if (payAmount > invoice.remaining_amount) return setClientError(`Không được thu vượt quá số nợ (${invoice.remaining_amount.toLocaleString()} đ).`);
         if (method === "bank_transfer" && !bankAccountId) return setClientError("Vui lòng chọn ngân hàng nhận tiền.");
+
+        // --- CHẶN NGÀY THU HỢP LÝ ---
+        const txDateObj = new Date(transactionDate);
+        const limitDateStr = invoice.issue_date || invoice.period_from;
+
+        if (limitDateStr) {
+            const limitDateObj = new Date(limitDateStr);
+            limitDateObj.setHours(0, 0, 0, 0); // Đưa về 0h00 để chỉ so sánh ngày
+
+            if (txDateObj.getTime() < limitDateObj.getTime()) {
+                return setClientError(`Ngày thu không được trước ngày lập hóa đơn (${limitDateObj.toLocaleDateString('vi-VN')}).`);
+            }
+        }
 
         try {
             setIsSubmitting(true);
@@ -354,9 +412,34 @@ export default function PaymentInvoiceModal({
                                             step="1"
                                             value={transactionDate}
                                             onChange={(e) => setTransactionDate(e.target.value)}
-                                            readOnly
+                                            // Thêm min để khóa không cho người dùng click chọn ngày cũ hơn trên Lịch
+                                            min={(invoice?.issue_date || invoice?.period_from) ? `${invoice.issue_date || invoice.period_from}T00:00` : undefined}
+                                            // readOnly
                                             className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-[13px] outline-none focus:border-brand"
                                         />
+                                        {/* NÚT CHỌN NHANH DÀNH CHO NHẬP LIỆU CŨ */}
+                                        {isOldInvoice && (
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={setDateToNow}
+                                                    className="text-[11px] px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded border border-slate-200 transition-colors"
+                                                >
+                                                    <i className="fa-solid fa-clock text-slate-400 mr-1"></i> Bây giờ
+                                                </button>
+
+                                                {/* Chỉ render nút Lùi ngày khi hàm isOldInvoice trả về TRUE */}
+                                                <button
+                                                    type="button"
+                                                    onClick={setDateToInvoiceDue}
+                                                    className="text-[11px] px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded border border-blue-200 transition-colors"
+                                                    title="Dùng cho việc nhập liệu sổ sách các tháng cũ"
+                                                >
+                                                    <i className="fa-solid fa-clock-rotate-left mr-1"></i> Lùi về hạn HĐ
+                                                    ({new Date(targetDateStr).toLocaleDateString("vi-VN")})
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div>

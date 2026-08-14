@@ -301,12 +301,69 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                                 </div>
                             </div>
 
-                            {/* NỬA PHẢI: CONTAINER 3D LẬT THẺ */}
-                            <div className="w-full sm:w-1/2 flex flex-col relative perspective-[1000px] min-h-[500px] sm:min-h-0">
-                                <div className={`w-full h-full relative duration-700 ease-[cubic-bezier(0.4,0.2,0.2,1)] [transform-style:preserve-3d] ${paymentResult ? '[transform:rotateY(180deg)]' : ''}`}>
+                            {/* NỬA PHẢI: QUÉT MÃ QR HOẶC THÀNH CÔNG (Hiệu ứng Fade & Zoom mượt mà) */}
+                            <div className="w-full sm:w-1/2 flex flex-col relative min-h-[500px] sm:min-h-0 transition-all duration-300">
 
-                                    {/* MẶT TRƯỚC: MÃ QR & CHUYỂN KHOẢN */}
-                                    <div className="absolute inset-0 [backface-visibility:hidden] bg-white border border-slate-200 rounded-xl p-5 flex flex-col items-center shadow-sm overflow-hidden flex-1">
+                                {paymentResult ? (
+                                    /* ========================================= */
+                                    /* MÀN HÌNH THÀNH CÔNG (HIỆN KHI CÓ TIỀN)     */
+                                    /* Dùng animate-[fadeInZoom...] để tạo độ mượt */
+                                    /* ========================================= */
+                                    <div className="flex-1 bg-white border border-green-200 rounded-xl p-6 flex flex-col items-center justify-center shadow-sm overflow-hidden animate-[fadeInZoom_0.4s_ease-out]">
+                                        <div className={`absolute top-0 left-0 w-full h-1.5 ${paymentResult?.status === 'full' ? 'bg-green-500' : 'bg-amber-400'}`}></div>
+
+                                        {/* SVG Animated Checkmark (Giữ nguyên vì đây là điểm nhấn UX) */}
+                                        <div className="svg-success-container mb-4 relative">
+                                            <svg className="checkmark w-24 h-24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                                <circle className={`checkmark__circle ${paymentResult.status === 'full' ? 'stroke-green-500' : 'stroke-amber-400'}`} cx="26" cy="26" r="25" fill="none" strokeWidth="2" strokeMiterlimit="10" />
+                                                <path className={`checkmark__check ${paymentResult.status === 'full' ? 'stroke-green-500' : 'stroke-amber-400'}`} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" strokeWidth="3" />
+                                            </svg>
+                                            {paymentResult.status === 'full' && (
+                                                <div className="absolute inset-0 animate-[ping_0.5s_ease-out] opacity-20 bg-green-400 rounded-full"></div>
+                                            )}
+                                        </div>
+
+                                        <h3 className="text-[20px] font-bold text-slate-800 mb-1 text-center">
+                                            {paymentResult?.status === 'full' ? 'Giao dịch thành công!' : 'Đã nhận một phần!'}
+                                        </h3>
+                                        <p className="text-[13px] text-slate-500 mb-6 text-center">Hệ thống vừa ghi nhận khoản tiền</p>
+
+                                        {/* Hiệu ứng trượt tiền lên */}
+                                        <div className="text-[36px] font-black mb-8 tracking-tight overflow-hidden flex items-center justify-center h-[40px]">
+                                            <span className={`animate-[slideUpMoney_0.5s_ease-out_forwards] translate-y-10 ${paymentResult?.status === 'full' ? 'text-green-600' : 'text-amber-500'}`}>
+                                                + {Number(paymentResult?.amount).toLocaleString()} <span className="text-[20px] font-bold">đ</span>
+                                            </span>
+                                        </div>
+
+                                        {/* Xử lý Trả một phần hoặc Hoàn tất */}
+                                        {paymentResult?.status === 'partial' ? (
+                                            <div className="w-full mt-auto animate-[fadeIn_0.5s_ease-out_0.3s_both]">
+                                                <div className="flex justify-between text-[11px] font-bold mb-1.5">
+                                                    <span className="text-amber-600">Đã thanh toán {paymentResult.progress}%</span>
+                                                    <span className="text-slate-500">Còn nợ</span>
+                                                </div>
+                                                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
+                                                    <div className="h-full bg-amber-400 transition-all duration-1000 ease-out" style={{ width: `${paymentResult.progress}%` }}></div>
+                                                </div>
+
+                                                <div className="p-3 bg-amber-50 rounded-lg border border-amber-100 text-center relative overflow-hidden">
+                                                    <div className="relative z-10">
+                                                        <p className="text-[12px] font-medium text-amber-700">Tạo mã QR mới sau <span className="font-bold text-amber-900">{countdown}s</span>...</p>
+                                                    </div>
+                                                    <div className="absolute bottom-0 left-0 h-1 bg-amber-200 transition-all ease-linear" style={{ width: `${(countdown / 4) * 100}%`, transitionDuration: '1s' }}></div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button onClick={onClose} className="mt-auto w-full py-3.5 bg-green-500 text-white rounded-lg text-[14px] font-bold hover:bg-green-600 transition-colors shadow-lg shadow-green-500/20 active:scale-[0.98] animate-[fadeIn_0.5s_ease-out_0.3s_both]">
+                                                Hoàn tất & Đóng
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : (
+                                    /* ========================================= */
+                                    /* MÀN HÌNH MÃ QR MẶC ĐỊNH                    */
+                                    /* ========================================= */
+                                    <div className="flex-1 bg-white border border-slate-200 rounded-xl p-5 flex flex-col items-center shadow-sm overflow-hidden animate-[fadeIn_0.3s_ease-out]">
                                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-green-300"></div>
 
                                         <h3 className="font-bold text-[15px] text-slate-800 mb-4 flex items-center gap-2 shrink-0">
@@ -318,12 +375,7 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                                                 {qrCodeUrl ? (
                                                     <div className="relative group mb-4 shrink-0">
                                                         <div className="p-3 border-2 border-dashed border-primary/40 rounded-2xl bg-white relative overflow-hidden transition-all group-hover:border-primary">
-                                                            <img
-                                                                key={qrCodeUrl}
-                                                                src={qrCodeUrl}
-                                                                alt="QR Code"
-                                                                className="w-[180px] h-[180px] object-contain animate-[fadeIn_0.5s_ease-out]"
-                                                            />
+                                                            <img key={qrCodeUrl} src={qrCodeUrl} alt="QR Code" className="w-[180px] h-[180px] object-contain" />
                                                             {isPolling && (
                                                                 <div className="absolute top-0 left-0 w-full h-[3px] bg-green-400 shadow-[0_0_12px_3px_#4ade80] opacity-70 animate-[scanQR_2s_ease-in-out_infinite]"></div>
                                                             )}
@@ -337,6 +389,7 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                                                 )}
 
                                                 <div className="w-full bg-[#F8FAFC] p-3 rounded-lg border border-slate-100 text-[12px] space-y-2 mb-4 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                                                    {/* Giữ nguyên các thông tin Số tài khoản, Ngân hàng, Nội dung CK... */}
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-slate-500">Ngân hàng:</span>
                                                         <span className="font-bold text-slate-800">{bankAccount.bank_code}</span>
@@ -379,7 +432,6 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                                                             <i className="fa-solid fa-circle-exclamation mt-0.5"></i>
                                                             <span className="text-left">Chế độ tự động xác nhận hiện không khả dụng. Bạn vui lòng tải lên ảnh chụp màn hình chuyển khoản thành công.</span>
                                                         </div>
-
                                                         <div className="w-full relative">
                                                             <input
                                                                 type="file"
@@ -410,58 +462,7 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* MẶT SAU: MÀN HÌNH THÀNH CÔNG */}
-                                    <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-white border border-green-200 rounded-xl p-6 flex flex-col items-center justify-center shadow-sm overflow-hidden flex-1">
-                                        <div className={`absolute top-0 left-0 w-full h-1.5 ${paymentResult?.status === 'full' ? 'bg-green-500' : 'bg-amber-400'}`}></div>
-
-                                        {paymentResult && (
-                                            <div className="svg-success-container mb-4 relative">
-                                                <svg className="checkmark w-24 h-24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                                                    <circle className={`checkmark__circle ${paymentResult.status === 'full' ? 'stroke-green-500' : 'stroke-amber-400'}`} cx="26" cy="26" r="25" fill="none" strokeWidth="2" strokeMiterlimit="10" />
-                                                    <path className={`checkmark__check ${paymentResult.status === 'full' ? 'stroke-green-500' : 'stroke-amber-400'}`} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" strokeWidth="3" />
-                                                </svg>
-                                                {paymentResult.status === 'full' && (
-                                                    <div className="absolute inset-0 animate-[ping_0.5s_ease-out] opacity-20 bg-green-400 rounded-full"></div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        <h3 className="text-[20px] font-bold text-slate-800 mb-1">
-                                            {paymentResult?.status === 'full' ? 'Giao dịch thành công!' : 'Đã nhận một phần!'}
-                                        </h3>
-                                        <p className="text-[13px] text-slate-500 mb-6">Hệ thống vừa ghi nhận khoản tiền</p>
-
-                                        <div className="text-[36px] font-black mb-8 tracking-tight overflow-hidden flex items-center justify-center h-[40px]">
-                                            <span className={`animate-[slideUpMoney_0.5s_ease-out_forwards] translate-y-10 ${paymentResult?.status === 'full' ? 'text-green-600' : 'text-amber-500'}`}>
-                                                + {Number(paymentResult?.amount).toLocaleString()} <span className="text-[20px] font-bold">đ</span>
-                                            </span>
-                                        </div>
-
-                                        {paymentResult?.status === 'partial' ? (
-                                            <div className="w-full mt-auto">
-                                                <div className="flex justify-between text-[11px] font-bold mb-1.5">
-                                                    <span className="text-amber-600">Đã thanh toán {paymentResult.progress}%</span>
-                                                    <span className="text-slate-500">Còn nợ</span>
-                                                </div>
-                                                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
-                                                    <div className="h-full bg-amber-400 transition-all duration-1000 ease-out" style={{ width: `${paymentResult.progress}%` }}></div>
-                                                </div>
-
-                                                <div className="p-3 bg-amber-50 rounded-lg border border-amber-100 text-center relative overflow-hidden">
-                                                    <div className="relative z-10">
-                                                        <p className="text-[12px] font-medium text-amber-700">Tạo mã QR mới sau <span className="font-bold text-amber-900">{countdown}s</span>...</p>
-                                                    </div>
-                                                    <div className="absolute bottom-0 left-0 h-1 bg-amber-200 transition-all ease-linear" style={{ width: `${(countdown / 4) * 100}%`, transitionDuration: '1s' }}></div>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <button onClick={onClose} className="mt-auto w-full py-3.5 bg-green-500 text-white rounded-lg text-[14px] font-bold hover:bg-green-600 transition-colors shadow-lg shadow-green-500/20 active:scale-[0.98]">
-                                                Hoàn tất & Đóng
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </>
                     )}
@@ -493,7 +494,10 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                 @keyframes stroke {
                     100% { stroke-dashoffset: 0; }
                 }
-                .perspective-\\[1000px\\] { perspective: 1000px; }
+                @keyframes fadeInZoom {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+}
             `}</style>
         </div>
     );

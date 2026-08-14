@@ -18,6 +18,18 @@ const formatDate = (dateString) => {
   });
 };
 
+const getAccountingTypeLabel = (type) => {
+  const labels = {
+    revenue: "Doanh thu",
+    expense: "Chi phí",
+    liability_in: "Nhận cọc (Tăng nợ phải trả)",
+    liability_out: "Hoàn cọc (Giảm nợ phải trả)",
+    receivable_adjustment: "Điều chỉnh công nợ", // Bổ sung từ DB Enum để đề phòng các phiếu điều chỉnh
+  };
+
+  return labels[type] || type; // Trả về nhãn tiếng Việt, nếu không có thì giữ nguyên type gốc
+};
+
 const getDirectionStyle = (direction) => {
   if (direction === "income") {
     return {
@@ -49,7 +61,7 @@ const getStatusStyle = (status) => {
 };
 
 export default function ViewFinancialTransactionModal({ open, transaction, onClose }) {
-  
+
   // Khóa cuộn trang nền khi mở Modal nhằm tối ưu UX cho mobile app
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
@@ -64,7 +76,7 @@ export default function ViewFinancialTransactionModal({ open, transaction, onClo
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
       <div className="bg-slate-50 w-full h-[95vh] sm:h-auto sm:max-h-[85vh] sm:max-w-[750px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out]">
-        
+
         {/* HEADER MODAL */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white shrink-0">
           <div className="flex items-center gap-2.5">
@@ -75,9 +87,9 @@ export default function ViewFinancialTransactionModal({ open, transaction, onClo
               {transaction.status_label || (transaction.status === "cancelled" ? "Đã hủy" : transaction.status === "pending" ? "Đang chờ duyệt" : "Thành công")}
             </span>
           </div>
-          <button 
-            type="button" 
-            onClick={onClose} 
+          <button
+            type="button"
+            onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
           >
             <i className="fa-solid fa-xmark"></i>
@@ -86,7 +98,7 @@ export default function ViewFinancialTransactionModal({ open, transaction, onClo
 
         {/* BODY (NỘI DUNG PHIẾU THU CHI CHỈ TIẾT) */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          
+
           {/* KHỐI TRỌNG TÂM: SỐ TIỀN BẢN GHI */}
           <div className="bg-white p-5 rounded-xl border border-slate-200 text-center flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
             <div className={`absolute top-0 left-0 right-0 h-1 ${transaction.direction === 'income' ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -102,11 +114,11 @@ export default function ViewFinancialTransactionModal({ open, transaction, onClo
 
           {/* CHIA LAYOUT 2 CỘT TRÊN DESKTOP */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
+
             {/* THÔNG TIN CHUNG */}
             <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
               <h4 className="text-[12px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5">Thông tin dòng tiền</h4>
-              
+
               <div className="flex justify-between items-center text-[13px]">
                 <span className="text-slate-500">Thời gian lập:</span>
                 <span className="font-semibold text-slate-800">{formatDate(transaction.transaction_date)}</span>
@@ -117,14 +129,16 @@ export default function ViewFinancialTransactionModal({ open, transaction, onClo
               </div>
               <div className="flex justify-between items-center text-[13px]">
                 <span className="text-slate-500">Bản chất kế toán:</span>
-                <span className="font-mono text-[11px] bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-bold">{transaction.accounting_type}</span>
+                <span className="font-sans text-[11px] bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-bold">
+                  {getAccountingTypeLabel(transaction.accounting_type)}
+                </span>
               </div>
             </div>
 
             {/* ĐỐI TƯỢNG HẠCH TOÁN */}
             <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
               <h4 className="text-[12px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5">Đối tượng hạch toán</h4>
-              
+
               <div className="flex justify-between items-start text-[13px]">
                 <span className="text-slate-500">Khu nhà / Phòng:</span>
                 <div className="text-right flex flex-col">
@@ -215,7 +229,34 @@ export default function ViewFinancialTransactionModal({ open, transaction, onClo
                 <p className="text-slate-600 bg-amber-50/30 text-amber-900 border border-amber-100 px-3 py-2 rounded-lg whitespace-pre-line italic">{transaction.note}</p>
               </div>
             )}
-            
+
+            {/* MINH CHỨNG THANH TOÁN (BỔ SUNG MỚI) */}
+            {transaction.proof_image && (
+              <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3 animate-[fadeIn_0.2s_ease-out]">
+                <h4 className="text-[12px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+                  <i className="fa-regular fa-image text-slate-400 text-[12px]"></i> Hình ảnh minh chứng
+                </h4>
+                <div className="mt-2">
+                  <a
+                    href={transaction.proof_image}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-lg border border-slate-200 overflow-hidden group block shrink-0 shadow-sm"
+                    title="Nhấn để xem ảnh lớn"
+                  >
+                    <img
+                      src={transaction.proof_image}
+                      alt="Minh chứng thanh toán"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors flex items-center justify-center">
+                      <i className="fa-solid fa-arrow-up-right-from-square text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md"></i>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            )}
+
             {/* LÝ DO HỦY PHIẾU (NẾU TRẠNG THÁI HỦY) */}
             {transaction.status === "cancelled" && (
               <div className="bg-red-50/50 border border-red-100 rounded-xl p-3.5 space-y-1 text-red-900 animate-[fadeIn_0.2s_ease-out]">
@@ -236,9 +277,9 @@ export default function ViewFinancialTransactionModal({ open, transaction, onClo
 
         {/* FOOTER MODAL */}
         <div className="border-t border-slate-200 px-5 py-3.5 bg-white shrink-0 flex items-center justify-end shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-          <button 
-            type="button" 
-            onClick={onClose} 
+          <button
+            type="button"
+            onClick={onClose}
             className="w-full sm:w-auto px-6 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-lg text-[13px] hover:bg-slate-200 active:bg-slate-300 transition-colors"
           >
             Đóng cửa sổ
