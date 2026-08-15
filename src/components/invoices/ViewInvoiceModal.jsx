@@ -343,8 +343,13 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         <div className="flex justify-between items-start text-[14px] border-b border-slate-200 pb-4 mb-4">
                                             <span className="text-slate-600">Kính gửi</span>
                                             <div className="text-right">
-                                                <div className="font-bold text-slate-800">{invoice.lease?.tenant?.full_name || "—"}</div>
-                                                <div className="text-[13px] text-slate-600 mt-1">SĐT: {invoice.lease?.tenant?.phone || "—"}</div>
+                                                {/* Ưu tiên Snapshot trước, nếu trống (hóa đơn cũ trước khi nâng cấp) thì lấy Relation */}
+                                                <div className="font-bold text-slate-800">
+                                                    {invoice.tenant_name_snapshot || invoice.lease?.tenant?.full_name || "—"}
+                                                </div>
+                                                <div className="text-[13px] text-slate-600 mt-1">
+                                                    SĐT: {invoice.tenant_phone_snapshot || invoice.lease?.tenant?.phone || "—"}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -385,7 +390,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                                 if (item.charge_type === 'room') {
                                                     subtitle = `${quantity} ${item.unit}, giá: ${price.toLocaleString()} đ`;
                                                 } else if (isUtility && meter) {
-                                                    subtitle = `Số mới: ${meter.current_reading}, Số cũ: ${meter.previous_reading}`;
+                                                    subtitle = `Mới: ${meter.current_reading}, Cũ: ${meter.previous_reading}`;
                                                     if (free > 0) subtitle += ` - Miễn phí: ${free}`;
                                                     calcBadge = `${quantity} ${item.unit} x ${price.toLocaleString()}đ`;
                                                 } else if (item.charge_type === 'deposit') {
@@ -428,11 +433,11 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
 
                                         {/* 6. Khối tóm tắt dòng tiền (Căn sát lề phải giống mẫu) */}
                                         <div className="pt-4 mt-2 border-t border-slate-100 flex flex-col items-end gap-3 text-[14px]">
-                                            <div className="flex items-center justify-between w-full sm:w-[220px]">
+                                            <div className="flex items-center justify-between w-full ">
                                                 <span className="text-slate-600">Tổng tiền dịch vụ</span>
                                                 <span className="font-bold text-slate-800">{Number(invoice.total_amount).toLocaleString()} đ</span>
                                             </div>
-                                            <div className="flex items-center justify-between w-full sm:w-[220px]">
+                                            <div className="flex items-center justify-between w-full ">
                                                 <span className="text-slate-600">Đã trả</span>
                                                 <span className="font-bold text-green-600">{Number(invoice.paid_amount).toLocaleString()} đ</span>
                                             </div>

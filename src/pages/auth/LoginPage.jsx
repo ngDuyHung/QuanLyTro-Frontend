@@ -90,7 +90,7 @@ export default function LoginPage() {
       if (error.response?.status === 401 || error.response?.status === 422) {
         setServerError(
           error.response.data.message ||
-            "Số điện thoại hoặc mật khẩu không đúng!",
+          "Số điện thoại hoặc mật khẩu không đúng!",
         );
       } else {
         setServerError("Không thể kết nối đến máy chủ.");
@@ -213,7 +213,7 @@ export default function LoginPage() {
       } catch (error) {
         setServerError(
           error.response?.data?.message ||
-            "Không thể đăng nhập bằng Zalo. Vui lòng thử lại.",
+          "Không thể đăng nhập bằng Zalo. Vui lòng thử lại.",
         );
 
         navigate("/login", { replace: true });
@@ -273,7 +273,8 @@ export default function LoginPage() {
                 </svg>
               </div>
               <input
-                type="text"
+                type="tel"
+                autoComplete="tel"
                 {...register("phone")}
                 placeholder="Nhập số điện thoại"
                 className={`w-full pl-11 pr-4 py-2.5 sm:py-3 bg-white border rounded-lg text-heading placeholder-gray-400 focus:outline-none focus:ring-2 transition ${errors.phone ? "border-red-500 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"}`}
@@ -317,7 +318,7 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 {...register("password")}
                 placeholder="Nhập mật khẩu"
-                className={`w-full pl-11 pr-11 py-2.5 sm:py-3 bg-white border rounded-lg text-heading placeholder-gray-400 focus:outline-none focus:ring-2 transition ${errors.password ? "border-red-500 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"}`}
+                className={`w-full pl-11 pr-11 py-2.5 sm:py-3 bg-white border rounded-lg text-heading placeholder-gray-400 focus:outline-none focus:ring-2 transition ${errors.password ? "border-red-500 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"}`}
               />
               <button
                 type="button"

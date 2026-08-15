@@ -65,10 +65,10 @@ export default function RegisterPage() {
         {/* Họ và Tên */}
         <div className="space-y-1.5">
           <label className="block font-medium text-heading text-sm sm:text-base">Họ và tên</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             {...register("name")}
-            placeholder="VD: Nguyễn Văn A" 
+            placeholder="VD: Nguyễn Văn A"
             className={`w-full px-4 py-2.5 bg-white border rounded-lg text-heading placeholder-gray-400 focus:outline-none focus:ring-2 transition ${errors.name ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-primary/20 focus:border-primary'}`}
           />
           {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
@@ -78,20 +78,22 @@ export default function RegisterPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="space-y-1.5">
             <label className="block font-medium text-heading text-sm sm:text-base">Email</label>
-            <input 
-              type="text" 
+            <input
+              type="email"
+              autoComplete="email"
               {...register("email")}
-              placeholder="Email" 
+              placeholder="Email"
               className={`w-full px-4 py-2.5 bg-white border rounded-lg text-heading placeholder-gray-400 focus:outline-none focus:ring-2 transition ${errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-primary/20 focus:border-primary'}`}
             />
             {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
           </div>
           <div className="space-y-1.5">
             <label className="block font-medium text-heading text-sm sm:text-base">Số điện thoại</label>
-            <input 
-              type="text" 
+            <input
+              type="tel"
+              autoComplete="tel"
               {...register("phone")}
-              placeholder="SĐT" 
+              placeholder="SĐT"
               className={`w-full px-4 py-2.5 bg-white border rounded-lg text-heading placeholder-gray-400 focus:outline-none focus:ring-2 transition ${errors.phone ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-primary/20 focus:border-primary'}`}
             />
             {errors.phone && <p className="text-red-500 text-xs">{errors.phone.message}</p>}
@@ -102,11 +104,11 @@ export default function RegisterPage() {
         <div className="space-y-1.5">
           <label className="block font-medium text-heading text-sm sm:text-base">Mật khẩu</label>
           <div className="relative">
-            <input 
-              type={showPassword ? "text" : "password"} 
+            <input
+              type={showPassword ? "text" : "password"}
               {...register("password")}
-              placeholder="Tạo mật khẩu" 
-              className={`w-full pl-4 pr-11 py-2.5 bg-white border rounded-lg text-heading placeholder-gray-400 focus:outline-none focus:ring-2 transition ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-primary/20 focus:border-primary'}`}
+              placeholder="Tạo mật khẩu"
+              className={`w-full pl-4 pr-11 py-2.5 bg-white border rounded-lg text-heading placeholder-gray-400 focus:outline-none focus:ring-2 transition ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-primary/20 focus:border-primary [&::-ms-reveal]:hidden [&::-ms-clear]:hidden'}`}
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
@@ -118,10 +120,10 @@ export default function RegisterPage() {
         {/* Xác nhận Mật khẩu */}
         <div className="space-y-1.5">
           <label className="block font-medium text-heading text-sm sm:text-base">Xác nhận mật khẩu</label>
-          <input 
-            type={showPassword ? "text" : "password"} 
+          <input
+            type={showPassword ? "text" : "password"}
             {...register("password_confirmation")}
-            placeholder="Nhập lại mật khẩu" 
+            placeholder="Nhập lại mật khẩu"
             className={`w-full px-4 py-2.5 bg-white border rounded-lg text-heading placeholder-gray-400 focus:outline-none focus:ring-2 transition ${errors.password_confirmation ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-primary/20 focus:border-primary'}`}
           />
           {errors.password_confirmation && <p className="text-red-500 text-xs">{errors.password_confirmation.message}</p>}

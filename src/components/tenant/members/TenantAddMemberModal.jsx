@@ -107,19 +107,19 @@ export default function TenantAddMemberModal({ open, onClose, onSuccess }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[12px] font-bold text-slate-600 mb-1">Họ và tên <span className="text-red-500">*</span></label>
-                            <input required type="text" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
+                            <input required type="text" value={formData.full_name} onChange={e => setFormData({ ...formData, full_name: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
                         </div>
                         <div>
                             <label className="block text-[12px] font-bold text-slate-600 mb-1">Số điện thoại <span className="text-red-500">*</span></label>
-                            <input required type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
+                            <input required type="text" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
                         </div>
                         <div>
-                            <label className="block text-[12px] font-bold text-slate-600 mb-1">Số CCCD <span className="text-red-500">*</span></label>
-                            <input required type="text" value={formData.id_card_number} onChange={e => setFormData({...formData, id_card_number: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
+                            <label className="block text-[12px] font-bold text-slate-600 mb-1">Số CCCD <span className="text-slate-400 font-normal">(tùy chọn)</span></label>
+                            <input type="text" value={formData.id_card_number} onChange={e => setFormData({ ...formData, id_card_number: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
                         </div>
                         <div>
                             <label className="block text-[12px] font-bold text-slate-600 mb-1">Mối quan hệ <span className="text-red-500">*</span></label>
-                            <select value={formData.relationship} onChange={e => setFormData({...formData, relationship: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none bg-white">
+                            <select value={formData.relationship} onChange={e => setFormData({ ...formData, relationship: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none bg-white">
                                 <option value="friend">Bạn bè / Ở ghép</option>
                                 <option value="spouse">Vợ / Chồng</option>
                                 <option value="child">Con cái</option>
@@ -130,15 +130,15 @@ export default function TenantAddMemberModal({ open, onClose, onSuccess }) {
                         </div>
                         <div>
                             <label className="block text-[12px] font-bold text-slate-600 mb-1">Ngày vào ở</label>
-                            <input type="date" value={formData.move_in_date} onChange={e => setFormData({...formData, move_in_date: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
+                            <input type="date" value={formData.move_in_date} onChange={e => setFormData({ ...formData, move_in_date: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
                         </div>
                         <div>
                             <label className="block text-[12px] font-bold text-slate-600 mb-1">Email (Tùy chọn)</label>
-                            <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
+                            <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
                         </div>
                         <div className="sm:col-span-2">
                             <label className="block text-[12px] font-bold text-slate-600 mb-1">Ghi chú thêm</label>
-                            <textarea rows="2" value={formData.note} onChange={e => setFormData({...formData, note: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none resize-none"></textarea>
+                            <textarea rows="2" value={formData.note} onChange={e => setFormData({ ...formData, note: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none resize-none"></textarea>
                         </div>
                     </div>
                 </form>

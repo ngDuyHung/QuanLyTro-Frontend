@@ -129,30 +129,34 @@ export default function ViewTenantModal({ open, tenant, onClose }) {
                                     <h3 className="text-[14px] font-bold text-slate-800">Trạng thái cư trú hiện tại</h3>
                                 </div>
                                 <div className="p-4">
-                                    {tenant.current_residence ? (
-                                        <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="text-[12px] text-slate-500 font-medium">Khu nhà</span>
-                                                    <span className="text-[14px] font-bold text-slate-800 line-clamp-1">{tenant.current_residence?.room?.property?.name || "—"}</span>
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="text-[12px] text-slate-500 font-medium">Phòng</span>
-                                                    <span className="text-[14px] font-bold text-slate-800">{tenant.current_residence?.room?.name || "—"}</span>
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="text-[12px] text-slate-500 font-medium">Ngày vào ở</span>
-                                                    <span className="text-[13px] font-semibold text-slate-700">{tenant.current_residence?.move_in_date || "—"}</span>
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="text-[12px] text-slate-500 font-medium">Vai trò</span>
-                                                    <div>
-                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${tenant.current_residence?.role === "representative" ? "bg-purple-100 text-purple-700" : "bg-slate-200 text-slate-700"}`}>
-                                                            {tenant.current_residence?.role === "representative" ? "Đại diện thuê" : "Người ở ghép"}
-                                                        </span>
+                                    {tenant.residence_history?.filter(h => h.status === 'active').length > 0 ? (
+                                        <div className="flex flex-col gap-3">
+                                            {tenant.residence_history.filter(h => h.status === 'active').map((res, idx) => (
+                                                <div key={idx} className="bg-blue-50/50 border border-blue-100 rounded-lg p-4">
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-[12px] text-slate-500 font-medium">Khu nhà</span>
+                                                            <span className="text-[14px] font-bold text-slate-800 line-clamp-1">{res.property_name || "—"}</span>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-[12px] text-slate-500 font-medium">Phòng</span>
+                                                            <span className="text-[14px] font-bold text-slate-800">{res.room_name || "—"}</span>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-[12px] text-slate-500 font-medium">Ngày vào ở</span>
+                                                            <span className="text-[13px] font-semibold text-slate-700">{res.move_in_date || "—"}</span>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-[12px] text-slate-500 font-medium">Vai trò</span>
+                                                            <div>
+                                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${res.role === "representative" ? "bg-purple-100 text-purple-700" : "bg-slate-200 text-slate-700"}`}>
+                                                                    {res.role === "representative" ? "Đại diện thuê" : "Người ở ghép"}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            ))}
                                         </div>
                                     ) : (
                                         <div className="text-center py-6">

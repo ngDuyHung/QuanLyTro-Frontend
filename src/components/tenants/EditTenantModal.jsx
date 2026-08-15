@@ -15,7 +15,7 @@ export default function EditTenantModal({
   isSubmitting = false,
 }) {
   const [form, setForm] = useState(initialForm);
-  
+
   // Quản lý ảnh mặt trước
   const [frontImage, setFrontImage] = useState(null);
   const [frontPreview, setFrontPreview] = useState("");
@@ -66,7 +66,7 @@ export default function EditTenantModal({
 
     setExistingFrontUrl(tenant.id_card_front_image || "");
     setExistingBackUrl(tenant.id_card_back_image || "");
-    
+
     setFrontImage(null);
     setFrontPreview("");
     setBackImage(null);
@@ -121,7 +121,6 @@ export default function EditTenantModal({
 
     if (!form.full_name.trim()) return setClientError("Vui lòng nhập họ và tên khách thuê.");
     if (!form.phone.trim()) return setClientError("Vui lòng nhập số điện thoại.");
-    if (!form.id_card_number.trim()) return setClientError("Vui lòng nhập số CCCD/CMND.");
 
     const payload = new FormData();
     // Khai báo _method PUT để Laravel nhận diện Update qua FormData
@@ -129,7 +128,7 @@ export default function EditTenantModal({
     payload.append("full_name", form.full_name.trim());
     payload.append("phone", form.phone.trim());
     payload.append("id_card_number", form.id_card_number.trim());
-    
+
     if (form.email.trim()) {
       payload.append("email", form.email.trim());
     }
@@ -163,7 +162,7 @@ export default function EditTenantModal({
       <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm sm:p-4 transition-all">
         {/* Modal Container */}
         <div className="bg-slate-50 w-full h-[95vh] sm:h-auto sm:max-h-[90vh] sm:max-w-[700px] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out] sm:animate-[fadeIn_0.2s_ease-out]">
-          
+
           {/* Header (Sticky Top) */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white shrink-0 sticky top-0 z-20">
             <div className="flex items-center gap-3">
@@ -193,7 +192,7 @@ export default function EditTenantModal({
           <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
             {/* Body (Scrollable) */}
             <div className="overflow-y-auto no-scrollbar flex-1 pb-6 bg-slate-50">
-              
+
               {/* Error Message */}
               {clientError && (
                 <div className="mx-5 mt-5 sm:mx-6 sm:mt-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-[13px] flex items-center gap-2 shadow-sm">
@@ -237,7 +236,7 @@ export default function EditTenantModal({
 
                   <div>
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Số CCCD/CMND <span className="text-red-500">*</span>
+                      Số CCCD/CMND <span className="text-slate-400 font-normal">(tùy chọn)</span>
                     </label>
                     <input
                       type="text"

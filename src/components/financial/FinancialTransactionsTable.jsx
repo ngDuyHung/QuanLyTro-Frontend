@@ -189,7 +189,7 @@ export default function FinancialTransactionsTable({
                       ) : (
                         <span>{item.property?.name} (Chi phí chung)</span>
                       )}
-                      {item.tenant && <span>- Khách: {item.tenant.full_name}</span>}
+                      {(item.tenant_name_snapshot || item.tenant) && <span>- Khách: {item.tenant_name_snapshot || item.tenant?.full_name}</span>}
                     </p>
                   </div>
 
@@ -322,7 +322,7 @@ export default function FinancialTransactionsTable({
 
                       {/* 6. Người giao dịch (Khách thuê) */}
                       <td className="py-4 px-3 text-slate-600 font-medium">
-                        {item.tenant?.full_name || "—"}
+                        {item.tenant_name_snapshot || item.tenant?.full_name || "—"}
                       </td>
 
                       {/* 7. Nội dung diễn giải */}

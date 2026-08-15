@@ -166,7 +166,7 @@ export default function TenantTable({
 
               const roomName = tenant.room || currentResidence?.room?.name || "Chưa gắn phòng";
               const propertyName = tenant.property || currentResidence?.room?.property?.name || "—";
-              const leaseId = currentResidence?.lease_id || currentResidence?.lease?.id || null;
+              const leaseId = tenant.lease_id || currentResidence?.lease_id || currentResidence?.lease?.id || null;
               const moveInDate = tenant.move_in_date || currentResidence?.move_in_date || null;
               const tenantName = tenant.name || tenant.full_name;
               const cccd = tenant.cccd || tenant.id_card_number || "—";
@@ -214,7 +214,7 @@ export default function TenantTable({
                       <div className="flex flex-col">
                         <span className="text-[11px] text-slate-500 mb-0.5">Hợp đồng</span>
                         <span className="font-medium text-slate-800 text-[12px]">
-                          {leaseId ? `HĐ #${leaseId}` : "Chưa gắn HĐ"}
+                          {leaseId ? String(leaseId).split(', ').map(id => `HĐ #${id}`).join(', ') : "Chưa gắn HĐ"}
                         </span>
                       </div>
                       <div className="flex flex-col items-end text-right">
@@ -306,6 +306,7 @@ export default function TenantTable({
                     "—";
 
                   const leaseId =
+                    tenant.lease_id ||
                     currentResidence?.lease_id ||
                     currentResidence?.lease?.id ||
                     null;
@@ -346,7 +347,7 @@ export default function TenantTable({
                       <td className="py-3 px-4">
                         <div className="flex flex-col">
                           <span className="font-medium text-slate-800">
-                            {leaseId ? `HĐ #${leaseId}` : "Chưa gắn HĐ"}
+                            {leaseId ? String(leaseId).split(', ').map(id => `HĐ #${id}`).join(', ') : "Chưa gắn HĐ"}
                           </span>
                           <span className="text-[11px] text-slate-500 mt-0.5">
                             {moveInDate ? `Vào ở: ${moveInDate}` : ""}

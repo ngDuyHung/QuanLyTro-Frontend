@@ -42,7 +42,7 @@ export default function TenantEditMemberModal({ open, member, onClose, onSuccess
                     setFormData(prev => ({ ...prev, full_name: full_name || prev.full_name, id_card_number: id_card_number || prev.id_card_number }));
                     toast.success("Cập nhật số CCCD từ ảnh!");
                 }
-            } catch (error) {} finally { setIsScanning(false); }
+            } catch (error) { } finally { setIsScanning(false); }
         } else {
             setBackImg(Object.assign(file, { preview: URL.createObjectURL(file), isOld: false }));
         }
@@ -99,19 +99,19 @@ export default function TenantEditMemberModal({ open, member, onClose, onSuccess
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[12px] font-bold text-slate-600 mb-1">Họ và tên <span className="text-red-500">*</span></label>
-                            <input required type="text" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
+                            <input required type="text" value={formData.full_name} onChange={e => setFormData({ ...formData, full_name: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
                         </div>
                         <div>
                             <label className="block text-[12px] font-bold text-slate-600 mb-1">Số điện thoại <span className="text-red-500">*</span></label>
-                            <input required type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
+                            <input required type="text" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
                         </div>
                         <div>
-                            <label className="block text-[12px] font-bold text-slate-600 mb-1">Số CCCD <span className="text-red-500">*</span></label>
-                            <input required type="text" value={formData.id_card_number} onChange={e => setFormData({...formData, id_card_number: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
+                            <label className="block text-[12px] font-bold text-slate-600 mb-1">Số CCCD <span className="text-slate-400 font-normal">(tùy chọn)</span></label>
+                            <input type="text" value={formData.id_card_number} onChange={e => setFormData({ ...formData, id_card_number: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
                         </div>
                         <div>
                             <label className="block text-[12px] font-bold text-slate-600 mb-1">Mối quan hệ <span className="text-red-500">*</span></label>
-                            <select value={formData.relationship} onChange={e => setFormData({...formData, relationship: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none bg-white">
+                            <select value={formData.relationship} onChange={e => setFormData({ ...formData, relationship: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none bg-white">
                                 <option value="friend">Bạn bè / Ở ghép</option>
                                 <option value="spouse">Vợ / Chồng</option>
                                 <option value="child">Con cái</option>
@@ -122,7 +122,7 @@ export default function TenantEditMemberModal({ open, member, onClose, onSuccess
                         </div>
                         <div className="sm:col-span-2">
                             <label className="block text-[12px] font-bold text-slate-600 mb-1">Ghi chú thêm</label>
-                            <input type="text" value={formData.note} onChange={e => setFormData({...formData, note: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
+                            <input type="text" value={formData.note} onChange={e => setFormData({ ...formData, note: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] focus:border-brand outline-none" />
                         </div>
                     </div>
                 </form>

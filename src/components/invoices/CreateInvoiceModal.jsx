@@ -131,6 +131,7 @@ export default function CreateInvoiceModal({
                 period_from: formatDateLocal(fromDate),
                 period_to: formatDateLocal(toDate),
                 due_date: formatDateLocal(dueDate),
+                issue_date: formatDateLocal(today), // <-- LUÔN LẤY NGÀY MỚI NHẤT
                 note: defaultNote || "",
             });
 
@@ -617,17 +618,25 @@ export default function CreateInvoiceModal({
                                                                     <span className="text-[11px] text-slate-500 truncate">{l.tenant?.full_name}</span>
                                                                 </div>
                                                                 <div className="shrink-0 flex items-center">
-                                                                    {status === 'debt' ? (
+                                                                    {status === 'issued' || status === 'overdue' ? (
                                                                         <span className="inline-block px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-md text-[10px] font-bold whitespace-nowrap shadow-sm">
                                                                             Nợ {Number(unpaidAmount).toLocaleString('vi-VN')}đ
                                                                         </span>
                                                                     ) : status === 'unbilled' ? (
                                                                         <span className="inline-block px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-md text-[10px] font-bold whitespace-nowrap shadow-sm">
-                                                                            Chưa lập HĐ
+                                                                            Tháng này chưa lập
+                                                                        </span>
+                                                                    ) : status === 'draft' ? (
+                                                                        <span className="inline-block px-2 py-0.5 bg-slate-50 text-slate-600 border border-slate-200 rounded-md text-[10px] font-bold whitespace-nowrap shadow-sm">
+                                                                            Đang lưu nháp
+                                                                        </span>
+                                                                    ) : status === 'partially_paid' ? (
+                                                                        <span className="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-md text-[10px] font-bold whitespace-nowrap shadow-sm">
+                                                                            Thu một phần
                                                                         </span>
                                                                     ) : status === 'paid' ? (
                                                                         <span className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-md text-[10px] font-bold whitespace-nowrap shadow-sm">
-                                                                            Đã thu đủ
+                                                                            Đã thu tháng này
                                                                         </span>
                                                                     ) : null}
                                                                 </div>

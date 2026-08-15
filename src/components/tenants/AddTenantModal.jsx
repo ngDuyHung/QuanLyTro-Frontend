@@ -268,7 +268,6 @@ export default function AddTenantModal({
 
         if (!form.full_name.trim()) return setClientError("Vui lòng nhập họ và tên khách thuê.");
         if (!form.phone.trim()) return setClientError("Vui lòng nhập số điện thoại.");
-        if (!form.id_card_number.trim()) return setClientError("Vui lòng nhập số CCCD/CMND.");
         if (!form.property_id) return setClientError("Vui lòng chọn khu nhà.");
         if (!form.room_id) return setClientError("Vui lòng chọn phòng.");
 
@@ -547,7 +546,9 @@ export default function AddTenantModal({
                                         </div>
 
                                         <div>
-                                            <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Số CCCD/CMND <span className="text-red-500">*</span></label>
+                                            <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                                                Số CCCD/CMND <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                                            </label>
                                             <input
                                                 type="text"
                                                 value={form.id_card_number}

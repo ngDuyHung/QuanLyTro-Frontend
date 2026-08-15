@@ -423,10 +423,10 @@ export default function AddLeaseModal({
       return;
     }
 
-    if (!form.id_card_number.trim()) {
-      setClientError("Vui lòng nhập số CCCD/CMND khách đại diện.");
-      return;
-    }
+    // if (!form.id_card_number.trim()) {
+    //   setClientError("Vui lòng nhập số CCCD/CMND khách đại diện.");
+    //   return;
+    // }
 
     if (!form.electricity_reading.trim() || Number(form.electricity_reading) < 0) {
       setClientError("Vui lòng nhập chỉ số điện hợp lệ (tối thiểu 0).");
@@ -647,7 +647,7 @@ export default function AddLeaseModal({
                     </div>
                     <div>
                       <label className="block text-[13px] font-semibold text-slate-700 mb-1.5 whitespace-nowrap truncate">
-                        Kết thúc <span className="text-slate-400 font-normal hidden sm:inline">(tùy chọn)</span>
+                        Kết thúc <span className="text-slate-400 font-normal ">(tùy chọn)</span>
                       </label>
                       <input
                         type="date"
@@ -662,7 +662,7 @@ export default function AddLeaseModal({
                   {/* HÀNG 3: Tiền bạc (Luôn 2 cột + Thêm hậu tố "đ") */}
                   <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Giá phòng</label>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Giá phòng <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <input
                           type="text"
@@ -675,7 +675,7 @@ export default function AddLeaseModal({
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Thế chân</label>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Thế chân <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <input
                           type="text"
@@ -692,7 +692,7 @@ export default function AddLeaseModal({
                   {/* HÀNG 4: Ngày thu & Người ở (Luôn 2 cột) */}
                   <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Thu tiền (ngày)</label>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Thu tiền (ngày) <span className="text-red-500">*</span></label>
                       <input
                         type="number" min="1" max="28" inputMode="numeric"
                         value={form.billing_day}
@@ -906,7 +906,7 @@ export default function AddLeaseModal({
                   </div>
                   <div>
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Số CCCD/CMND <span className="text-red-500">*</span>
+                      Số CCCD/CMND <span className="text-slate-400 font-normal">(tùy chọn)</span>
                     </label>
                     <input
                       type="text"

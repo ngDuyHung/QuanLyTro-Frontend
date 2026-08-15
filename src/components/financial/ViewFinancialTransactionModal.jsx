@@ -148,7 +148,9 @@ export default function ViewFinancialTransactionModal({ open, transaction, onClo
               </div>
               <div className="flex justify-between items-center text-[13px]">
                 <span className="text-slate-500">Người thực hiện:</span>
-                <span className="font-semibold text-slate-800">{transaction.tenant?.full_name || "—"}</span>
+                <span className="font-semibold text-slate-800">
+                  {transaction.tenant_name_snapshot || transaction.tenant?.full_name || "—"}
+                </span>
               </div>
               {transaction.tenant?.phone && (
                 <div className="flex justify-between items-center text-[13px]">
