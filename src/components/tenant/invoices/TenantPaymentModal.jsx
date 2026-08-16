@@ -254,6 +254,18 @@ export default function TenantPaymentModal({ open, invoice: initialInvoice, onCl
                                             <span className="text-[13px] text-slate-500 font-medium">Kỳ hóa đơn</span>
                                             <span className="text-[13px] font-bold text-slate-800">{invoiceDetail.period_from} - {invoiceDetail.period_to}</span>
                                         </div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-[13px] text-slate-500 font-medium">Phòng</span>
+                                            <span className="text-[13px] font-bold text-slate-800">{invoiceDetail.room_name_snapshot}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-[13px] text-slate-500 font-medium">Người đại diện</span>
+                                            <span className="text-[13px] font-bold text-slate-800">{invoiceDetail.tenant_name_snapshot}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-[13px] text-slate-500 font-medium">Số điện thoại</span>
+                                            <span className="text-[13px] font-bold text-slate-800">{invoiceDetail.tenant_phone_snapshot}</span>
+                                        </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-[13px] text-slate-500 font-medium">Hạn thanh toán</span>
                                             <span className="text-[13px] font-bold text-red-500">{invoiceDetail.due_date}</span>

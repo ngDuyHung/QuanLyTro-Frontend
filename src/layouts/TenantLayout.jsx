@@ -5,6 +5,9 @@ import { toast } from "react-toastify";
 import notificationService from "@/services/notificationService";
 import api from "@/services/api";
 
+import tenantLeaseService from "@/services/tenantLeaseService";
+import useTenantStore from "@/stores/tenantStore";
+
 // 1. IMPORT MODAL TÀI KHOẢN VÀO ĐÂY
 import UserProfileModal from "@/components/user/UserProfileModal";
 
@@ -23,6 +26,28 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const userMenuRef = useRef(null);
+
+  // Lấy hàm từ Store
+  const { leases, currentLeaseId, setLeases, setCurrentLeaseId, clearTenantData } = useTenantStore();
+
+  // Gọi API lấy danh sách hợp đồng 1 lần duy nhất khi load Layout
+  useEffect(() => {
+    const fetchLeases = async () => {
+      try {
+        const res = await tenantLeaseService.getAll({ status: 'active' });
+        const data = res.data.data || [];
+        setLeases(data);
+
+        // Nếu user có hợp đồng và chưa chọn cái nào, set mặc định là cái đầu tiên
+        if (data.length > 0 && !currentLeaseId) {
+          setCurrentLeaseId(data[0].id);
+        }
+      } catch (error) {
+        console.error("Lỗi lấy danh sách hợp đồng trên Header", error);
+      }
+    };
+    fetchLeases();
+  }, [setLeases, currentLeaseId, setCurrentLeaseId]);
 
   useEffect(() => {
     const fetchLatestNotifs = async () => {
@@ -75,6 +100,7 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
     }
 
     clearAuth();
+    clearTenantData();
     toast.info("Đã đăng xuất khỏi hệ thống");
     navigate("/login");
   };
@@ -254,6 +280,29 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
           </div>
 
           <div className="flex items-center gap-3">
+            {/* THÊM MỚI: DROPDOWN CHỌN PHÒNG */}
+            {leases.length > 1 ? (
+              <div className="relative">
+                <select
+                  value={currentLeaseId || ""}
+                  onChange={(e) => setCurrentLeaseId(Number(e.target.value))}
+                  className="appearance-none bg-brand/10 border border-brand/20 text-brand text-[13px] font-bold py-1.5 pl-3 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/50 cursor-pointer"
+                >
+                  {leases.map(l => (
+                    <option key={l.id} value={l.id}>
+                      P. {l.room?.name} - {l.room?.property?.name}
+                    </option>
+                  ))}
+                </select>
+                <i className="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-brand pointer-events-none"></i>
+              </div>
+            ) : leases.length === 1 ? (
+              // Nếu chỉ có 1 phòng, hiển thị tên phòng dạng Badge
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-brand/10 text-brand rounded-lg text-[13px] font-bold">
+                <i className="fa-solid fa-house"></i> P. {leases[0].room?.name}
+              </div>
+            ) : null}
+
             {/* THÔNG BÁO */}
             <div className="relative mx-1" ref={notifRef}>
               <button
@@ -389,7 +438,7 @@ export default function TenantLayout() { // Đổi tên component cho chuẩn
         <div ref={scrollContainerRef}
           className="flex-1 overflow-y-auto flex flex-col pb-[65px] lg:pb-0">
           <div className="flex-1 flex flex-col">
-            <Outlet />
+            <Outlet key={currentLeaseId} />
           </div>
           <footer className="hidden lg:block py-4 text-center border-t border-slate-200/60 mx-8 shrink-0 relative z-10 bg-slate-50">
             <p className="text-[12px] text-slate-400">

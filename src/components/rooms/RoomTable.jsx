@@ -672,6 +672,8 @@ export default function RoomTable({
           onChange={(event) => onSortChange?.(event.target.value)}
           className="w-full border border-slate-200 rounded-lg text-[13px] px-3 py-2.5 text-slate-600 outline-none focus:border-brand bg-slate-50 focus:bg-white transition-colors"
         >
+          <option value="sort_order_asc">Thứ tự: Nhỏ đến lớn</option>
+          <option value="sort_order_desc">Thứ tự: Lớn đến nhỏ</option>
           <option value="created_at_desc">Mới nhất</option>
           <option value="created_at_asc">Cũ nhất</option>
           <option value="price_asc">Giá phòng: Thấp đến cao</option>
@@ -737,6 +739,8 @@ export default function RoomTable({
               onChange={(event) => onSortChange?.(event.target.value)}
               className="shrink-0 min-w-[160px] border border-slate-200 rounded-lg text-[13px] px-3 py-2 text-slate-600 outline-none focus:border-brand bg-white cursor-pointer hover:bg-slate-50 transition-colors"
             >
+              <option value="sort_order_asc">Thứ tự: Nhỏ đến lớn</option>
+              <option value="sort_order_desc">Thứ tự: Lớn đến nhỏ</option>
               <option value="created_at_desc">Sắp xếp: Mới nhất</option>
               <option value="created_at_asc">Sắp xếp: Cũ nhất</option>
               <option value="price_asc">Giá phòng: Thấp đến cao</option>
@@ -862,8 +866,8 @@ export default function RoomTable({
               </th>
 
               {/* GỌI HÀM ĐỂ TẠO CỘT CÓ THỂ BẤM SORT */}
-              {renderSortableHeader("Phòng", "name_asc", "name_desc")}
 
+              {renderSortableHeader("Phòng", "sort_order_asc", "sort_order_desc")}
               <th className="py-3 px-4 border-b border-slate-100">Khu nhà</th>
               <th className="py-3 px-4 border-b border-slate-100">Diện tích</th>
 
@@ -883,7 +887,7 @@ export default function RoomTable({
 
           <tbody className="text-[13px]">
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, index) => (
+              Array.from({ length: 10 }).map((_, index) => (
                 <tr
                   key={index}
                   className="border-b border-slate-50 animate-pulse"
@@ -922,10 +926,22 @@ export default function RoomTable({
                     </td>
 
                     <td className="py-3 px-4">
-                      <p className="font-bold text-slate-800">{room.name}</p>
-                      <p className="text-[11px] text-slate-500">
-                        {formatFloor(room.floor_number)}
-                      </p>
+                      <div className="flex items-start gap-2">
+                        <span
+                          className="text-[12px] font-bold text-slate-400 mt-0.5 w-4 text-center shrink-0"
+                          title="Thứ tự hiển thị"
+                        >
+                          {room.sort_order ?? 0}
+                        </span>
+                        <div>
+                          <p className="font-bold text-slate-800 leading-tight mb-0.5">
+                            {room.name}
+                          </p>
+                          <p className="text-[11px] text-slate-500 leading-tight">
+                            {formatFloor(room.floor_number)}
+                          </p>
+                        </div>
+                      </div>
                     </td>
 
                     <td className="py-3 px-4 max-w-[240px]">

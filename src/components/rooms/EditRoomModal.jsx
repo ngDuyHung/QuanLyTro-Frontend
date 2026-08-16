@@ -72,6 +72,7 @@ const toForm = (room) => ({
   is_public: Boolean(room?.is_public),
   description: room?.description || "",
   amenities: Array.isArray(room?.amenities) ? room.amenities : [],
+  sort_order: room?.sort_order ?? "0",
 });
 
 export default function EditRoomModal({
@@ -393,7 +394,7 @@ export default function EditRoomModal({
     payload.append("is_public", form.is_public ? "1" : "0");
     payload.append("description", form.description || "");
 
-    payload.append("description", form.description || "");
+    payload.append("sort_order", form.sort_order || "0");
 
     // Thay formData thành payload
     if (form.amenities && form.amenities.length > 0) {
@@ -525,6 +526,18 @@ export default function EditRoomModal({
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div className="sm:col-span-1">
+                  <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                    Thứ tự hiện thị <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={form.sort_order}
+                    onChange={handleChange("sort_order")}
+                    className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                  />
                 </div>
 
                 <div className="sm:col-span-1">

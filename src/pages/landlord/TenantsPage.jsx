@@ -8,6 +8,7 @@ import propertyService from "@/services/propertyService";
 import EditTenantModal from "@/components/tenants/EditTenantModal";
 import ViewTenantModal from "@/components/tenants/ViewTenantModal";
 import DeleteTenantModal from "@/components/tenants/DeleteTenantModal";
+import LeaveRoomModal from "@/components/tenants/LeaveRoomModal";
 export default function TenantsPage() {
   const [tenants, setTenants] = useState([]);
   const [stats, setStats] = useState(null);
@@ -34,6 +35,11 @@ export default function TenantsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingTenant, setDeletingTenant] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // State quản lý Modal Rời phòng
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [selectedTenantToLeave, setSelectedTenantToLeave] = useState(null);
+  const [isLeaving, setIsLeaving] = useState(false);
 
   // Hàm tải danh sách khu nhà để hiển thị trong filter
   const fetchProperties = useCallback(async () => {
@@ -169,10 +175,39 @@ export default function TenantsPage() {
   };
 
 
+  const handleOpenLeaveModal = (tenant) => {
+    setSelectedTenantToLeave(tenant);
+    setLeaveModalOpen(true);
+  };
+
   // ---  HÀM XỬ LÝ XÓA ---
   const handleOpenDeleteModal = (tenant) => {
     setDeletingTenant(tenant);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseLeaveModal = () => {
+    setSelectedTenantToLeave(null);
+    setLeaveModalOpen(false);
+  };
+
+  // Hàm gọi API xác nhận
+  const handleConfirmLeave = async (tenantId, data) => {
+    try {
+      setIsLeaving(true);
+      // Gọi file tenantService.js đã có sẵn hàm leave()
+      await tenantService.leave(tenantId, data);
+
+      toast.success("Đã ghi nhận khách rời phòng thành công!");
+      handleCloseLeaveModal();
+
+      // Gọi lại hàm fetch danh sách tenants để làm mới UI
+      fetchTenants();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Có lỗi xảy ra khi xử lý.");
+    } finally {
+      setIsLeaving(false);
+    }
   };
 
   const handleConfirmDelete = async (tenantId) => {
@@ -253,6 +288,7 @@ export default function TenantsPage() {
           onOpenScanModal={handleOpenScanModal}
           onOpenViewModal={handleOpenViewModal}
           onOpenDeleteModal={handleOpenDeleteModal}
+          onOpenLeaveModal={handleOpenLeaveModal}
         />
       </div>
 
@@ -280,6 +316,13 @@ export default function TenantsPage() {
           setIsViewModalOpen(false);
           setViewingTenant(null);
         }}
+      />
+      <LeaveRoomModal
+        isOpen={leaveModalOpen}
+        onClose={handleCloseLeaveModal}
+        onConfirm={handleConfirmLeave}
+        tenant={selectedTenantToLeave}
+        isLoading={isLeaving}
       />
       <DeleteTenantModal
         open={isDeleteModalOpen}

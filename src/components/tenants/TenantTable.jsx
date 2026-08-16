@@ -51,6 +51,7 @@ export default function TenantTable({
   onOpenScanModal,
   onOpenViewModal,
   onOpenDeleteModal,
+  onOpenLeaveModal,
 }) {
 
   const handlePageChange = (newPage) => {
@@ -242,6 +243,17 @@ export default function TenantTable({
                       <i className="fa-solid fa-pen-to-square"></i> Sửa
                     </button>
 
+                    {/* NÚT RỜI PHÒNG (Chỉ hiện cho người ở ghép và đang ở) */}
+                    {tenant.role !== "representative" && tenant.status === "active" && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenLeaveModal?.(tenant)}
+                        className="flex-1 py-2 border border-orange-100 rounded-lg bg-white text-[12px] font-medium text-orange-600 active:bg-orange-50 flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <i className="fa-solid fa-person-walking-arrow-right"></i> Rời
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => onOpenDeleteModal?.(tenant)}
@@ -381,6 +393,18 @@ export default function TenantTable({
                           >
                             <i className="fa-solid fa-pen-to-square text-[12px]"></i>
                           </button>
+
+                          {/* NÚT RỜI PHÒNG BẢNG PC */}
+                          {tenant.role !== "representative" && tenant.status === "active" && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenLeaveModal?.(tenant)}
+                              className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-orange-600 hover:border-orange-600 hover:bg-orange-50 flex items-center justify-center bg-white transition-colors"
+                              title="Báo rời phòng"
+                            >
+                              <i className="fa-solid fa-person-walking-arrow-right text-[12px]"></i>
+                            </button>
+                          )}
                           {/* nút xóa */}
                           <button
                             type="button"

@@ -277,7 +277,7 @@ export default function AddTenantModal({
         payload.append("id_card_number", form.id_card_number.trim());
         if (form.email.trim()) payload.append("email", form.email.trim());
         payload.append("room_id", form.room_id);
-        payload.append("role", "member");
+        payload.append("relationship", "roommate");
         if (form.move_in_date) payload.append("move_in_date", form.move_in_date);
         if (form.note.trim()) payload.append("note", form.note.trim());
         if (frontImage) payload.append("id_card_front_image", frontImage);

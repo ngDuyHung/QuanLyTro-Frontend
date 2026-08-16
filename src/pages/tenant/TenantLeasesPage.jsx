@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import tenantLeaseService from "@/services/tenantLeaseService";
+import useTenantStore from "@/stores/tenantStore";
 
 const formatCurrency = (amount) => Number(amount || 0).toLocaleString("vi-VN");
 const formatDate = (dateString) => {
@@ -9,16 +10,18 @@ const formatDate = (dateString) => {
 };
 
 export default function TenantLeasesPage() {
-    const [leases, setLeases] = useState([]);
-    const [selectedLeaseId, setSelectedLeaseId] = useState("");
-    
+
+    // LẤY ID HỢP ĐỒNG ĐANG CHỌN TỪ STORE TOÀN CỤC
+    // LẤY ĐẦY ĐỦ CÁC BIẾN TỪ STORE TOÀN CỤC
+    const { currentLeaseId, leases, setLeases, setCurrentLeaseId } = useTenantStore();
+
     // Chi tiết hợp đồng đang chọn
     const [leaseDetail, setLeaseDetail] = useState(null);
     const [previewHtml, setPreviewHtml] = useState("");
-    
-    const [isLoadingList, setIsLoadingList] = useState(true);
+
+
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
-    
+
     const [mobileTab, setMobileTab] = useState("details"); // 'details' | 'document'
 
     // State cho chức năng Đăng ký trả phòng
@@ -26,30 +29,13 @@ export default function TenantLeasesPage() {
     const [checkoutDate, setCheckoutDate] = useState("");
     const [isSubmittingCheckout, setIsSubmittingCheckout] = useState(false);
 
-    // 1. Tải danh sách hợp đồng
-    useEffect(() => {
-        const fetchLeases = async () => {
-            setIsLoadingList(true);
-            try {
-                const response = await tenantLeaseService.getAll({ per_page: 100 });
-                const data = response.data.data || [];
-                setLeases(data);
-                
-                if (data.length > 0) {
-                    setSelectedLeaseId(data[0].id);
-                }
-            } catch (error) {
-                toast.error("Không thể tải dữ liệu hợp đồng.");
-            } finally {
-                setIsLoadingList(false);
-            }
-        };
-        fetchLeases();
-    }, []);
+    // STATE QUẢN LÝ LOADING CHO NÚT TẢI PDF
+    const [isExporting, setIsExporting] = useState(false);
 
-    // 2. Tải chi tiết và Bản in HTML mỗi khi ID hợp đồng thay đổi
+
+    // 3. TẢI CHI TIẾT & BẢN IN HTML MỖI KHI ĐỔI PHÒNG TRÊN HEADER
     useEffect(() => {
-        if (!selectedLeaseId) {
+        if (!currentLeaseId) {
             setLeaseDetail(null);
             setPreviewHtml("");
             return;
@@ -59,11 +45,11 @@ export default function TenantLeasesPage() {
             setIsLoadingDetail(true);
             try {
                 const [detailRes, htmlRes] = await Promise.all([
-                    tenantLeaseService.getById(selectedLeaseId),
-                    tenantLeaseService.getPreviewHtml(selectedLeaseId)
+                    tenantLeaseService.getById(currentLeaseId),
+                    tenantLeaseService.getPreviewHtml(currentLeaseId)
                 ]);
-                setLeaseDetail(detailRes.data.data);
-                setPreviewHtml(htmlRes.data.html);
+                setLeaseDetail(detailRes.data?.data || detailRes.data);
+                setPreviewHtml(htmlRes.data?.html || htmlRes.data);
             } catch (error) {
                 toast.error("Không thể tải chi tiết hợp đồng.");
             } finally {
@@ -72,18 +58,44 @@ export default function TenantLeasesPage() {
         };
 
         fetchDetail();
-    }, [selectedLeaseId]);
+    }, [currentLeaseId]);
+
+
+    // HÀM XỬ LÝ TẢI PDF 
+    const handleDownloadPdf = async () => {
+        setIsExporting(true);
+        try {
+            const response = await tenantLeaseService.exportPdf(currentLeaseId);
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const fileName = `Hop_dong_phong_${leaseDetail?.room?.name || currentLeaseId}.pdf`;
+
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+            toast.success("Đã tải xuống hợp đồng PDF thành công.");
+        } catch (error) {
+            toast.error("Có lỗi xảy ra khi kết xuất tệp PDF. Vui lòng thử lại sau.");
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     // Tính toán cảnh báo 10 ngày
     const getCheckoutWarning = () => {
         if (!checkoutDate) return null;
         const selected = new Date(checkoutDate);
         const today = new Date();
-        today.setHours(0,0,0,0);
-        
+        today.setHours(0, 0, 0, 0);
+
         const diffTime = selected - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays < 0) return { type: 'error', msg: 'Không thể chọn ngày trong quá khứ.' };
         if (diffDays < 10) return { type: 'warning', msg: `Bạn báo trước ${diffDays} ngày. Theo quy định cần báo trước ít nhất 10 ngày, bạn có thể bị mất cọc.` };
         return { type: 'success', msg: 'Ngày trả phòng hợp lệ theo quy định hợp đồng.' };
@@ -100,13 +112,14 @@ export default function TenantLeasesPage() {
 
         setIsSubmittingCheckout(true);
         try {
-            await tenantLeaseService.registerCheckout(selectedLeaseId, { move_out_date: checkoutDate });
+            await tenantLeaseService.registerCheckout(currentLeaseId, { move_out_date: checkoutDate }); // Sửa thành currentLeaseId
             toast.success("Đăng ký trả phòng thành công!");
             setIsCheckoutModalOpen(false);
-            
+
             // Cập nhật State cục bộ không cần load lại API
             setLeaseDetail(prev => ({ ...prev, move_out_notice_date: checkoutDate }));
-            setLeases(leases.map(l => l.id === selectedLeaseId ? { ...l, move_out_notice_date: checkoutDate } : l));
+            // Sửa thành currentLeaseId để cập nhật cái tag "(Sắp trả phòng)" trên Header
+            setLeases(leases.map(l => l.id === currentLeaseId ? { ...l, move_out_notice_date: checkoutDate } : l));
         } catch (error) {
             toast.error(error.response?.data?.message || "Lỗi khi đăng ký trả phòng.");
         } finally {
@@ -114,14 +127,6 @@ export default function TenantLeasesPage() {
         }
     };
 
-    if (isLoadingList) {
-        return (
-            <div className="flex-1 p-6 flex flex-col items-center justify-center bg-slate-50 text-brand">
-                <i className="fa-solid fa-circle-notch animate-spin text-3xl mb-3"></i>
-                <p className="text-[14px] font-medium text-slate-500">Đang đồng bộ dữ liệu hợp đồng...</p>
-            </div>
-        );
-    }
 
     if (leases.length === 0) {
         return (
@@ -139,7 +144,7 @@ export default function TenantLeasesPage() {
 
     return (
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 md:p-6 lg:p-6 flex flex-col h-full bg-slate-50 relative">
-            
+
             {/* Header & Dropdown */}
             <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
                 <div>
@@ -147,26 +152,11 @@ export default function TenantLeasesPage() {
                     <p className="text-[13px] text-slate-500 mt-1">Xem thông tin lưu trú, dịch vụ và văn bản thỏa thuận.</p>
                 </div>
 
-                {leases.length > 1 && (
-                    <div className="w-full sm:w-auto relative">
-                        <select 
-                            value={selectedLeaseId} 
-                            onChange={(e) => setSelectedLeaseId(e.target.value)}
-                            className="w-full sm:w-[320px] pl-3.5 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-[13px] font-bold text-brand shadow-sm outline-none focus:border-brand appearance-none cursor-pointer"
-                        >
-                            {leases.map(l => (
-                                <option key={l.id} value={l.id}>
-                                    Phòng {l.room?.name} {l.move_out_notice_date ? '(Sắp trả phòng)' : (l.status === 'active' ? '(Đang thuê)' : '(Đã cũ)')}
-                                </option>
-                            ))}
-                        </select>
-                        <i className="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
-                    </div>
-                )}
+               
             </div>
 
             <div className="flex-1 min-h-0 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col lg:flex-row relative">
-                
+
                 {isLoadingDetail && (
                     <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
                         <i className="fa-solid fa-spinner animate-spin text-2xl text-brand"></i>
@@ -186,7 +176,7 @@ export default function TenantLeasesPage() {
                 <div className={`w-full lg:w-[380px] lg:flex-none flex-col bg-white border-r border-slate-100 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${mobileTab === "details" ? "flex" : "hidden"} lg:flex overflow-y-auto`}>
                     {leaseDetail && (
                         <div className="p-5 space-y-6">
-                            
+
                             {/* Card Tóm tắt Trạng thái */}
                             <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 relative overflow-hidden">
                                 <div className={`absolute top-0 left-0 w-1 h-full ${leaseDetail.status === 'active' ? 'bg-green-500' : 'bg-slate-400'}`}></div>
@@ -214,14 +204,14 @@ export default function TenantLeasesPage() {
                                         <h3 className="text-[13px] font-bold text-slate-800"><i className="fa-solid fa-person-walking-luggage mr-1.5 text-orange-500"></i> Đăng ký trả phòng</h3>
                                         <p className="text-[11px] text-slate-500 mt-1">Thông báo rời đi trước 10 ngày theo hợp đồng.</p>
                                     </div>
-                                    
+
                                     {leaseDetail.move_out_notice_date ? (
                                         <div className="bg-white p-3 rounded-lg border border-orange-100 text-[13px]">
                                             <span className="text-slate-500 block mb-1">Ngày dự kiến rời đi:</span>
                                             <strong className="text-orange-600 text-[15px]">{formatDate(leaseDetail.move_out_notice_date)}</strong>
                                         </div>
                                     ) : (
-                                        <button 
+                                        <button
                                             onClick={() => setIsCheckoutModalOpen(true)}
                                             className="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-[13px] font-bold transition-colors shadow-sm"
                                         >
@@ -289,8 +279,20 @@ export default function TenantLeasesPage() {
                     <div className="w-full max-w-[800px] bg-white rounded-xl shadow-md p-4 sm:p-10 min-h-full border border-slate-200 relative">
                         {previewHtml ? (
                             <>
-                                <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
-                                    <button 
+                                <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2">
+                                    {/* NÚT TẢI PDF MỚI THÊM */}
+                                    <button
+                                        onClick={handleDownloadPdf}
+                                        disabled={isExporting}
+                                        className="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 bg-brand text-white hover:bg-green-700 rounded-lg text-[12px] font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
+                                        title="Tải PDF"
+                                    >
+                                        {isExporting ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-download"></i>}
+                                        <span className="hidden sm:inline">{isExporting ? 'Đang tải...' : 'Tải PDF'}</span>
+                                    </button>
+
+                                    {/* NÚT IN BẢN CỨNG CŨ */}
+                                    <button
                                         onClick={() => window.print()}
                                         className="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 bg-slate-100 text-slate-600 hover:text-brand hover:bg-green-50 border border-slate-200 rounded-lg text-[12px] font-bold transition-colors flex items-center justify-center gap-1.5"
                                         title="In hợp đồng"
@@ -321,26 +323,25 @@ export default function TenantLeasesPage() {
                                 <i className="fa-solid fa-xmark text-lg"></i>
                             </button>
                         </div>
-                        
+
                         <form onSubmit={handleRegisterCheckout} className="p-5 space-y-4">
                             <div>
                                 <label className="block text-[13px] font-bold text-slate-700 mb-2">Ngày dự kiến rời đi</label>
-                                <input 
-                                    type="date" 
+                                <input
+                                    type="date"
                                     required
                                     value={checkoutDate}
                                     onChange={(e) => setCheckoutDate(e.target.value)}
-                                    className="w-full p-2.5 border border-slate-200 rounded-xl text-[14px] focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-shadow" 
+                                    className="w-full p-2.5 border border-slate-200 rounded-xl text-[14px] focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-shadow"
                                 />
                             </div>
 
                             {/* Cảnh báo Realtime */}
                             {warningStatus && (
-                                <div className={`p-3 rounded-lg text-[13px] flex items-start gap-2 border ${
-                                    warningStatus.type === 'warning' ? 'bg-orange-50 border-orange-200 text-orange-700' : 
-                                    warningStatus.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 
-                                    'bg-green-50 border-green-200 text-green-700'
-                                }`}>
+                                <div className={`p-3 rounded-lg text-[13px] flex items-start gap-2 border ${warningStatus.type === 'warning' ? 'bg-orange-50 border-orange-200 text-orange-700' :
+                                    warningStatus.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' :
+                                        'bg-green-50 border-green-200 text-green-700'
+                                    }`}>
                                     <i className={`fa-solid mt-0.5 ${warningStatus.type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}`}></i>
                                     <span>{warningStatus.msg}</span>
                                 </div>

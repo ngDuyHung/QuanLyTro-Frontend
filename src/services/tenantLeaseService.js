@@ -10,6 +10,8 @@ const tenantLeaseService = {
   // Lấy bản HTML của hợp đồng để hiển thị/in ấn
   getPreviewHtml: (id) => api.get(`/tenant/leases/${id}/preview-html`),
 
+  exportPdf: (id) => api.get(`/tenant/leases/${id}/export-pdf`, { responseType: "blob" }),
+
   registerCheckout: (id, data) => api.post(`/tenant/leases/${id}/checkout`, data),
 };
 
