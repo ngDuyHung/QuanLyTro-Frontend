@@ -803,67 +803,64 @@ export default function LandlordDashboard() {
               {!isLoading && (
                 <>
                   {/* 1. Cảnh báo Hợp đồng */}
-                  {pendingTasks.expiring_leases_count > 0 && (
-                    <div className="flex gap-4 items-start relative pb-5 border-b border-slate-100/60">
-                      <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-500 flex items-center justify-center text-xl shrink-0">
+                  <div className={`flex items-center justify-between border border-slate-100 p-3 rounded-xl transition-colors cursor-pointer group ${pendingTasks.expiring_leases_count > 0 ? 'hover:border-yellow-200 hover:bg-yellow-50/30' : 'opacity-60'}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 ${pendingTasks.expiring_leases_count > 0 ? 'bg-yellow-50 text-yellow-500' : 'bg-slate-50 text-slate-400'}`}>
                         <i className="fa-solid fa-folder-open"></i>
                       </div>
-                      <div className="flex-1 flex flex-col justify-center pt-0.5">
-                        <p className="text-[13px] font-bold text-slate-800 mb-0.5">
+                      <div className="flex flex-col justify-center">
+                        <p className={`text-[13px] font-semibold transition-colors ${pendingTasks.expiring_leases_count > 0 ? 'text-slate-800 group-hover:text-yellow-600' : 'text-slate-500'}`}>
                           Hợp đồng sắp hết hạn
                         </p>
-                        <p className="text-[12px] text-slate-500">
-                          Có <span className="font-semibold text-yellow-600">{pendingTasks.expiring_leases_count} hợp đồng</span> sẽ hết hạn trong vòng 30 ngày tới.
+                        <p className="text-[12px] text-slate-500 mt-0.5">
+                          {pendingTasks.expiring_leases_count || 0} hợp đồng
                         </p>
                       </div>
                     </div>
-                  )}
+                    <div className="flex items-center gap-3">
+                      <i className={`fa-solid fa-angle-right text-[12px] ${pendingTasks.expiring_leases_count > 0 ? 'text-slate-400' : 'text-slate-300'}`}></i>
+                    </div>
+                  </div>
 
                   {/* 2. Cảnh báo Sự cố */}
-                  {pendingTasks.pending_incidents_count > 0 && (
-                    <div className="flex gap-4 items-start relative pb-5 border-b border-slate-100/60">
-                      <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl shrink-0">
+                  <div className={`flex items-center justify-between border border-slate-100 p-3 rounded-xl transition-colors cursor-pointer group ${pendingTasks.pending_incidents_count > 0 ? 'hover:border-orange-200 hover:bg-orange-50/30' : 'opacity-60'}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 ${pendingTasks.pending_incidents_count > 0 ? 'bg-orange-50 text-orange-500' : 'bg-slate-50 text-slate-400'}`}>
                         <i className="fa-solid fa-screwdriver-wrench"></i>
                       </div>
-                      <div className="flex-1 flex flex-col justify-center pt-0.5">
-                        <p className="text-[13px] font-bold text-slate-800 mb-0.5">
+                      <div className="flex flex-col justify-center">
+                        <p className={`text-[13px] font-semibold transition-colors ${pendingTasks.pending_incidents_count > 0 ? 'text-slate-800 group-hover:text-orange-600' : 'text-slate-500'}`}>
                           Sự cố cần xử lý
                         </p>
-                        <p className="text-[12px] text-slate-500">
-                          Bạn có <span className="font-semibold text-orange-600">{pendingTasks.pending_incidents_count} sự cố</span> đang chờ tiếp nhận/nghiệm thu.
+                        <p className="text-[12px] text-slate-500 mt-0.5">
+                          {pendingTasks.pending_incidents_count || 0} sự cố
                         </p>
                       </div>
                     </div>
-                  )}
+                    <div className="flex items-center gap-3">
+                      <i className={`fa-solid fa-angle-right text-[12px] ${pendingTasks.pending_incidents_count > 0 ? 'text-slate-400' : 'text-slate-300'}`}></i>
+                    </div>
+                  </div>
 
-                  {/* 3. Cảnh báo Hóa đơn nợ */}
-                  {pendingTasks.unpaid_invoices_count > 0 && (
-                    <div className="flex gap-4 items-start relative">
-                      <div className="w-10 h-10 rounded-xl bg-red-50 text-red-400 flex items-center justify-center text-xl shrink-0">
+                  {/* 3. Cảnh báo Hóa đơn */}
+                  <div className={`flex items-center justify-between border border-slate-100 p-3 rounded-xl transition-colors cursor-pointer group ${pendingTasks.unpaid_invoices_count > 0 ? 'hover:border-red-200 hover:bg-red-50/30' : 'opacity-60'}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 ${pendingTasks.unpaid_invoices_count > 0 ? 'bg-red-50 text-red-400' : 'bg-slate-50 text-slate-400'}`}>
                         <i className="fa-solid fa-file-circle-exclamation"></i>
                       </div>
-                      <div className="flex-1 flex flex-col justify-center pt-0.5">
-                        <p className="text-[13px] font-bold text-slate-800 mb-0.5">
-                          {pendingTasks.unpaid_invoices_count} hóa đơn chưa thu đủ
+                      <div className="flex flex-col justify-center">
+                        <p className={`text-[13px] font-semibold transition-colors ${pendingTasks.unpaid_invoices_count > 0 ? 'text-slate-800 group-hover:text-red-600' : 'text-slate-500'}`}>
+                          Hóa đơn chưa thu đủ
                         </p>
-                        <p className="text-[12px] text-slate-500">
-                          Tổng công nợ: <span className="font-bold text-red-500">{Number(pendingTasks.unpaid_invoices_total).toLocaleString("vi-VN")}đ</span>
+                        <p className="text-[12px] text-slate-500 mt-0.5">
+                          Tổng: {Number(pendingTasks.unpaid_invoices_total || 0).toLocaleString("vi-VN")}đ
                         </p>
                       </div>
                     </div>
-                  )}
-
-                  {/* 4. Trạng thái rỗng (Khi mọi thứ đều tốt, = 0) */}
-                  {pendingTasks.expiring_leases_count === 0 &&
-                    pendingTasks.pending_incidents_count === 0 &&
-                    pendingTasks.unpaid_invoices_count === 0 && (
-                      <div className="flex flex-col items-center justify-center py-8 opacity-60">
-                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
-                          <i className="fa-regular fa-bell-slash text-2xl text-slate-400"></i>
-                        </div>
-                        <p className="text-[13px] text-slate-500 font-medium">Tuyệt vời! Không có cảnh báo nào.</p>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-3">
+                      <i className={`fa-solid fa-angle-right text-[12px] ${pendingTasks.unpaid_invoices_count > 0 ? 'text-slate-400' : 'text-slate-300'}`}></i>
+                    </div>
+                  </div>
                 </>
               )}
             </div>

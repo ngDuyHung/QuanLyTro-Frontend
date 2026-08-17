@@ -12,7 +12,6 @@ export default function TenantInvoicesTable({
     // 1. Hàm helper: Tách tháng và năm trực tiếp từ chuỗi (tránh lỗi lệch múi giờ của JS Date)
     const getMonthYear = (dateString) => {
         if (!dateString) return { month: "--", year: "----" };
-        // API trả về định dạng "YYYY-MM-DD" (VD: "2025-08-01") -> Cắt chuỗi lấy luôn vị trí năm và tháng
         const parts = dateString.split("-");
         if (parts.length >= 2) {
             return {
@@ -82,7 +81,7 @@ export default function TenantInvoicesTable({
     };
 
     return (
-        <div className="flex-1 flex flex-col">
+        <div id="tenant-invoices-top" className="flex-1 flex flex-col justify-between h-full">
             <div className="p-6 space-y-4 flex-1">
                 {isLoading ? (
                     // Hiệu ứng Skeleton Loading mô phỏng Card
@@ -110,12 +109,12 @@ export default function TenantInvoicesTable({
                     </div>
                 ) : (
                     // Danh sách Card Hóa Đơn
-                    <>
+                    <div className="space-y-4">
                         {invoices.map(invoice => {
                             const { month, year } = getMonthYear(invoice.period_from);
                             const config = getStatusConfig(invoice.status);
 
-                            // Xác định số tiền hiển thị: Đã hủy/Đã trả thì hiện tổng tiền, đang nợ thì hiện số tiền CÒN NỢ
+                            // Xác định số tiền hiển thị
                             const isResolved = invoice.status === 'paid' || invoice.status === 'cancelled';
                             const displayAmount = isResolved ? invoice.total_amount : invoice.remaining_amount;
 
@@ -131,7 +130,7 @@ export default function TenantInvoicesTable({
                                     {/* 1. GIAO DIỆN MOBILE (Dạng Ticket/Receipt)  */}
                                     {/* ========================================== */}
                                     <div className={`sm:hidden relative bg-white rounded-xl shadow-sm border-[1.5px] flex flex-col overflow-hidden transition-all ${invoice.status === 'overdue' ? 'border-red-400' :
-                                            (invoice.status === 'issued' || invoice.status === 'partially_paid') ? 'border-primary/80' : 'border-gray-200'
+                                        (invoice.status === 'issued' || invoice.status === 'partially_paid') ? 'border-primary/80' : 'border-gray-200'
                                         } ${invoice.status === 'cancelled' ? 'opacity-70' : ''}`}>
 
                                         {/* HEADER */}
@@ -161,7 +160,7 @@ export default function TenantInvoicesTable({
                                                 {isResolved ? 'Tổng thanh toán' : 'Số tiền cần thanh toán'}
                                             </span>
                                             <div className={`text-[32px] font-black leading-none tracking-tight ${invoice.status === 'overdue' ? 'text-red-500' :
-                                                    (invoice.status === 'paid' ? 'text-gray-800' : 'text-primary')
+                                                (invoice.status === 'paid' ? 'text-gray-800' : 'text-primary')
                                                 }`}>
                                                 {Number(displayAmount).toLocaleString('vi-VN')} <span className="text-[18px] underline decoration-gray-300 font-bold ml-0.5">đ</span>
                                             </div>
@@ -169,13 +168,13 @@ export default function TenantInvoicesTable({
 
                                         {/* ĐƯỜNG CẮT RĂNG CƯA */}
                                         <div className={`relative border-t-[1.5px] border-dashed ${invoice.status === 'overdue' ? 'border-red-300' :
-                                                (invoice.status === 'issued' || invoice.status === 'partially_paid') ? 'border-primary/40' : 'border-gray-200'
+                                            (invoice.status === 'issued' || invoice.status === 'partially_paid') ? 'border-primary/40' : 'border-gray-200'
                                             }`}>
                                             <div className={`absolute -left-[9px] -top-[9px] w-4 h-4 rounded-full bg-[#f8fafc] border-r-[1.5px] ${invoice.status === 'overdue' ? 'border-red-400' :
-                                                    (invoice.status === 'issued' || invoice.status === 'partially_paid') ? 'border-primary/80' : 'border-gray-200'
+                                                (invoice.status === 'issued' || invoice.status === 'partially_paid') ? 'border-primary/80' : 'border-gray-200'
                                                 }`}></div>
                                             <div className={`absolute -right-[9px] -top-[9px] w-4 h-4 rounded-full bg-[#f8fafc] border-l-[1.5px] ${invoice.status === 'overdue' ? 'border-red-400' :
-                                                    (invoice.status === 'issued' || invoice.status === 'partially_paid') ? 'border-primary/80' : 'border-gray-200'
+                                                (invoice.status === 'issued' || invoice.status === 'partially_paid') ? 'border-primary/80' : 'border-gray-200'
                                                 }`}></div>
                                         </div>
 
@@ -333,14 +332,102 @@ export default function TenantInvoicesTable({
                                 </div>
                             );
                         })}
-
-                        {/* End of data indicator */}
-                        <div className="pb-4 pt-2 flex items-center justify-center text-gray-400 text-sm gap-2">
-                            <i className="fa-regular fa-file-lines"></i> Không còn dữ liệu
-                        </div>
-                    </>
+                    </div>
                 )}
             </div>
+            
+            {/* Phân trang đặt riêng ở dưới cùng, ngoài khối padding chính */}
+            {invoices.length > 0 && !isLoading && (
+                <div className="bg-white border border-gray-200 sm:border-x-0 sm:border-b-0 sm:border-t sm:border-gray-100 rounded-b-xl p-3 sm:p-4 flex items-center justify-between mt-auto shrink-0">
+                    <span className="text-[12px] sm:text-[13px] text-gray-500">
+                        {pagination ? (
+                            <>
+                                {/* Mobile text */}
+                                <span className="sm:hidden">
+                                    Trang {pagination.current_page || 1}/{pagination.last_page || 1} · {pagination.total || 0} HĐ
+                                </span>
+                                {/* PC text */}
+                                <span className="hidden sm:inline">
+                                    Hiển thị {pagination.from || 0} - {pagination.to || 0} trong tổng số {pagination.total || 0} hóa đơn
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="sm:hidden">0 HĐ</span>
+                                <span className="hidden sm:inline">Chưa có dữ liệu hóa đơn</span>
+                            </>
+                        )}
+                    </span>
+
+                    {pagination?.last_page > 1 && (
+                        <div className="flex items-center gap-1">
+                            {/* Nút lùi trang */}
+                            <button
+                                type="button"
+                                disabled={page <= 1}
+                                onClick={() => {
+                                    onPageChange?.(Math.max(1, page - 1));
+                                    // Tự động cuộn lên đầu danh sách khi chuyển trang (tương tự TenantTable)
+                                    const tableContainer = document.getElementById('tenant-invoices-top');
+                                    if (tableContainer) tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    else window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                                className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg sm:rounded flex items-center justify-center text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <i className="fa-solid fa-angle-left text-[12px] sm:text-[11px]"></i>
+                            </button>
+
+                            {/* UI Mobile: Chỉ hiện 1 ô số trang hiện tại */}
+                            <button
+                                type="button"
+                                className="flex sm:hidden w-8 h-8 rounded-lg items-center justify-center bg-primary text-white font-medium text-[13px]"
+                            >
+                                {page}
+                            </button>
+
+                            {/* UI PC: Hiện đầy đủ dãy số trang */}
+                            <div className="hidden sm:flex gap-1">
+                                {Array.from({ length: pagination.last_page }).map((_, index) => {
+                                    const pageNumber = index + 1;
+                                    return (
+                                        <button
+                                            key={pageNumber}
+                                            type="button"
+                                            onClick={() => {
+                                                onPageChange?.(pageNumber);
+                                                const tableContainer = document.getElementById('tenant-invoices-top');
+                                                if (tableContainer) tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                else window.scrollTo({ top: 0, behavior: 'smooth' });
+                                            }}
+                                            className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
+                                                ? "bg-primary text-white shadow-sm"
+                                                : "border border-gray-200 text-gray-600 hover:bg-gray-50 bg-white"
+                                                }`}
+                                        >
+                                            {pageNumber}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Nút tiến trang */}
+                            <button
+                                type="button"
+                                disabled={page >= pagination.last_page}
+                                onClick={() => {
+                                    onPageChange?.(page + 1);
+                                    const tableContainer = document.getElementById('tenant-invoices-top');
+                                    if (tableContainer) tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    else window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                                className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg sm:rounded flex items-center justify-center text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <i className="fa-solid fa-angle-right text-[12px] sm:text-[11px]"></i>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
