@@ -660,10 +660,7 @@ export default function InvoicesTable({
                           {['issued', 'partially_paid', 'overdue'].includes(invoice.status) && (
                             <>
                               {(() => {
-                                const isPending = invoice.allocations?.some(
-                                  (a) => a.financial_transaction?.status === 'pending'
-                                );
-
+                                const isPending = invoice.has_pending_transaction;
                                 if (isPending) {
                                   return (
                                     <button
