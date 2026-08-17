@@ -68,7 +68,7 @@ export default function AppRouter() {
 
       {/* Tuyến đường của Chủ Trọ (Landlord) */}
       <Route
-        path="/landlord/*"
+        path="/landlord"
         element={
           <ProtectedRoute allowedRoles={["landlord"]}>
             <LandlordLayout />
@@ -96,7 +96,7 @@ export default function AppRouter() {
 
       {/* Tuyến đường của Người Thuê (Tenant) */}
       <Route
-        path="/tenant/*"
+        path="/tenant"
         element={
           <ProtectedRoute allowedRoles={["tenant"]}>
             <TenantLayout />
@@ -115,7 +115,7 @@ export default function AppRouter() {
 
       {/* Tuyến đường của Admin */}
       <Route
-        path="/admin/*"
+        path="/admin"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <Routes>
