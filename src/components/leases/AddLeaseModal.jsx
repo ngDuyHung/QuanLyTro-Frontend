@@ -195,12 +195,15 @@ export default function AddLeaseModal({
         setAvailableServices(fetchedServices);
 
         // Tự động map tất cả dịch vụ có sẵn vào form, gán số lượng = 1 và lấy giá mặc định
-        const autoFilledServices = fetchedServices.map((srv) => ({
-          service_type: srv.service_type,
-          quantity: 1,
-          // Sử dụng unit_price hoặc price tùy theo cấu trúc object API trả về
-          custom_price: srv.unit_price !== undefined ? srv.unit_price : (srv.price || ""),
-        }));
+        const autoFilledServices = fetchedServices.map((srv) => {
+          const rawPrice = srv.unit_price !== undefined ? srv.unit_price : (srv.price || "");
+          return {
+            service_type: srv.service_type,
+            quantity: 1,
+            // Format ngay lập tức khi đổ dữ liệu vào
+            custom_price: rawPrice !== "" ? formatMoneyInput(rawPrice) : "",
+          };
+        });
 
         setForm((prev) => ({
           ...prev,

@@ -27,6 +27,7 @@ export default function EditTenantModal({
   const [existingBackUrl, setExistingBackUrl] = useState("");
 
   const [clientError, setClientError] = useState("");
+  const [fullScreenImage, setFullScreenImage] = useState(null);
 
   // Cleanup object URLs để tránh memory leak
   useEffect(() => {
@@ -166,7 +167,8 @@ export default function EditTenantModal({
           {/* Header (Sticky Top) */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white shrink-0 sticky top-0 z-20">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+              {/* Đổi màu bg-blue-50/text-blue-600 thành bg-brand/10 và text-brand */}
+              <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand shrink-0">
                 <i className="fa-solid fa-user-pen text-[18px]"></i>
               </div>
               <div>
@@ -191,21 +193,42 @@ export default function EditTenantModal({
 
           <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
             {/* Body (Scrollable) */}
-            <div className="overflow-y-auto no-scrollbar flex-1 pb-6 bg-slate-50">
+            <div className="overflow-y-auto no-scrollbar flex-1 pb-6 bg-white">
 
-              {/* Error Message */}
+              {/* Error Message Đồng Bộ */}
               {clientError && (
-                <div className="mx-5 mt-5 sm:mx-6 sm:mt-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-[13px] flex items-center gap-2 shadow-sm">
-                  <i className="fa-solid fa-circle-exclamation"></i>
-                  {clientError}
+                <div className="mx-5 mt-5 sm:mx-6 sm:mt-6 mb-2 bg-red-50 border-l-[4px] border-red-500 rounded-r-xl p-3.5 sm:p-4 shadow-sm flex items-start gap-3 animate-[fadeIn_0.3s_ease-out]">
+                  <div className="w-8 h-8 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0 mt-0.5 border border-red-200">
+                    <i className="fa-solid fa-triangle-exclamation text-[14px]"></i>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-[14px] font-bold text-red-700 mb-0.5">
+                      Thiếu thông tin hoặc sai định dạng
+                    </h4>
+                    <p className="text-[13px] text-red-600 leading-relaxed">
+                      {clientError}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setClientError("")}
+                    className="w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-colors"
+                  >
+                    <i className="fa-solid fa-xmark text-[13px]"></i>
+                  </button>
                 </div>
               )}
 
               {/* 1. Thông tin cá nhân */}
-              <div className={`bg-white px-5 py-5 sm:p-6 border-b border-slate-200 ${clientError ? 'mt-4' : ''}`}>
-                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-address-card text-[13px]"></i> 1. Thông tin liên hệ
-                </h3>
+              <div className="px-5 py-5 sm:p-6">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">
+                    1
+                  </div>
+                  <h3 className="text-[15px] font-bold text-slate-800">
+                    Thông tin liên hệ
+                  </h3>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
                   <div className="sm:col-span-2">
@@ -217,7 +240,7 @@ export default function EditTenantModal({
                       value={form.full_name}
                       onChange={handleChange("full_name")}
                       placeholder="VD: Nguyễn Văn A"
-                      className="w-full px-3.5 py-3 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-medium"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
                     />
                   </div>
 
@@ -230,7 +253,7 @@ export default function EditTenantModal({
                       value={form.phone}
                       onChange={handleChange("phone")}
                       placeholder="Nhập số điện thoại"
-                      className="w-full px-3.5 py-3 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-medium"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
                     />
                   </div>
 
@@ -243,7 +266,7 @@ export default function EditTenantModal({
                       value={form.id_card_number}
                       onChange={handleChange("id_card_number")}
                       placeholder="Nhập số CCCD"
-                      className="w-full px-3.5 py-3 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-medium"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
                     />
                   </div>
 
@@ -256,85 +279,122 @@ export default function EditTenantModal({
                       value={form.email}
                       onChange={handleChange("email")}
                       placeholder="VD: khachthue@email.com"
-                      className="w-full px-3.5 py-3 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-medium"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
                     />
                   </div>
                 </div>
               </div>
 
+              <div className="h-px w-full bg-slate-100"></div>
+
               {/* 2. Ảnh giấy tờ */}
-              <div className="bg-white px-5 py-5 sm:p-6 mt-2 sm:mt-0">
-                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-regular fa-images text-[13px]"></i> 2. Ảnh CCCD / CMND
-                </h3>
+              <div className="px-5 py-5 sm:p-6">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">
+                    2
+                  </div>
+                  <h3 className="text-[15px] font-bold text-slate-800">
+                    Ảnh CCCD / CMND
+                  </h3>
+                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="grid grid-cols-2 gap-3 sm:gap-5 mb-2">
                   {/* Mặt trước */}
-                  <div className="flex flex-col">
-                    <span className="text-[12px] font-semibold text-slate-600 mb-2 text-center uppercase tracking-wide">Mặt trước</span>
-                    <div className="relative w-full aspect-[8/5] rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 overflow-hidden flex items-center justify-center group hover:border-brand transition-colors">
-                      {frontPreview ? (
-                        <img src={frontPreview} alt="Mặt trước mới" className="w-full h-full object-cover" />
-                      ) : existingFrontUrl ? (
-                        <img src={existingFrontUrl} alt="Mặt trước hiện tại" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="text-center text-slate-400">
-                          <i className="fa-regular fa-image text-2xl mb-1 group-hover:text-brand transition-colors"></i>
-                          <p className="text-[11px]">Chưa có ảnh</p>
-                        </div>
-                      )}
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all min-h-[140px] sm:min-h-[170px] relative bg-white hover:border-brand">
+                    <p className="text-[11px] sm:text-[13px] font-semibold text-slate-700 mb-2 relative z-10 w-full text-center">
+                      Mặt trước
+                    </p>
 
-                      {/* Nút Upload đè lên */}
-                      <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-[1px]">
-                        <div className="bg-white text-slate-700 px-3 py-1.5 rounded-lg text-[12px] font-semibold shadow-sm flex items-center gap-1.5">
-                          <i className="fa-solid fa-camera"></i> {existingFrontUrl || frontPreview ? 'Đổi ảnh' : 'Tải lên'}
+                    {(frontPreview || existingFrontUrl) ? (
+                      <div className="relative w-full h-[80px] sm:h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-black mb-1.5 shadow-inner group">
+                        <img
+                          src={frontPreview || existingFrontUrl}
+                          alt="Mặt trước"
+                          className="absolute inset-0 w-full h-full object-cover cursor-pointer active:scale-95 transition-transform"
+                          onClick={() => setFullScreenImage(frontPreview || existingFrontUrl)}
+                        />
+
+                        {/* Nút đổi ảnh (Thu nhỏ lại nằm ở dưới cùng) */}
+                        <label className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white px-3 py-1 rounded-full text-[11px] font-medium shadow-sm transition-all cursor-pointer backdrop-blur-sm z-20 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+                          <i className="fa-solid fa-camera mr-1.5"></i> Đổi ảnh
+                          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFrontChange} className="hidden" />
+                        </label>
+
+                        {/* Nút X chỉ hiện nếu là ảnh mới tải lên */}
+                        {frontPreview && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveNewFront();
+                            }}
+                            className="absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-black/50 text-white hover:bg-red-500 flex items-center justify-center backdrop-blur-sm transition-colors shadow-md z-20"
+                          >
+                            <i className="fa-solid fa-xmark text-[10px] sm:text-[11px]"></i>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <label className="w-full h-[80px] sm:h-[110px] flex flex-col items-center justify-center cursor-pointer mb-1.5 group-hover:border-brand transition-colors">
+                        <div className="w-10 h-8 sm:w-12 sm:h-10 border border-slate-300 rounded flex items-center justify-center text-slate-400 mb-1.5 group-hover:border-brand group-hover:text-brand transition-colors relative z-10 shadow-sm">
+                          <i className="fa-regular fa-address-card text-lg sm:text-xl"></i>
                         </div>
+                        <span className="text-[10px] sm:text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center">
+                          Tải ảnh lên
+                        </span>
                         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFrontChange} className="hidden" />
                       </label>
-                    </div>
-                    {frontPreview && (
-                      <button type="button" onClick={handleRemoveNewFront} className="mt-2 text-[12px] font-semibold text-red-500 hover:text-red-600 text-center">
-                        Hủy ảnh mới chọn
-                      </button>
                     )}
                   </div>
 
                   {/* Mặt sau */}
-                  <div className="flex flex-col">
-                    <span className="text-[12px] font-semibold text-slate-600 mb-2 text-center uppercase tracking-wide">Mặt sau</span>
-                    <div className="relative w-full aspect-[8/5] rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 overflow-hidden flex items-center justify-center group hover:border-brand transition-colors">
-                      {backPreview ? (
-                        <img src={backPreview} alt="Mặt sau mới" className="w-full h-full object-cover" />
-                      ) : existingBackUrl ? (
-                        <img src={existingBackUrl} alt="Mặt sau hiện tại" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="text-center text-slate-400">
-                          <i className="fa-regular fa-image text-2xl mb-1 group-hover:text-brand transition-colors"></i>
-                          <p className="text-[11px]">Chưa có ảnh</p>
-                        </div>
-                      )}
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all min-h-[140px] sm:min-h-[170px] relative bg-white hover:border-brand">
+                    <p className="text-[11px] sm:text-[13px] font-semibold text-slate-700 mb-2 relative z-10 w-full text-center">
+                      Mặt sau
+                    </p>
 
-                      <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-[1px]">
-                        <div className="bg-white text-slate-700 px-3 py-1.5 rounded-lg text-[12px] font-semibold shadow-sm flex items-center gap-1.5">
-                          <i className="fa-solid fa-camera"></i> {existingBackUrl || backPreview ? 'Đổi ảnh' : 'Tải lên'}
+                    {(backPreview || existingBackUrl) ? (
+                      <div className="relative w-full h-[80px] sm:h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-black mb-1.5 shadow-inner group">
+                        <img
+                          src={backPreview || existingBackUrl}
+                          alt="Mặt sau"
+                          className="absolute inset-0 w-full h-full object-cover cursor-pointer active:scale-95 transition-transform"
+                          onClick={() => setFullScreenImage(backPreview || existingBackUrl)}
+                        />
+
+                        {/* Nút đổi ảnh (Thu nhỏ lại nằm ở dưới cùng) */}
+                        <label className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white px-3 py-1 rounded-full text-[11px] font-medium shadow-sm transition-all cursor-pointer backdrop-blur-sm z-20 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+                          <i className="fa-solid fa-camera mr-1.5"></i> Đổi ảnh
+                          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleBackChange} className="hidden" />
+                        </label>
+
+                        {backPreview && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveNewBack();
+                            }}
+                            className="absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-black/50 text-white hover:bg-red-500 flex items-center justify-center backdrop-blur-sm transition-colors shadow-md z-20"
+                          >
+                            <i className="fa-solid fa-xmark text-[10px] sm:text-[11px]"></i>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <label className="w-full h-[80px] sm:h-[110px] flex flex-col items-center justify-center cursor-pointer mb-1.5 group-hover:border-brand transition-colors">
+                        <div className="w-10 h-8 sm:w-12 sm:h-10 border border-slate-300 rounded flex items-center justify-center text-slate-400 mb-1.5 group-hover:border-brand group-hover:text-brand transition-colors relative z-10 shadow-sm">
+                          <i className="fa-regular fa-address-card text-lg sm:text-xl"></i>
                         </div>
+                        <span className="text-[10px] sm:text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center">
+                          Tải ảnh lên
+                        </span>
                         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleBackChange} className="hidden" />
                       </label>
-                    </div>
-                    {backPreview && (
-                      <button type="button" onClick={handleRemoveNewBack} className="mt-2 text-[12px] font-semibold text-red-500 hover:text-red-600 text-center">
-                        Hủy ảnh mới chọn
-                      </button>
                     )}
                   </div>
                 </div>
-
-                <div className="mt-4 bg-blue-50 border border-blue-100 p-3.5 rounded-xl text-[12px] text-blue-700 flex items-start gap-2.5">
-                  <i className="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
-                  <p className="leading-relaxed">Nếu bạn tải ảnh mới lên, ảnh cũ sẽ tự động được thay thế. Dung lượng ảnh tối đa 4MB.</p>
-                </div>
               </div>
-
             </div>
 
             {/* Footer (Sticky Bottom) */}
@@ -371,6 +431,21 @@ export default function EditTenantModal({
           </form>
         </div>
       </div>
+      {fullScreenImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 sm:p-10 cursor-zoom-out animate-[fadeIn_0.2s_ease-out]"
+          onClick={() => setFullScreenImage(null)}
+        >
+          <button className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white/50 hover:text-white text-3xl sm:text-4xl transition-colors w-12 h-12 flex items-center justify-center bg-black/50 rounded-full">
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+          <img
+            src={fullScreenImage}
+            alt="Phóng to"
+            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-[zoomIn_0.2s_ease-out]"
+          />
+        </div>
+      )}
     </>
   );
 }

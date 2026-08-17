@@ -1,6 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import servicePriceService from "@/services/servicePriceService";
+
+const parseMoney = (value) => {
+  if (!value) return 0;
+  return Number(String(value).replace(/[^\d]/g, ""));
+};
+
+const formatMoneyInput = (value) => {
+  const number = parseMoney(value);
+  if (!number) return "";
+  return new Intl.NumberFormat("vi-VN").format(number);
+};
 
 const initialForm = {
   property_type: "boarding_house",
@@ -45,6 +56,19 @@ export default function EditPropertyModal({
   // State quản lý danh sách dịch vụ của khu nhà này
   const [services, setServices] = useState([]);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
+  // ---  State cho Error Banner, Scroll và Zoom ---
+  const [clientError, setClientError] = useState("");
+  const scrollContainerRef = useRef(null);
+  const [fullScreenImage, setFullScreenImage] = useState(null);
+
+  useEffect(() => {
+    if (clientError && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+  }, [clientError]);
 
   useEffect(() => {
     return () => {
@@ -117,7 +141,7 @@ export default function EditPropertyModal({
         prices.map((p) => ({
           service_type: p.service_type,
           service_type_label: p.service_type_label,
-          unit_price: p.unit_price || 0,
+          unit_price: formatMoneyInput(p.unit_price || 0),
           free_units: p.free_units || 0,
           free_unit_type: p.free_unit_type || "none",
         }))
@@ -132,6 +156,7 @@ export default function EditPropertyModal({
   if (!open) return null;
 
   const handleChange = (field) => (event) => {
+    setClientError("");
     const value = event.target.value;
     setForm((prev) => {
       if (field === "name" && !prev.code) {
@@ -203,6 +228,17 @@ export default function EditPropertyModal({
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    setClientError(""); // Xóa lỗi cũ
+
+    // Validate cơ bản
+    if (!form.name.trim()) {
+      setClientError("Vui lòng nhập tên khu nhà.");
+      return;
+    }
+    if (!form.address.trim()) {
+      setClientError("Vui lòng nhập địa chỉ khu nhà.");
+      return;
+    }
     const note = form.note?.trim() || "";
     const formData = new FormData();
 
@@ -228,10 +264,10 @@ export default function EditPropertyModal({
     } else {
       services.forEach((service, index) => {
         formData.append(`services[${index}][service_type]`, service.service_type);
-        formData.append(`services[${index}][unit_price]`, service.unit_price || 0);
+        formData.append(`services[${index}][unit_price]`, parseMoney(service.unit_price) || 0);
         formData.append(`services[${index}][free_units]`, service.free_units || 0);
         formData.append(`services[${index}][free_unit_type]`, service.free_unit_type || "none");
-        formData.append(`services[${index}][effective_date]`,  ""); // để trống để pass request thôi chứ update property nó set ngày sẵn trong rồi 
+        formData.append(`services[${index}][effective_date]`, ""); // để trống để pass request thôi chứ update property nó set ngày sẵn trong rồi 
       });
     }
 
@@ -287,15 +323,43 @@ export default function EditPropertyModal({
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
-            <div className="overflow-y-auto no-scrollbar flex-1 pb-6 bg-slate-50">
+            {/* THÊM ref VÀ STYLE LIỀN MẠCH VÀO ĐÂY */}
+            <div ref={scrollContainerRef} className="overflow-y-auto no-scrollbar flex-1 pb-6 bg-white px-4 py-5 sm:p-6 flex flex-col gap-6 sm:gap-8">
+
+              {/* --- BẮT ĐẦU KHỐI THÔNG BÁO LỖI --- */}
+              {clientError && (
+                <div className="bg-red-50 border-l-[4px] border-red-500 rounded-r-xl p-3.5 sm:p-4 shadow-sm flex items-start gap-3 animate-[fadeIn_0.3s_ease-out]">
+                  <div className="w-8 h-8 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0 mt-0.5 border border-red-200">
+                    <i className="fa-solid fa-triangle-exclamation text-[14px]"></i>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-[14px] font-bold text-red-700 mb-0.5">
+                      Thiếu thông tin hoặc sai định dạng
+                    </h4>
+                    <p className="text-[13px] text-red-600 leading-relaxed">
+                      {clientError}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setClientError("")}
+                    className="w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-colors"
+                  >
+                    <i className="fa-solid fa-xmark text-[13px]"></i>
+                  </button>
+                </div>
+              )}
+              {/* --- KẾT THÚC KHỐI THÔNG BÁO LỖI --- */}
 
               {/* 1. Thông tin cơ bản */}
-              <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200">
-                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-circle-info text-[12px]"></i> 1. Thông tin cơ bản
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-4">
-                  <div className="sm:col-span-2">
+              <div className="bg-white px-1 py-5 sm:p-6 border-b border-slate-200">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">1</div>
+                  <h3 className="text-[15px] font-bold text-slate-800">Thông tin cơ bản</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 sm:gap-x-5 gap-y-4">
+                  {/* Tên khu nhà: Full width mobile, 2/3 PC */}
+                  <div className="col-span-2 sm:col-span-2">
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                       Tên khu nhà <span className="text-red-500">*</span>
                     </label>
@@ -303,11 +367,14 @@ export default function EditPropertyModal({
                       type="text"
                       value={form.name}
                       onChange={handleChange("name")}
+                      placeholder="VD: Khu A - Lê Văn Sỹ"
                       required
-                      className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-medium transition-all"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-medium transition-all"
                     />
                   </div>
-                  <div className="sm:col-span-1">
+
+                  {/* Mã khu: Full width mobile, 1/3 PC */}
+                  <div className="col-span-2 sm:col-span-1">
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                       Mã khu <span className="text-red-500">*</span>
                     </label>
@@ -315,11 +382,14 @@ export default function EditPropertyModal({
                       type="text"
                       value={form.code}
                       onChange={handleChange("code")}
+                      placeholder="VD: KHU-A"
                       required
-                      className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
                     />
                   </div>
-                  <div className="sm:col-span-1">
+
+                  {/* Số tầng: 1/2 mobile, 1/3 PC */}
+                  <div className="col-span-1 sm:col-span-1">
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                       Số tầng <span className="text-red-500">*</span>
                     </label>
@@ -328,24 +398,30 @@ export default function EditPropertyModal({
                       min="0"
                       value={form.floors_count}
                       onChange={handleChange("floors_count")}
+                      placeholder="VD: 0"
                       required
-                      className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
                     />
                   </div>
-                  <div className="sm:col-span-1">
-                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                      Số phòng dự kiến <span className="text-red-500">*</span>
+
+                  {/* Số phòng: 1/2 mobile, 1/3 PC */}
+                  <div className="col-span-1 sm:col-span-1">
+                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5 whitespace-nowrap truncate">
+                      Số phòng <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       min="0"
                       value={form.expected_rooms_count}
                       onChange={handleChange("expected_rooms_count")}
+                      placeholder="VD: 20"
                       required
-                      className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
                     />
                   </div>
-                  <div className="sm:col-span-1">
+
+                  {/* Người quản lý: Full width mobile, 1/3 PC */}
+                  <div className="col-span-2 sm:col-span-1">
                     <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                       Người quản lý <span className="text-slate-400 font-normal">(tùy chọn)</span>
                     </label>
@@ -353,21 +429,24 @@ export default function EditPropertyModal({
                       type="text"
                       value={form.manager_name}
                       onChange={handleChange("manager_name")}
-                      className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                      placeholder="VD: Nguyễn Văn A"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
                     />
                   </div>
-                  <div className="sm:col-span-3 mt-1">
+
+                  {/* Trạng thái: Full width cả Mobile và PC */}
+                  <div className="col-span-2 sm:col-span-3 mt-1">
                     <label className="block text-[13px] font-semibold text-slate-700 mb-2">Trạng thái khu nhà</label>
                     <div className="flex gap-3">
                       <label className="flex-1 relative cursor-pointer">
                         <input type="radio" name="status" value="active" checked={form.status === "active"} onChange={handleChange("status")} className="peer sr-only" />
-                        <div className="w-full text-center px-3 py-3 sm:py-2 rounded-xl sm:rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 peer-checked:border-brand peer-checked:bg-brand/5 peer-checked:text-brand transition-all">
+                        <div className="w-full text-center px-3 py-3.5 sm:py-2.5 rounded-xl sm:rounded-lg border border-slate-200 bg-white text-[14px] sm:text-[13px] font-semibold text-slate-600 peer-checked:border-brand peer-checked:bg-brand/5 peer-checked:text-brand transition-all active:scale-[0.98]">
                           Đang hoạt động
                         </div>
                       </label>
                       <label className="flex-1 relative cursor-pointer">
                         <input type="radio" name="status" value="inactive" checked={form.status === "inactive"} onChange={handleChange("status")} className="peer sr-only" />
-                        <div className="w-full text-center px-3 py-3 sm:py-2 rounded-xl sm:rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-600 transition-all">
+                        <div className="w-full text-center px-3 py-3.5 sm:py-2.5 rounded-xl sm:rounded-lg border border-slate-200 bg-white text-[14px] sm:text-[13px] font-semibold text-slate-600 peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-600 transition-all active:scale-[0.98]">
                           Tạm ngưng
                         </div>
                       </label>
@@ -377,45 +456,69 @@ export default function EditPropertyModal({
               </div>
 
               {/* 2. Ảnh đại diện */}
-              <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
-                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-regular fa-image text-[12px]"></i> 2. Ảnh đại diện
-                </h3>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="w-full sm:w-[220px] h-[140px] rounded-xl border border-dashed border-slate-300 bg-slate-50 overflow-hidden flex items-center justify-center">
-                    {form.cover_image_preview ? (
-                      <img src={form.cover_image_preview} alt="Ảnh mới" className="w-full h-full object-cover" />
-                    ) : form.existing_cover_image_url ? (
-                      <img src={form.existing_cover_image_url} alt="Hiện tại" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-center px-4">
-                        <div className="w-11 h-11 mx-auto rounded-full bg-brand/10 text-brand flex items-center justify-center mb-2">
-                          <i className="fa-regular fa-image text-[18px]"></i>
+              <div className="bg-white px-1 py-5 sm:p-6 border-b border-slate-200">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">2</div>
+                  <h3 className="text-[15px] font-bold text-slate-800">Ảnh đại diện</h3>
+                </div>
+                <div className="flex items-start sm:items-center gap-4 mt-2">
+                  {/* Ô hiển thị ảnh */}
+                  <div className="w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] shrink-0 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 overflow-hidden relative group flex items-center justify-center hover:border-brand transition-colors">
+                    {form.cover_image_preview || form.existing_cover_image_url ? (
+                      <>
+                        <img
+                          src={form.cover_image_preview || form.existing_cover_image_url}
+                          alt="Ảnh đại diện"
+                          className="w-full h-full object-cover cursor-pointer active:scale-95 transition-transform"
+                          onClick={() => setFullScreenImage(form.cover_image_preview || form.existing_cover_image_url)}
+                        />
+                        {/* Nút xóa ảnh hiển thị khi hover (trên PC) */}
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex">
+                          <button type="button" onClick={handleRemoveSelectedImage} className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-md transition-colors" title="Bỏ ảnh này">
+                            <i className="fa-solid fa-trash-can text-[12px]"></i>
+                          </button>
                         </div>
-                        <p className="text-[12px] font-medium text-slate-600">Chưa có ảnh</p>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-slate-400 group-hover:text-brand transition-colors">
+                        <i className="fa-regular fa-image text-[24px] sm:text-[28px] mb-1"></i>
+                        <span className="text-[11px] sm:text-[12px] font-medium">Trống</span>
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 flex flex-col justify-center">
-                    <label className="inline-flex w-fit items-center gap-2 px-4 py-2.5 rounded-xl bg-brand text-white text-[13px] font-bold cursor-pointer hover:bg-brand-dark transition-colors">
+
+                  {/* Nút upload và Text hướng dẫn */}
+                  <div className="flex-1">
+                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-brand text-white text-[13px] font-bold cursor-pointer hover:bg-brand-dark transition-colors shadow-sm active:scale-[0.98]">
                       <i className="fa-solid fa-upload text-[12px]"></i>
-                      {form.existing_cover_image_url || form.cover_image_preview ? "Đổi ảnh đại diện" : "Chọn ảnh đại diện"}
+                      <span className="hidden sm:inline">
+                        {form.cover_image_preview || form.existing_cover_image_url ? "Đổi ảnh đại diện" : "Chọn ảnh đại diện"}
+                      </span>
+                      <span className="sm:hidden">Tải ảnh lên</span>
                       <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} className="hidden" />
                     </label>
+
+                    {/* Hiển thị nút xóa ảnh ngay dưới nút Upload cho Mobile dễ bấm */}
                     {form.cover_image_preview && (
-                      <button type="button" onClick={handleRemoveSelectedImage} className="mt-2 w-fit text-[13px] font-semibold text-red-600 hover:text-red-700">
-                        Hủy ảnh mới chọn
+                      <button type="button" onClick={handleRemoveSelectedImage} className="sm:hidden ml-3 px-3 py-2.5 rounded-lg bg-red-50 text-[13px] font-bold text-red-500 active:bg-red-100 transition-colors">
+                        Hủy ảnh mới
                       </button>
                     )}
+
+                    <p className="text-[12px] text-slate-500 mt-2.5 leading-relaxed">
+                      Định dạng JPG, PNG, WEBP (Tối đa 4MB).<br className="hidden sm:block" />
+                      Ảnh hiển thị ở danh sách khu nhà.
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* 3. Địa chỉ */}
-              <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
-                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-map-location-dot text-[12px]"></i> 3. Địa chỉ
-                </h3>
+              <div className="bg-white px-1 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">3</div>
+                  <h3 className="text-[15px] font-bold text-slate-800">Địa chỉ</h3>
+                </div>
                 <div>
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                     Địa chỉ khu nhà <span className="text-red-500">*</span>
@@ -426,131 +529,157 @@ export default function EditPropertyModal({
                       type="text"
                       value={form.address}
                       onChange={handleChange("address")}
+                      placeholder="Nhập đầy đủ số nhà, đường, phường/xã, quận/huyện..."
                       required
-                      className="w-full pl-9 pr-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                      className="w-full pl-9 pr-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder:text-slate-400"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* 4. Cấu hình dịch vụ áp dụng (Giao diện Responsive chuẩn Mobile) */}
-              <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
-                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-file-invoice-dollar text-[12px]"></i> 4. Dịch vụ và Định mức áp dụng
-                </h3>
+              {/* 4. Cấu hình dịch vụ & Định mức miễn phí (THIẾT KẾ ĐÁP ỨNG MOBILE) */}
+              <div className="bg-white px-1 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
+                <div className="flex items-center gap-2.5 mb-1">
+                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">4</div>
+                  <h3 className="text-[15px] font-bold text-slate-800">Dịch vụ và Định mức mặc định</h3>
+                </div>
                 <p className="text-[12px] text-slate-500 mb-4">
-                  Danh sách dịch vụ đang áp dụng cho khu nhà này. Nếu bạn điều chỉnh đơn giá hoặc định mức, giá mới sẽ áp dụng cho các hợp đồng tạo sau này.
+                  Cấu hình giá dịch vụ và định mức miễn phí (nếu có) dành riêng cho khu nhà này. Nhấn nút xóa đối với các dịch vụ không áp dụng.
                 </p>
 
                 {isLoadingServices ? (
                   <div className="py-6 text-center text-[13px] text-slate-400">
-                    <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang tải dữ liệu dịch vụ khu nhà...
+                    <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang tải bảng giá đề xuất hệ thống...
                   </div>
                 ) : services.length === 0 ? (
                   <div className="py-4 text-center text-[13px] text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                    Khu nhà này không áp dụng bất kỳ dịch vụ nào.
+                    Hệ thống chưa thiết lập danh mục giá toàn cục.
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {/* Header Desktop */}
-                    <div className="hidden sm:grid grid-cols-12 gap-3 px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase bg-slate-100 border border-slate-200 rounded-lg">
-                      <div className="col-span-3">Loại dịch vụ</div>
-                      <div className="col-span-3">Đơn giá (đ)</div>
-                      <div className="col-span-2">Định mức miễn phí</div>
-                      <div className="col-span-3">Hình thức miễn phí</div>
-                      <div className="col-span-1 text-center">Bỏ</div>
+                    {/* Header chỉ hiện ở Desktop */}
+                    <div className="hidden sm:flex items-center gap-2 px-4 py-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 border border-slate-200 rounded-lg">
+                      <div className="w-[140px]">Dịch vụ</div>
+                      <div className="flex-1">Đơn giá (đ)</div>
+                      <div className="w-[90px]">Miễn phí</div>
+                      <div className="w-[140px]">Hình thức</div>
+                      <div className="w-8 text-center">Bỏ</div>
                     </div>
 
-                    {/* Form Item Row */}
-                    {services.map((service, index) => (
-                      <div
-                        key={service.service_type}
-                        className="p-3.5 bg-white border border-slate-200 rounded-xl flex flex-col gap-3.5 sm:grid sm:grid-cols-12 sm:gap-3 sm:items-center hover:border-slate-300 shadow-sm transition-all"
-                      >
-                        {/* Tên dịch vụ */}
-                        <div className="col-span-12 sm:col-span-3 flex items-center gap-2 bg-slate-50 sm:bg-transparent p-2 sm:p-0 rounded-lg">
-                          <div className="w-2 h-2 rounded-full bg-brand shrink-0"></div>
-                          <span className="text-[13px] font-bold text-slate-800">
-                            {service.service_type_label}
-                          </span>
-                        </div>
+                    {/* Danh sách dịch vụ */}
+                    {services.map((service, index) => {
+                      const unit = service.service_type === "electricity" ? "kWh"
+                        : service.service_type === "water" ? "m³"
+                          : service.service_type === "garbage" ? "tháng"
+                            : service.service_type === "internet" ? "tháng" : "đv";
 
-                        {/* Ô nhập Đơn giá */}
-                        <div className="col-span-12 sm:col-span-3">
-                          <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">Đơn giá (VNĐ):</label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              min="0"
-                              required
-                              value={service.unit_price}
-                              onChange={(e) => handleServiceChange(index, "unit_price", e.target.value ? Number(e.target.value) : "")}
-                              className="w-full pl-3 pr-7 py-2 bg-slate-50/50 sm:bg-white border border-slate-200 rounded-lg text-[13px] font-bold text-slate-800 focus:outline-none focus:border-brand"
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">đ</span>
-                          </div>
-                        </div>
+                      return (
+                        <div
+                          key={service.service_type}
+                          className="bg-white border border-slate-200 sm:border-slate-100 rounded-xl sm:rounded-lg p-3 sm:p-2 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 shadow-sm sm:shadow-none hover:border-brand/30 transition-all group"
+                        >
+                          {/* Header Card trên Mobile / Cột 1 trên PC */}
+                          <div className="flex items-center justify-between sm:w-[140px]">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-brand sm:hidden"></div>
+                              <span className="text-[14px] sm:text-[13px] font-bold text-slate-800">
+                                {service.service_type_label} <span className="text-slate-500 font-medium text-[12px]">/{unit}</span>
+                              </span>
+                            </div>
 
-                        {/* Ô nhập Định mức miễn phí */}
-                        <div className="col-span-6 sm:col-span-2">
-                          <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">Số lượng miễn phí:</label>
-                          <input
-                            type="number"
-                            min="0"
-                            required
-                            value={service.free_units}
-                            onChange={(e) => handleServiceChange(index, "free_units", e.target.value ? Number(e.target.value) : 0)}
-                            className="w-full px-3 py-2 bg-slate-50/50 sm:bg-white border border-slate-200 rounded-lg text-[13px] font-semibold text-slate-800 focus:outline-none focus:border-brand"
-                          />
-                        </div>
-
-                        {/* Dropdown chọn Loại đơn vị miễn phí */}
-                        <div className="col-span-6 sm:col-span-3">
-                          <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">Hình thức miễn phí:</label>
-                          <div className="relative">
-                            <select
-                              value={service.free_unit_type}
-                              onChange={(e) => handleServiceChange(index, "free_unit_type", e.target.value)}
-                              className="w-full pl-3 pr-8 py-2 bg-slate-50/50 sm:bg-white border border-slate-200 rounded-lg text-[13px] font-semibold text-slate-700 outline-none focus:border-brand appearance-none"
+                            {/* Nút xóa trên Mobile */}
+                            <button
+                              type="button"
+                              onClick={() => setServices(prev => prev.filter((_, i) => i !== index))}
+                              className="sm:hidden w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center active:bg-red-100 transition-colors"
                             >
-                              <option value="none">Không miễn phí</option>
-                              <option value="per_room">Tính theo phòng</option>
-                              <option value="per_person">Tính theo người</option>
-                            </select>
-                            <i className="fa-solid fa-angle-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[11px] pointer-events-none"></i>
+                              <i className="fa-regular fa-trash-can text-[13px]"></i>
+                            </button>
+                          </div>
+
+                          {/* Lưới nhập liệu (Grid 2 cột trên Mobile, Flex hàng ngang trên PC) */}
+                          <div className="grid grid-cols-2 sm:flex sm:flex-1 gap-3 sm:gap-2">
+                            {/* Ô nhập Đơn giá (Trải dài 2 cột trên Mobile) */}
+                            <div className="col-span-2 sm:flex-1">
+                              <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">Đơn giá (VNĐ)</label>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  required
+                                  value={service.unit_price}
+                                  onChange={(e) => handleServiceChange(index, "unit_price", formatMoneyInput(e.target.value))}
+                                  className="w-full pl-3 pr-7 py-2.5 sm:py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-bold text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                                  placeholder="0"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">đ</span>
+                              </div>
+                            </div>
+
+                            {/* Ô SL Miễn phí */}
+                            <div className="col-span-1 sm:w-[90px]">
+                              <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">SL Miễn phí</label>
+                              <input
+                                type="number"
+                                min="0"
+                                required
+                                value={service.free_units}
+                                onChange={(e) => handleServiceChange(index, "free_units", e.target.value ? Number(e.target.value) : 0)}
+                                className="w-full px-3 py-2.5 sm:py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-semibold text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                              />
+                            </div>
+
+                            {/* Dropdown Hình thức */}
+                            <div className="col-span-1 sm:w-[140px]">
+                              <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">Hình thức</label>
+                              <select
+                                value={service.free_unit_type}
+                                onChange={(e) => handleServiceChange(index, "free_unit_type", e.target.value)}
+                                className="w-full px-2 py-2.5 sm:py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-medium text-slate-700 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand transition-all cursor-pointer"
+                              >
+                                <option value="none">Không miễn phí</option>
+                                <option value="per_room">Theo phòng</option>
+                                <option value="per_person">Theo người</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Nút xóa trên PC */}
+                          <div className="hidden sm:flex w-8 items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={() => setServices(prev => prev.filter((_, i) => i !== index))}
+                              className="text-slate-400 hover:text-red-500 w-7 h-7 rounded-md hover:bg-red-50 flex items-center justify-center transition-colors"
+                              title="Bỏ dịch vụ này"
+                            >
+                              <i className="fa-regular fa-trash-can text-[13px]"></i>
+                            </button>
                           </div>
                         </div>
-
-                        {/* Nút loại bỏ dịch vụ khỏi khu nhà */}
-                        <div className="col-span-12 sm:col-span-1 text-right sm:text-center mt-1 sm:mt-0 border-t border-dashed border-slate-100 pt-2 sm:pt-0 sm:border-none">
-                          <button
-                            type="button"
-                            onClick={() => setServices(prev => prev.filter((_, i) => i !== index))}
-                            className="w-full sm:w-8 sm:h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center gap-2 py-2 sm:py-0 text-[12px] sm:text-[14px] font-medium transition-colors"
-                            title="Xóa dịch vụ này"
-                          >
-                            <i className="fa-regular fa-trash-can text-[13px]"></i>
-                            <span className="sm:hidden font-bold">Bỏ áp dụng dịch vụ này</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
               {/* 5. Ghi chú */}
-              <div className="bg-white px-5 py-5 sm:p-6 mt-2 sm:mt-0">
-                <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                  <i className="fa-solid fa-note-sticky text-[12px]"></i> 5. Ghi chú
-                </h3>
-                <textarea
-                  value={form.note}
-                  onChange={handleChange("note")}
-                  maxLength={500}
-                  placeholder="Nhập ghi chú thêm về khu nhà..."
-                  className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all resize-none min-h-[90px]"
-                ></textarea>
+              <div className="bg-white px-1 py-5 sm:p-6 mt-2 sm:mt-0">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">5</div>
+                  <h3 className="text-[15px] font-bold text-slate-800">Ghi chú</h3>
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                    Thông tin thêm <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                  </label>
+                  <textarea
+                    value={form.note}
+                    onChange={handleChange("note")}
+                    maxLength={500}
+                    placeholder="Nhập ghi chú thêm về khu nhà..."
+                    className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all resize-none min-h-[90px] placeholder:text-slate-400"
+                  ></textarea>
+                </div>
               </div>
             </div>
 
@@ -585,6 +714,22 @@ export default function EditPropertyModal({
           </form>
         </div>
       </div>
+      {/* GIAO DIỆN ZOOM ẢNH TOÀN MÀN HÌNH */}
+      {fullScreenImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 sm:p-10 cursor-zoom-out animate-[fadeIn_0.2s_ease-out]"
+          onClick={() => setFullScreenImage(null)}
+        >
+          <button className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white/50 hover:text-white text-3xl sm:text-4xl transition-colors w-12 h-12 flex items-center justify-center bg-black/50 rounded-full active:scale-95">
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+          <img
+            src={fullScreenImage}
+            alt="Phóng to ảnh"
+            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-[zoomIn_0.2s_ease-out]"
+          />
+        </div>
+      )}
     </>
   );
 }

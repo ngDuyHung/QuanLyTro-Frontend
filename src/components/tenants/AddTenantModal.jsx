@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import roomService from "@/services/roomService";
 import ocrService from "@/services/ocrService";
 
@@ -116,6 +116,16 @@ export default function AddTenantModal({
 
     // --- Quản lý trạng thái Zoom ảnh ---
     const [fullScreenImage, setFullScreenImage] = useState(null);
+    const scrollContainerRef = useRef(null);
+
+    useEffect(() => {
+        if (clientError && scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+    }, [clientError]);
 
     useEffect(() => {
         return () => {
@@ -346,11 +356,36 @@ export default function AddTenantModal({
                     </div>
 
                     {/* Body (Scrollable) */}
-                    <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
-                        <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar bg-white">
 
+                        {/* --- BẮT ĐẦU KHỐI THÔNG BÁO LỖI --- */}
+                        {clientError && (
+                            <div className="m-4 sm:m-6 mb-0 bg-red-50 border-l-[4px] border-red-500 rounded-r-xl p-3.5 sm:p-4 shadow-sm flex items-start gap-3 animate-[fadeIn_0.3s_ease-out]">
+                                <div className="w-8 h-8 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0 mt-0.5 border border-red-200">
+                                    <i className="fa-solid fa-triangle-exclamation text-[14px]"></i>
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="text-[14px] font-bold text-red-700 mb-0.5">
+                                        Thiếu thông tin hoặc sai định dạng
+                                    </h4>
+                                    <p className="text-[13px] text-red-600 leading-relaxed">
+                                        {clientError}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setClientError("")}
+                                    className="w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-colors"
+                                >
+                                    <i className="fa-solid fa-xmark text-[13px]"></i>
+                                </button>
+                            </div>
+                        )}
+                        {/* --- KẾT THÚC KHỐI THÔNG BÁO LỖI --- */}
+
+                        <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
                             {/* CỘT TRÁI */}
-                            <div className="lg:col-span-7 flex flex-col gap-8">
+                            <div className="lg:col-span-7 flex flex-col gap-6 sm:gap-8">
                                 {/* 1. Thông tin cá nhân */}
                                 <div>
                                     <div className="flex items-center gap-2.5 mb-4">
@@ -362,40 +397,28 @@ export default function AddTenantModal({
                                         </h3>
                                     </div>
 
-                                    {clientError && (
-                                        <div className="mb-4 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-lg text-[13px]">
-                                            {clientError}
-                                        </div>
-                                    )}
-
-                                    <div className="bg-green-50/50 border border-green-100 text-green-700 px-4 py-3 rounded-xl sm:rounded-lg text-[13px] flex items-start gap-3 mb-5">
+                                    <div className="bg-green-50/50 border border-green-100 text-green-700 px-4 py-3 rounded-xl sm:rounded-lg text-[13px] flex items-start gap-3 mb-4">
                                         <i className="fa-solid fa-wand-magic-sparkles mt-0.5 text-green-500"></i>
                                         <p>Sau khi tải ảnh lên, hệ thống sẽ tự động trích xuất thông tin từ CCCD.</p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                                    {/* LƯỚI ẢNH ĐƯỢC CHIA 2 CỘT */}
+                                    <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-5">
                                         {/* Mặt trước CCCD */}
-                                        <div className="border-2 border-dashed border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center transition-all min-h-[170px] relative bg-white">
-                                            <p className="text-[13px] font-semibold text-slate-700 mb-3 relative z-10 w-full text-center">
-                                                Mặt trước CCCD
+                                        <div className="border-2 border-dashed border-slate-200 rounded-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all min-h-[120px] sm:min-h-[170px] relative bg-white hover:border-brand">
+                                            <p className="text-[11px] sm:text-[13px] font-semibold text-slate-700 mb-2 relative z-10 w-full text-center">
+                                                Mặt trước
                                             </p>
 
                                             {frontImagePreview ? (
-                                                // KHI CÓ ẢNH
-                                                <div className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-black mb-2 shadow-inner">
-
-                                                    {/* LỚP 1: ẢNH NỀN (Nhấp vào để zoom) */}
+                                                <div className="relative w-full h-[70px] sm:h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-black mb-1.5 shadow-inner">
                                                     <img
                                                         src={frontImagePreview}
                                                         alt="Mặt trước CCCD"
-                                                        className="absolute inset-0 w-full h-full object-cover cursor-pointer"
+                                                        className="absolute inset-0 w-full h-full object-cover cursor-pointer active:scale-95 transition-transform"
                                                         onClick={() => setFullScreenImage(frontImagePreview)}
                                                     />
-
-                                                    {/* LỚP 2: OVERLAY QUÉT (Nằm đè lên ảnh) */}
                                                     <EkycOverlay status={scanStatusFront} />
-
-                                                    {/* LỚP 3: NÚT XÓA ẢNH (Nằm trên cùng) */}
                                                     <button
                                                         type="button"
                                                         onClick={(event) => {
@@ -403,24 +426,22 @@ export default function AddTenantModal({
                                                             setFrontImage(null);
                                                             setScanStatusFront("idle");
                                                         }}
-                                                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 text-white hover:bg-red-500 flex items-center justify-center backdrop-blur-sm transition-colors shadow-md z-20"
+                                                        className="absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-black/50 text-white hover:bg-red-500 flex items-center justify-center backdrop-blur-sm transition-colors shadow-md z-20"
                                                     >
-                                                        <i className="fa-solid fa-xmark text-[11px]"></i>
+                                                        <i className="fa-solid fa-xmark text-[10px] sm:text-[11px]"></i>
                                                     </button>
                                                 </div>
                                             ) : (
-                                                // KHI CHƯA CÓ ẢNH
-                                                <label className="w-full h-[110px] flex flex-col items-center justify-center cursor-pointer mb-2 group-hover:border-brand transition-colors">
-                                                    <div className="w-12 h-10 border border-slate-300 rounded flex items-center justify-center text-slate-400 mb-2 group-hover:border-brand group-hover:text-brand transition-colors relative z-10">
-                                                        <i className="fa-regular fa-address-card text-xl"></i>
+                                                <label className="w-full h-[70px] sm:h-[110px] flex flex-col items-center justify-center cursor-pointer mb-1.5 group-hover:border-brand transition-colors">
+                                                    <div className="w-10 h-8 sm:w-12 sm:h-10 border border-slate-300 rounded flex items-center justify-center text-slate-400 mb-1.5 group-hover:border-brand group-hover:text-brand transition-colors relative z-10 shadow-sm">
+                                                        <i className="fa-regular fa-address-card text-lg sm:text-xl"></i>
                                                     </div>
-                                                    <span className="text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center line-clamp-1 max-w-full relative z-10">
-                                                        Chụp hoặc tải ảnh lên
+                                                    <span className="text-[10px] sm:text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center line-clamp-1 max-w-full relative z-10">
+                                                        <span className="hidden sm:inline">Chụp / tải ảnh</span>
+                                                        <span className="sm:hidden">Tải ảnh</span>
                                                     </span>
                                                     <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        className="hidden"
+                                                        type="file" accept="image/*" className="hidden"
                                                         onChange={(event) => {
                                                             const file = event.target.files?.[0];
                                                             if (file) {
@@ -432,36 +453,23 @@ export default function AddTenantModal({
                                                     />
                                                 </label>
                                             )}
-
-                                            {/* Tên file */}
-                                            {frontImage && (
-                                                <span className="text-[12px] text-slate-500 text-center line-clamp-1 max-w-full relative z-10 mt-1 w-full block">
-                                                    {frontImage.name}
-                                                </span>
-                                            )}
                                         </div>
 
                                         {/* Mặt sau CCCD */}
-                                        <div className="border-2 border-dashed border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center transition-all min-h-[170px] relative bg-white">
-                                            <p className="text-[13px] font-semibold text-slate-700 mb-3 relative z-10 w-full text-center">
-                                                Mặt sau CCCD
+                                        <div className="border-2 border-dashed border-slate-200 rounded-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all min-h-[120px] sm:min-h-[170px] relative bg-white hover:border-brand">
+                                            <p className="text-[11px] sm:text-[13px] font-semibold text-slate-700 mb-2 relative z-10 w-full text-center">
+                                                Mặt sau
                                             </p>
 
                                             {backImagePreview ? (
-                                                <div className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-black mb-2 shadow-inner">
-
-                                                    {/* LỚP 1: ẢNH NỀN (Nhấp vào để zoom) */}
+                                                <div className="relative w-full h-[70px] sm:h-[110px] rounded-lg overflow-hidden border border-slate-200 bg-black mb-1.5 shadow-inner">
                                                     <img
                                                         src={backImagePreview}
                                                         alt="Mặt sau CCCD"
-                                                        className="absolute inset-0 w-full h-full object-cover cursor-pointer"
+                                                        className="absolute inset-0 w-full h-full object-cover cursor-pointer active:scale-95 transition-transform"
                                                         onClick={() => setFullScreenImage(backImagePreview)}
                                                     />
-
-                                                    {/* LỚP 2: OVERLAY QUÉT (Nằm đè lên ảnh) */}
                                                     <EkycOverlay status={scanStatusBack} />
-
-                                                    {/* LỚP 3: NÚT XÓA ẢNH (Nằm trên cùng) */}
                                                     <button
                                                         type="button"
                                                         onClick={(event) => {
@@ -469,23 +477,22 @@ export default function AddTenantModal({
                                                             setBackImage(null);
                                                             setScanStatusBack("idle");
                                                         }}
-                                                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 text-white hover:bg-red-500 flex items-center justify-center backdrop-blur-sm transition-colors shadow-md z-20"
+                                                        className="absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-black/50 text-white hover:bg-red-500 flex items-center justify-center backdrop-blur-sm transition-colors shadow-md z-20"
                                                     >
-                                                        <i className="fa-solid fa-xmark text-[11px]"></i>
+                                                        <i className="fa-solid fa-xmark text-[10px] sm:text-[11px]"></i>
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <label className="w-full h-[110px] flex flex-col items-center justify-center cursor-pointer mb-2 group-hover:border-brand transition-colors">
-                                                    <div className="w-12 h-10 border border-slate-300 rounded flex items-center justify-center text-slate-400 mb-2 group-hover:border-brand group-hover:text-brand transition-colors relative z-10">
-                                                        <i className="fa-regular fa-address-card text-xl"></i>
+                                                <label className="w-full h-[70px] sm:h-[110px] flex flex-col items-center justify-center cursor-pointer mb-1.5 group-hover:border-brand transition-colors">
+                                                    <div className="w-10 h-8 sm:w-12 sm:h-10 border border-slate-300 rounded flex items-center justify-center text-slate-400 mb-1.5 group-hover:border-brand group-hover:text-brand transition-colors relative z-10 shadow-sm">
+                                                        <i className="fa-regular fa-address-card text-lg sm:text-xl"></i>
                                                     </div>
-                                                    <span className="text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center line-clamp-1 max-w-full relative z-10">
-                                                        Chụp hoặc tải ảnh lên
+                                                    <span className="text-[10px] sm:text-[12px] text-slate-500 group-hover:text-brand transition-colors text-center line-clamp-1 max-w-full relative z-10">
+                                                        <span className="hidden sm:inline">Chụp / tải ảnh</span>
+                                                        <span className="sm:hidden">Tải ảnh</span>
                                                     </span>
                                                     <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        className="hidden"
+                                                        type="file" accept="image/*" className="hidden"
                                                         onChange={(event) => {
                                                             const file = event.target.files?.[0];
                                                             if (file) {
@@ -495,13 +502,6 @@ export default function AddTenantModal({
                                                         }}
                                                     />
                                                 </label>
-                                            )}
-
-                                            {/* Tên file */}
-                                            {backImage && (
-                                                <span className="text-[12px] text-slate-500 text-center line-clamp-1 max-w-full relative z-10 mt-1 w-full block">
-                                                    {backImage.name}
-                                                </span>
                                             )}
                                         </div>
                                     </div>
@@ -522,51 +522,26 @@ export default function AddTenantModal({
                                         </div>
                                     )}
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
-                                        <div>
+                                    {/* LƯỚI THÔNG TIN CÁ NHÂN */}
+                                    <div className="grid grid-cols-2 gap-x-4 sm:gap-x-5 gap-y-4">
+                                        <div className="col-span-2">
                                             <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Họ và tên <span className="text-red-500">*</span></label>
-                                            <input
-                                                type="text"
-                                                value={form.full_name}
-                                                onChange={handleChange("full_name")}
-                                                placeholder="Nhập họ và tên"
-                                                className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
-                                            />
+                                            <input type="text" value={form.full_name} onChange={handleChange("full_name")} placeholder="Nhập họ và tên" className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all" />
                                         </div>
 
-                                        <div>
+                                        <div className="col-span-1">
                                             <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Số điện thoại <span className="text-red-500">*</span></label>
-                                            <input
-                                                type="text"
-                                                value={form.phone}
-                                                onChange={handleChange("phone")}
-                                                placeholder="Nhập số điện thoại"
-                                                className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
-                                            />
+                                            <input type="text" value={form.phone} onChange={handleChange("phone")} placeholder="Nhập SĐT" className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all" />
                                         </div>
 
-                                        <div>
-                                            <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                                                Số CCCD/CMND <span className="text-slate-400 font-normal">(tùy chọn)</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={form.id_card_number}
-                                                onChange={handleChange("id_card_number")}
-                                                placeholder="Nhập số CCCD/CMND"
-                                                className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
-                                            />
+                                        <div className="col-span-1">
+                                            <label className="block text-[13px] font-semibold text-slate-700 mb-1.5 truncate">Số CCCD <span className="text-slate-400 font-normal">(tùy chọn)</span></label>
+                                            <input type="text" value={form.id_card_number} onChange={handleChange("id_card_number")} placeholder="Nhập CCCD" className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all" />
                                         </div>
 
-                                        <div>
+                                        <div className="col-span-2">
                                             <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Email <span className="text-slate-400 font-normal">(tùy chọn)</span></label>
-                                            <input
-                                                type="email"
-                                                value={form.email}
-                                                onChange={handleChange("email")}
-                                                placeholder="VD: khachthue@gmail.com"
-                                                className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
-                                            />
+                                            <input type="email" value={form.email} onChange={handleChange("email")} placeholder="VD: khachthue@gmail.com" className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all" />
                                         </div>
                                     </div>
                                 </div>
@@ -576,63 +551,35 @@ export default function AddTenantModal({
                                 {/* 2. Thông tin lưu trú */}
                                 <div>
                                     <div className="flex items-center gap-2.5 mb-4">
-                                        <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">
-                                            2
-                                        </div>
-                                        <h3 className="text-[15px] font-bold text-slate-800">
-                                            Gắn vào phòng
-                                        </h3>
+                                        <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">2</div>
+                                        <h3 className="text-[15px] font-bold text-slate-800">Gắn vào phòng</h3>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
+                                    {/* LƯỚI KHU NHÀ & PHÒNG */}
+                                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                                        <div className="col-span-2 sm:col-span-1">
                                             <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Khu nhà <span className="text-red-500">*</span></label>
-                                            <select
-                                                value={form.property_id}
-                                                onChange={handleChange("property_id")}
-                                                className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] outline-none focus:border-brand"
-                                            >
+                                            <select value={form.property_id} onChange={handleChange("property_id")} className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] outline-none focus:border-brand">
                                                 <option value="">Chọn khu nhà</option>
-                                                {properties.map((property) => (
-                                                    <option key={property.id} value={property.id}>{property.name}</option>
-                                                ))}
+                                                {properties.map((property) => (<option key={property.id} value={property.id}>{property.name}</option>))}
                                             </select>
                                         </div>
 
-                                        <div>
+                                        <div className="col-span-2 sm:col-span-1">
                                             <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Phòng <span className="text-red-500">*</span></label>
-                                            <select
-                                                value={form.room_id}
-                                                onChange={handleChange("room_id")}
-                                                disabled={!form.property_id || isLoadingRooms}
-                                                className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] outline-none focus:border-brand disabled:bg-slate-50 disabled:text-slate-400"
-                                            >
-                                                <option value="">
-                                                    {isLoadingRooms ? "Đang tải phòng..." : form.property_id ? "Chọn phòng" : "Chọn khu nhà trước"}
-                                                </option>
-                                                {rooms.map((room) => (
-                                                    <option key={room.id} value={room.id}>{room.name} - {getRoomActiveLeaseText(room)}</option>
-                                                ))}
+                                            <select value={form.room_id} onChange={handleChange("room_id")} disabled={!form.property_id || isLoadingRooms} className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] outline-none focus:border-brand disabled:bg-slate-50 disabled:text-slate-400">
+                                                <option value="">{isLoadingRooms ? "Đang tải phòng..." : form.property_id ? "Chọn phòng" : "Chọn khu nhà trước"}</option>
+                                                {rooms.map((room) => (<option key={room.id} value={room.id}>{room.name} - {getRoomActiveLeaseText(room)}</option>))}
                                             </select>
-                                            {roomNotice && <p className="mt-1.5 text-[12px] text-orange-600 leading-relaxed">{roomNotice}</p>}
+                                            {roomNotice && <p className="mt-1.5 text-[11px] text-orange-600 leading-relaxed">{roomNotice}</p>}
                                         </div>
 
-                                        <div>
+                                        <div className="col-span-2">
                                             <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">Ngày vào ở</label>
-                                            <input
-                                                type="date"
-                                                value={form.move_in_date}
-                                                onChange={handleChange("move_in_date")}
-                                                className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
-                                            />
+                                            <input type="date" value={form.move_in_date} onChange={handleChange("move_in_date")} className="w-full px-3.5 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl sm:rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all" />
                                         </div>
 
-                                        <div className="bg-blue-50 border border-blue-100 text-blue-700 px-4 py-3 rounded-xl sm:rounded-lg text-[13px] flex items-start gap-3">
-                                            <i className="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
-                                            <div>
-                                                <p>Khách thuê sẽ được thêm vào phòng với vai trò <b>người ở ghép</b>.</p>
-                                            </div>
-                                        </div>
+
                                     </div>
                                 </div>
                             </div>

@@ -704,6 +704,9 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
               {sort === "created_at_asc" && "Sắp xếp: Cũ nhất"}
               {sort === "price_asc" && "Sắp xếp: Giá thấp - cao"}
               {sort === "price_desc" && "Sắp xếp: Giá cao - thấp"}
+              {/* Thêm 2 dòng này để hiển thị khi người dùng chọn sắp xếp theo thứ tự */}
+              {sort === "sort_order_asc" && "Sắp xếp: Thứ tự nhỏ - lớn"}
+              {sort === "sort_order_desc" && "Sắp xếp: Thứ tự lớn - nhỏ"}
             </span>
 
             {/* Thẻ select ẩn danh, phủ kín và đè lên trên nút cũ */}
@@ -715,12 +718,17 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
               }}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             >
+              {/* Thêm 2 option này vào danh sách */}
+              <option value="sort_order_asc">Thứ tự: Nhỏ đến lớn</option>
+              <option value="sort_order_desc">Thứ tự: Lớn đến nhỏ</option>
+
               <option value="created_at_desc">Mới nhất</option>
               <option value="created_at_asc">Cũ nhất</option>
               <option value="price_asc">Giá: Thấp đến cao</option>
               <option value="price_desc">Giá: Cao đến thấp</option>
             </select>
           </div>
+
           <button
             type="button"
             onClick={() => setIsAddRoomOpen(true)}
@@ -1006,6 +1014,9 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                         <td className="py-3 px-5 font-semibold text-slate-800">
                           <div className="flex items-center gap-2 min-w-0">
                             <i className="fa-solid fa-door-open text-slate-400 shrink-0"></i>
+                            {/* <span className="text-[12px] font-bold text-slate-400 w-4 text-center shrink-0" title="Thứ tự hiển thị">
+                              {room.sort_order ?? 0}
+                            </span> */}
                             <span className="truncate">{room.name}</span>
                           </div>
                         </td>

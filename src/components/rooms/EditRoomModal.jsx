@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
+import servicePriceService from "@/services/servicePriceService";
 
 const ROOM_AMENITIES = [
   { value: "air_conditioner", label: "Máy lạnh", icon: "fa-snowflake" },
@@ -93,6 +94,52 @@ export default function EditRoomModal({
     index: null,
   });
   const [clientError, setClientError] = useState("");
+  const scrollContainerRef = useRef(null);
+  const [fullScreenImage, setFullScreenImage] = useState(null);
+  // ---  cho Dịch vụ ---
+  const [propertyServices, setPropertyServices] = useState([]);
+  const [isLoadingServices, setIsLoadingServices] = useState(false);
+
+  // Helper lấy icon dịch vụ
+  const getServiceIcon = (type) => {
+    switch (type) {
+      case "electricity": return { icon: "fa-bolt", color: "text-amber-500" };
+      case "water": return { icon: "fa-droplet", color: "text-blue-500" };
+      case "internet": return { icon: "fa-wifi", color: "text-indigo-500" };
+      case "garbage": return { icon: "fa-trash-can", color: "text-slate-500" };
+      default: return { icon: "fa-gears", color: "text-brand" };
+    }
+  };
+
+  // Tự động tải danh sách dịch vụ của khu nhà hiện tại
+  useEffect(() => {
+    const targetPropertyId = room?.property_id || form.property_id;
+
+    if (targetPropertyId) {
+      setIsLoadingServices(true);
+      servicePriceService.getByProperty(targetPropertyId, { per_page: 100 })
+        .then(res => {
+          setPropertyServices(res.data.data || []);
+        })
+        .catch(() => {
+          setPropertyServices([]);
+        })
+        .finally(() => {
+          setIsLoadingServices(false);
+        });
+    } else {
+      setPropertyServices([]);
+    }
+  }, [room?.property_id, form.property_id]);
+
+  useEffect(() => {
+    if (clientError && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+  }, [clientError]);
 
   const floorOptions = useMemo(() => {
     // 1. Tìm khu nhà hiện tại trong mảng properties
@@ -186,6 +233,7 @@ export default function EditRoomModal({
   if (!open) return null;
 
   const handleChange = (field) => (event) => {
+    setClientError("");
     const value =
       event.target.type === "checkbox"
         ? event.target.checked
@@ -352,6 +400,7 @@ export default function EditRoomModal({
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    setClientError("");
 
     if (!room?.id) {
       setClientError("Không tìm thấy phòng cần cập nhật.");
@@ -469,196 +518,190 @@ export default function EditRoomModal({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col min-h-0">
-          <div className="overflow-y-auto no-scrollbar flex-1 pb-6 bg-slate-50">
-            {/* 1. Thông tin cơ bản */}
-            <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200">
-              <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                <i className="fa-solid fa-circle-info text-[12px]"></i>
-                1. Thông tin cơ bản
-              </h3>
+          {/* THÊM ref VÀ ĐỔI NỀN TRẮNG */}
+          <div ref={scrollContainerRef} className="overflow-y-auto no-scrollbar flex-1 pb-6 bg-white px-4 py-5 sm:p-6 flex flex-col gap-6 sm:gap-8">
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-4">
-                <div className="sm:col-span-2">
+            {/* --- BẮT ĐẦU KHỐI THÔNG BÁO LỖI --- */}
+            {clientError && (
+              <div className="bg-red-50 border-l-[4px] border-red-500 rounded-r-xl p-3.5 sm:p-4 shadow-sm flex items-start gap-3 animate-[fadeIn_0.3s_ease-out]">
+                <div className="w-8 h-8 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0 mt-0.5 border border-red-200">
+                  <i className="fa-solid fa-triangle-exclamation text-[14px]"></i>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-[14px] font-bold text-red-700 mb-0.5">
+                    Thiếu thông tin hoặc sai định dạng
+                  </h4>
+                  <p className="text-[13px] text-red-600 leading-relaxed">
+                    {clientError}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setClientError("")}
+                  className="w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-colors"
+                >
+                  <i className="fa-solid fa-xmark text-[13px]"></i>
+                </button>
+              </div>
+            )}
+            {/* --- KẾT THÚC KHỐI THÔNG BÁO LỖI --- */}
+
+            {/* 1. Thông tin cơ bản */}
+            <div className="bg-white px-1 py-5 sm:p-6 border-b border-slate-200">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">1</div>
+                <h3 className="text-[15px] font-bold text-slate-800">Thông tin cơ bản</h3>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 sm:gap-x-5 gap-y-4">
+                {/* Khu nhà: Trải dài 2 cột trên Mobile, 2 cột trên PC */}
+                <div className="col-span-2 sm:col-span-2">
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                     Khu nhà <span className="text-red-500">*</span>
                   </label>
-
                   <div className="relative">
                     <input
                       type="text"
                       value={room?.property?.name || "Không xác định"}
                       disabled
-                      className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-500 cursor-not-allowed"
+                      className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-500 cursor-not-allowed"
                     />
                     <i className="fa-solid fa-angle-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[12px] pointer-events-none"></i>
                   </div>
                 </div>
 
-                <div className="sm:col-span-1">
+                {/* Tên/Số phòng: 1/2 Mobile, 1/3 PC */}
+                <div className="col-span-1 sm:col-span-1">
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                     Tên/Số phòng <span className="text-red-500">*</span>
                   </label>
-
                   <input
                     type="text"
                     value={form.name}
                     onChange={handleChange("name")}
                     placeholder="VD: 101"
                     required
-                    className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-medium"
+                    className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-medium"
                   />
                 </div>
 
-                <div className="sm:col-span-1">
-                  <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                    Tầng
-                  </label>
-
-                  <select
-                    value={form.floor_number}
-                    onChange={handleChange("floor_number")}
-                    required
-                    className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand appearance-none cursor-pointer"
-                  >
-                    {floorOptions.map((floor) => (
-                      <option key={floor.value} value={floor.value}>
-                        {floor.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="sm:col-span-1">
-                  <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                    Thứ tự hiện thị <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                {/* Thứ tự hiển thị: 1/2 Mobile, 1/3 PC */}
+                <div className="col-span-1 sm:col-span-1">
+                  <label className="block text-[13px] font-semibold text-slate-700 mb-1.5 whitespace-nowrap truncate">
+                    Thứ tự hiển thị
                   </label>
                   <input
                     type="number"
                     value={form.sort_order}
                     onChange={handleChange("sort_order")}
-                    className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                    placeholder="VD: 1"
+                    className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
 
-                <div className="sm:col-span-1">
+                {/* Tầng: 1/2 Mobile, 1/3 PC */}
+                <div className="col-span-1 sm:col-span-1">
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                    Diện tích{" "}
-                    <span className="text-slate-400 font-normal">(m²)</span>
+                    Tầng
                   </label>
+                  <select
+                    value={form.floor_number}
+                    onChange={handleChange("floor_number")}
+                    required
+                    className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand appearance-none cursor-pointer"
+                  >
+                    {floorOptions.map((floor) => (
+                      <option key={floor.value} value={floor.value}>{floor.label}</option>
+                    ))}
+                  </select>
+                </div>
 
+                {/* Diện tích: 1/2 Mobile, 1/3 PC */}
+                <div className="col-span-1 sm:col-span-1">
+                  <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                    Diện tích <span className="text-slate-400 font-normal">(m²)</span>
+                  </label>
                   <input
                     type="number"
                     value={form.area}
                     onChange={handleChange("area")}
-                    min="0"
-                    step="0.1"
-                    placeholder="VD: 25"
-                    required
-                    className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                    min="0" step="0.1" placeholder="VD: 25" required inputMode="numeric"
+                    className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
 
-                <div className="sm:col-span-1">
+                {/* Giá thuê: 1/2 Mobile, 1/3 PC */}
+                <div className="col-span-1 sm:col-span-1">
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                     Giá thuê <span className="text-red-500">*</span>
                   </label>
-
                   <div className="relative">
                     <input
                       type="text"
                       value={form.current_price}
                       onChange={handleChange("current_price")}
-                      placeholder="VD: 2.800.000"
-                      required
-                      className="w-full pl-3.5 pr-8 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-bold text-brand"
+                      placeholder="VD: 2.800.000" required inputMode="numeric"
+                      className="w-full pl-3.5 pr-8 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-bold text-brand"
                     />
-
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">
-                      đ
-                    </span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">đ</span>
                   </div>
                 </div>
 
-                <div className="sm:col-span-1">
+                {/* Tiền cọc: 1/2 Mobile, 1/3 PC */}
+                <div className="col-span-1 sm:col-span-1">
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                     Tiền thế chân <span className="text-red-500">*</span>
                   </label>
-
                   <div className="relative">
                     <input
                       type="text"
                       value={form.deposit_amount}
                       onChange={handleChange("deposit_amount")}
-                      placeholder="VD: 800.000"
-                      required
-                      className="w-full pl-3.5 pr-8 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-bold text-brand"
+                      placeholder="VD: 800.000" required inputMode="numeric"
+                      className="w-full pl-3.5 pr-8 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand font-bold text-brand"
                     />
-
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">
-                      đ
-                    </span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">đ</span>
                   </div>
                 </div>
 
-                <div className="sm:col-span-1">
+                {/* Sức chứa: Trải dài 2 cột Mobile, 1/3 PC */}
+                <div className="col-span-2 sm:col-span-1">
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                     Sức chứa tối đa
                   </label>
-
                   <div className="relative">
                     <input
                       type="number"
                       value={form.max_occupants}
                       onChange={handleChange("max_occupants")}
-                      min="0"
-                      placeholder="VD: 3"
-                      required
-                      className="w-full pl-3.5 pr-12 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+                      min="0" placeholder="VD: 3" required
+                      className="w-full pl-3.5 pr-12 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                     />
-
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-slate-400 pointer-events-none">
-                      người
-                    </span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-slate-400 pointer-events-none">người</span>
                   </div>
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                {/* Trạng thái phòng: Trải dài trên mọi màn hình */}
+                <div className="col-span-2 sm:col-span-3 mt-1">
+                  <label className="block text-[13px] font-semibold text-slate-700 mb-2">
                     Trạng thái phòng
                   </label>
-
                   {isOccupiedRoom ? (
-                    <div className="px-3 py-2 rounded-lg border border-green-200 bg-green-50 text-[13px] font-semibold text-green-600 flex items-center gap-2">
+                    <div className="px-3 py-3 sm:py-2.5 rounded-xl sm:rounded-lg border border-green-200 bg-green-50 text-[14px] sm:text-[13px] font-semibold text-green-600 flex items-center gap-2">
                       <i className="fa-solid fa-building-circle-check"></i>
                       Đang thuê - trạng thái này được quản lý bởi hợp đồng
                     </div>
                   ) : (
                     <div className="flex gap-3">
                       <label className="flex-1 relative cursor-pointer">
-                        <input
-                          type="radio"
-                          name="status"
-                          value="available"
-                          checked={form.status === "available"}
-                          onChange={handleChange("status")}
-                          required
-                          className="peer sr-only"
-                        />
-                        <div className="w-full text-center px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 peer-checked:border-brand peer-checked:bg-brand/5 peer-checked:text-brand transition-all">
+                        <input type="radio" name="status" value="available" checked={form.status === "available"} onChange={handleChange("status")} required className="peer sr-only" />
+                        <div className="w-full text-center px-3 py-3.5 sm:py-2.5 rounded-xl sm:rounded-lg border border-slate-200 bg-white text-[14px] sm:text-[13px] font-semibold text-slate-600 peer-checked:border-brand peer-checked:bg-brand/5 peer-checked:text-brand transition-all active:scale-[0.98]">
                           Trống
                         </div>
                       </label>
-
                       <label className="flex-1 relative cursor-pointer">
-                        <input
-                          type="radio"
-                          name="status"
-                          value="maintenance"
-                          checked={form.status === "maintenance"}
-                          onChange={handleChange("status")}
-                          className="peer sr-only"
-                        />
-                        <div className="w-full text-center px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-600 transition-all">
+                        <input type="radio" name="status" value="maintenance" checked={form.status === "maintenance"} onChange={handleChange("status")} className="peer sr-only" />
+                        <div className="w-full text-center px-3 py-3.5 sm:py-2.5 rounded-xl sm:rounded-lg border border-slate-200 bg-white text-[14px] sm:text-[13px] font-semibold text-slate-600 peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-600 transition-all active:scale-[0.98]">
                           Bảo trì
                         </div>
                       </label>
@@ -669,67 +712,85 @@ export default function EditRoomModal({
             </div>
 
             {/* 2. Cấu hình dịch vụ & Thu tiền */}
-            <div className="bg-white px-5 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
-              <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                <i className="fa-solid fa-file-invoice-dollar text-[12px]"></i>
-                2. Cấu hình dịch vụ & Thu tiền
-              </h3>
+            <div className="bg-white px-1 py-5 sm:p-6 border-b border-slate-200 mt-2 sm:mt-0">
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">2</div>
+                <h3 className="text-[15px] font-bold text-slate-800">Cấu hình dịch vụ & Thu tiền</h3>
+              </div>
 
-                <div className="sm:col-span-1">
+
+              <div className="grid grid-cols-2 gap-x-4 sm:gap-x-5 gap-y-5">
+                {/* Dịch vụ mặc định: Luôn chiếm 2 cột */}
+                <div className="col-span-2">
+                  <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                    Dịch vụ mặc định áp dụng
+                  </label>
+                  <div className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-lg flex items-center flex-wrap gap-2 min-h-[50px]">
+                    {isLoadingServices ? (
+                      <span className="text-[12px] text-slate-400">
+                        <i className="fa-solid fa-circle-notch fa-spin mr-1.5"></i> Đang tải dịch vụ...
+                      </span>
+                    ) : propertyServices.length > 0 ? (
+                      <>
+                        {propertyServices.map((srv) => {
+                          const iconConfig = getServiceIcon(srv.service_type);
+                          return (
+                            <div key={srv.service_type} className="bg-white border border-slate-200 shadow-sm text-slate-700 text-[12px] font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                              <i className={`fa-solid ${iconConfig.icon} ${iconConfig.color} text-[11px]`}></i>
+                              {srv.service_type_label}
+                            </div>
+                          );
+                        })}
+                        <span className="text-[11px] text-slate-400 ml-1 mt-0.5 w-full block sm:inline sm:w-auto italic">
+                          (Thay đổi được khi làm hợp đồng)
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[12px] text-slate-400 italic">Khu nhà này chưa có dịch vụ nào.</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Ngày thu tiền: Full width Mobile, 1/2 PC */}
+                <div className="col-span-2 sm:col-span-1">
                   <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
                     Ngày thu tiền định kỳ
                   </label>
-
                   <div className="relative">
                     <select
                       value={form.billing_day}
                       onChange={handleChange("billing_day")}
-                      className="w-full pl-3.5 pr-10 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand appearance-none cursor-pointer"
+                      className="w-full pl-3.5 pr-10 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand appearance-none cursor-pointer"
                     >
                       <option value="">Theo cấu hình khu nhà</option>
                       <option value="0">Theo ngày vào ở</option>
                       {Array.from({ length: 31 }).map((_, index) => (
-                        <option key={index + 1} value={index + 1}>
-                          Ngày {index + 1} hằng tháng
-                        </option>
+                        <option key={index + 1} value={index + 1}>Ngày {index + 1} hằng tháng</option>
                       ))}
                     </select>
-
                     <i className="fa-solid fa-angle-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[12px] pointer-events-none"></i>
                   </div>
                 </div>
 
-                <div className="sm:col-span-1 flex flex-col justify-center gap-3 bg-slate-50 rounded-lg p-3 border border-slate-100">
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-[13px] font-medium text-slate-700">
+                {/* 2 Nút gạt Toggle: Full width Mobile, 1/2 PC */}
+                <div className="col-span-2 sm:col-span-1 flex flex-col justify-center gap-3 bg-white sm:bg-slate-50 rounded-xl sm:rounded-lg sm:p-3 sm:border sm:border-slate-100">
+                  <label className="flex items-center justify-between cursor-pointer group px-1 sm:px-0">
+                    <span className="text-[14px] sm:text-[13px] font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">
                       Cho phép ở ghép
                     </span>
-
                     <div className="relative">
-                      <input
-                        type="checkbox"
-                        checked={form.allow_shared}
-                        onChange={handleChange("allow_shared")}
-                        className="sr-only peer"
-                      />
+                      <input type="checkbox" checked={form.allow_shared} onChange={handleChange("allow_shared")} className="sr-only peer" />
                       <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand"></div>
                     </div>
                   </label>
 
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-[13px] font-medium text-slate-700">
+                  <label className="flex items-center justify-between cursor-pointer group px-1 sm:px-0">
+                    <span className="text-[14px] sm:text-[13px] font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">
                       Đăng lên trang công khai
                     </span>
-
                     <div className="relative">
-                      <input
-                        type="checkbox"
-                        checked={form.is_public}
-                        onChange={handleChange("is_public")}
-                        className="sr-only peer"
-                      />
+                      <input type="checkbox" checked={form.is_public} onChange={handleChange("is_public")} className="sr-only peer" />
                       <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand"></div>
                     </div>
                   </label>
@@ -738,11 +799,13 @@ export default function EditRoomModal({
             </div>
 
             {/* 3. Hình ảnh & Mô tả */}
-            <div className="bg-white px-5 py-5 sm:p-6 mt-2 sm:mt-0">
-              <h3 className="text-[14px] font-bold text-brand mb-4 flex items-center gap-2">
-                <i className="fa-solid fa-images text-[12px]"></i>
-                3. Hình ảnh & Mô tả
-              </h3>
+            <div className="bg-white px-1 py-5 sm:p-6 mt-2 sm:mt-0">
+
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-[12px] font-bold shrink-0">3</div>
+                <h3 className="text-[15px] font-bold text-slate-800">Hình ảnh & Mô tả</h3>
+              </div>
+
 
               <div className="flex flex-col gap-4">
                 <div>
@@ -770,6 +833,7 @@ export default function EditRoomModal({
                       />
                     </label>
 
+                    {/* Vòng lặp 1: Ảnh CŨ từ server */}
                     {existingImages.map((image) => (
                       <div
                         key={image.id}
@@ -784,8 +848,9 @@ export default function EditRoomModal({
 
                         <img
                           src={image.image_url}
-                          className="w-full h-full object-cover"
-                          alt="Room"
+                          className="w-full h-full object-cover cursor-pointer active:scale-95 transition-transform"
+                          alt="Room existing"
+                          onClick={() => setFullScreenImage(image.image_url)}
                         />
 
                         <button
@@ -812,6 +877,7 @@ export default function EditRoomModal({
                       </div>
                     ))}
 
+                    {/* Vòng lặp 2: Ảnh MỚI user vừa chọn */}
                     {newImages.map((image, index) => (
                       <div
                         key={image.previewUrl}
@@ -826,8 +892,9 @@ export default function EditRoomModal({
 
                         <img
                           src={image.previewUrl}
-                          className="w-full h-full object-cover"
-                          alt={`Room preview ${index + 1}`}
+                          className="w-full h-full object-cover cursor-pointer active:scale-95 transition-transform"
+                          alt={`Room preview new ${index + 1}`}
+                          onClick={() => setFullScreenImage(image.previewUrl)}
                         />
 
                         <button
@@ -864,7 +931,7 @@ export default function EditRoomModal({
                   <textarea
                     value={form.description}
                     onChange={handleChange("description")}
-                    className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand resize-none min-h-[90px] placeholder:text-slate-400"
+                    className="w-full px-3.5 py-3 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] text-slate-800 focus:bg-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand resize-none min-h-[90px] placeholder:text-slate-400"
                     placeholder="Nhập tiện ích phòng, giờ giấc, quy định riêng..."
                   ></textarea>
                 </div>
@@ -896,12 +963,6 @@ export default function EditRoomModal({
                   </div>
                 </div>
                 {/* KẾT THÚC: KHỐI TIỆN ÍCH PHÒNG */}
-
-                {clientError && (
-                  <div className="px-3.5 py-2.5 rounded-lg bg-red-50 border border-red-100 text-red-600 text-[13px] font-medium">
-                    {clientError}
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -937,6 +998,22 @@ export default function EditRoomModal({
           </div>
         </form>
       </div>
+      {/* GIAO DIỆN ZOOM ẢNH TOÀN MÀN HÌNH */}
+      {fullScreenImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 sm:p-10 cursor-zoom-out animate-[fadeIn_0.2s_ease-out]"
+          onClick={() => setFullScreenImage(null)}
+        >
+          <button className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white/50 hover:text-white text-3xl sm:text-4xl transition-colors w-12 h-12 flex items-center justify-center bg-black/50 rounded-full active:scale-95">
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+          <img
+            src={fullScreenImage}
+            alt="Phóng to ảnh"
+            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-[zoomIn_0.2s_ease-out]"
+          />
+        </div>
+      )}
     </div>
   );
 }
