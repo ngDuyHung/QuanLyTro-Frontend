@@ -5,6 +5,7 @@ import tenantUtilityService from "@/services/tenantUtilityService";
 import TenantUtilitiesTable from "@/components/tenant/utilities/TenantUtilitiesTable";
 import TenantSubmitUtilityModal from "@/components/tenant/utilities/TenantSubmitUtilityModal";
 import TenantViewUtilityModal from "@/components/tenant/utilities/TenantViewUtilityModal";
+import useTenantStore from "@/stores/tenantStore";
 
 export default function TenantUtilitiesPage() {
     const [readings, setReadings] = useState([]);
@@ -22,6 +23,8 @@ export default function TenantUtilitiesPage() {
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [selectedReading, setSelectedReading] = useState(null);
+
+    const { setCurrentLeaseId } = useTenantStore();
 
     const fetchReadings = useCallback(async () => {
         try {
@@ -41,14 +44,25 @@ export default function TenantUtilitiesPage() {
         }
     }, [page, type, month]);
 
-    // MỞ MODAL TỰ ĐỘNG
+    // MỞ MODAL TỰ ĐỘNG & ĐIỀU HƯỚNG ĐÚNG PHÒNG
     useEffect(() => {
-        if (searchParams.get("action") === "submit_reading") {
+        const action = searchParams.get("action");
+        const leaseIdParam = searchParams.get("lease_id");
+
+        // Nếu trên URL có truyền lease_id từ thông báo Push
+        if (leaseIdParam) {
+            setCurrentLeaseId(Number(leaseIdParam)); // Ép toàn bộ App chuyển sang phòng này
+        }
+
+        if (action === "submit_reading") {
             setIsSubmitModalOpen(true);
+
+            // Dọn dẹp URL cho sạch sẽ sau khi đã mở Modal
             searchParams.delete("action");
+            searchParams.delete("lease_id");
             setSearchParams(searchParams, { replace: true });
         }
-    }, [searchParams, setSearchParams]);
+    }, [searchParams, setSearchParams, setCurrentLeaseId]);
 
     useEffect(() => {
         fetchReadings();
