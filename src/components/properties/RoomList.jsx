@@ -920,7 +920,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); handleAction("reserve", room); }}
-                          className="flex-1 py-2 rounded-lg border border-amber-200 bg-amber-50 text-[12px] font-semibold text-amber-600 flex items-center justify-center gap-1.5 active:bg-amber-100"
+                          className="flex-1 py-2 rounded-lg border border-amber-400 bg-amber-50 text-[12px] font-semibold text-amber-600 flex items-center justify-center gap-1.5 active:bg-amber-100"
                         >
                           <i className="fa-solid fa-hand-holding-dollar"></i> Nhận cọc
                         </button>
@@ -944,7 +944,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); handleAction("cancelReserve", room); }}
-                          className="flex-1 py-2 rounded-lg border border-red-200 bg-red-50 text-[12px] font-semibold text-red-600 flex items-center justify-center gap-1.5 active:bg-red-100"
+                          className="flex-1 py-2 rounded-lg border border-red-400 bg-red-50 text-[12px] font-semibold text-red-600 flex items-center justify-center gap-1.5 active:bg-red-100"
                         >
                           <i className="fa-solid fa-ban"></i> Hủy cọc
                         </button>
@@ -953,7 +953,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handleAction("available", room); }}
-                        className="flex-1 py-2 rounded-lg border border-orange-200 bg-orange-50 text-[12px] font-semibold text-orange-600 flex items-center justify-center gap-1.5 active:bg-orange-100"
+                        className="flex-1 py-2 rounded-lg border border-orange-400 bg-orange-50 text-[12px] font-semibold text-orange-600 flex items-center justify-center gap-1.5 active:bg-orange-100"
                       >
                         <i className="fa-solid fa-wrench"></i> Bảo trì xong
                       </button>
@@ -962,7 +962,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); handleAction("view", room); }}
-                          className="flex-1 py-2 rounded-lg border border-slate-200 bg-white text-[12px] font-medium text-slate-600 flex items-center justify-center gap-1.5 active:bg-slate-100"
+                          className="flex-1 py-2 rounded-lg border border-slate-400 bg-white text-[12px] font-medium text-slate-600 flex items-center justify-center gap-1.5 active:bg-slate-100"
                         >
                           <i className="fa-regular fa-eye text-slate-400"></i>
                           Xem chi tiết
@@ -970,7 +970,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); handleAction("invoice", room); }}
-                          className="flex-1 py-2 rounded-lg border border-green-200 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100"
+                          className="flex-1 py-2 rounded-lg border border-green-400 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100"
                         >
                           <i className="fa-solid fa-file-invoice-dollar"></i> Lập hóa đơn
                         </button>
