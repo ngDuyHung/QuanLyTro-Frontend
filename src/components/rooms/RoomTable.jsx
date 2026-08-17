@@ -156,9 +156,9 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
         }`}
     >
       {/* Header */}
-      <div className={`flex items-start justify-between gap-3 px-3.5 py-3 border-b ${hasDebt ? "border-red-100 bg-red-50/40 rounded-t-xl" : "border-slate-100"
+      <div className={`flex items-start justify-between gap-3 px-4 py-3 border-b ${hasDebt ? "border-red-100 bg-red-50/40 rounded-t-xl" : "border-slate-100"
         }`}>
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <div
             className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${statusConfig.iconClass}`}
           >
@@ -166,11 +166,11 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
           </div>
 
           <div className="min-w-0">
-            <p className="text-[14px] font-bold text-slate-800 leading-tight truncate">
+            <p className="text-[15px] font-bold text-slate-800 leading-tight truncate">
               {room.name}
             </p>
 
-            <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+            <p className="text-[12px] text-slate-500 mt-0.5 truncate">
               {room.property?.name || "Chưa có khu nhà"} ·{" "}
               {formatFloor(room.floor_number)}
             </p>
@@ -179,7 +179,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
 
         <div className="flex items-center gap-1.5 shrink-0">
           <span
-            className={`px-2 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap ${statusConfig.badgeClass}`}
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap shadow-sm ${statusConfig.badgeClass}`}
           >
             {room.status_label || statusConfig.shortLabel}
           </span>
@@ -188,7 +188,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onToggleMenu?.(room.id); }}
-              className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 bg-white active:bg-slate-50"
+              className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 bg-white active:bg-slate-50 shadow-sm"
               title="Thao tác"
             >
               <i className="fa-solid fa-ellipsis-vertical text-[12px]"></i>

@@ -57,6 +57,14 @@ const getStatusConfig = (status) => {
   }
 };
 
+const formatFloor = (floorNumber) => {
+  if (floorNumber === null || floorNumber === undefined || floorNumber === "") {
+    return "Không xác định";
+  }
+  if (Number(floorNumber) === 0) return "Trệt";
+  return `Tầng ${floorNumber}`;
+};
+
 const getRoomCoverImage = (room) => {
   const images = room.images || [];
 
@@ -793,33 +801,37 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
                       </div>
 
                       <div className="min-w-0">
-                        <p className="text-[14px] font-bold text-slate-800 leading-none truncate">
+                        <p className="text-[15px] font-bold text-slate-800 leading-tight truncate">
                           {room.name}
                         </p>
-                        {/* Ẩn diện tích, chỉ hiện thông báo nhỏ (nếu cần) hoặc để trống */}
-                        <p className="text-[11px] text-slate-500 mt-1 truncate">
-                          {room.property?.name || "Khu nhà"}
+
+                        <p className="text-[12px] text-slate-500 mt-0.5 truncate">
+                          {room.property?.name || "Chưa có khu nhà"} {room.floor_number !== undefined ? `· ${formatFloor(room.floor_number)}` : ""}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 relative shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <span
-                        className={`px-2.5 py-1 text-[11px] font-semibold rounded-full ${statusConfig.badgeClass}`}
+                        className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap shadow-sm ${statusConfig.badgeClass}`}
                       >
+                        {/* Lưu ý: Nếu muốn dùng shortLabel giống RoomTable, bạn cần thêm thuộc tính shortLabel vào hàm getStatusConfig ở đầu file này */}
                         {room.status_label || statusConfig.label}
                       </span>
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveActionRoomId((currentId) => currentId === room.id ? null : room.id);
-                        }}
-                        className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 bg-white"
-                      >
-                        <i className="fa-solid fa-ellipsis-vertical text-[12px]"></i>
-                      </button>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveActionRoomId((currentId) => currentId === room.id ? null : room.id);
+                          }}
+                          className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 bg-white active:bg-slate-50 shadow-sm"
+                          title="Thao tác"
+                        >
+                          <i className="fa-solid fa-ellipsis-vertical text-[12px]"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
