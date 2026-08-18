@@ -93,6 +93,7 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
         const res = await invoiceService.getAll({
           room_id: room.id,
           per_page: 2, // Lấy đúng 2 hóa đơn mới nhất
+          include_details: 1 // Bao gồm chi tiết các khoản thu
         });
         setRecentInvoices(res.data?.data || []);
       } catch (error) {
