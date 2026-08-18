@@ -161,7 +161,6 @@ export default function FinancialTransactionsTable({
                             </span>
                           )}
                         </div>
-                        <span className="font-bold text-slate-800 text-[14px]">{item.transaction_code}</span>
                         <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-500">
                           <span>{formatDate(item.transaction_date)}</span>
                           <span>•</span>
