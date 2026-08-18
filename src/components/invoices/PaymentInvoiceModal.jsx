@@ -26,6 +26,7 @@ export default function PaymentInvoiceModal({
     invoice,
     onClose,
     onSuccess,
+    onOpenViewModal,
 }) {
     const [amount, setAmount] = useState("");
     const [displayAmount, setDisplayAmount] = useState("");
@@ -82,8 +83,8 @@ export default function PaymentInvoiceModal({
 
     // Hàm set ngày lùi về hạn chót hóa đơn
     const setDateToInvoiceDue = () => {
-        // Nên lấy issue_date làm chuẩn, nếu không có thì lấy due_date
-        const targetDate = invoice?.issue_date || invoice?.due_date || invoice?.period_to;
+        // Đã xóa bỏ invoice?.issue_date để đồng nhất với biến targetDateStr của nút bấm
+        const targetDate = invoice?.due_date || invoice?.period_to;
         if (targetDate) {
             const date = new Date(targetDate);
             date.setHours(12, 0, 0, 0); // Đặt 12h trưa
@@ -291,9 +292,9 @@ export default function PaymentInvoiceModal({
                             <i className="fa-solid fa-hand-holding-dollar text-[18px]"></i>
                         </div>
                         <div>
-                            <h2 className="text-[17px] sm:text-[19px] font-bold text-slate-800">Thu tiền hóa đơn</h2>
+                            <h2 className="text-[17px] sm:text-[19px] font-bold text-slate-800">Thu tiền hóa đơn </h2>
                             <p className="text-[13px] font-semibold text-slate-500 mt-0.5">
-                                Mã HĐ: <span className="text-brand">{invoice.invoice_code}</span> - Phòng: {invoice.room?.name}
+                                Mã HĐ: <span className="text-brand">{invoice.invoice_code}</span> - {invoice.room?.name}
                             </p>
                         </div>
                     </div>
@@ -306,8 +307,31 @@ export default function PaymentInvoiceModal({
                 <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
                     <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-1 p-5 bg-slate-50 flex flex-col sm:flex-row gap-6">
 
-                        {/* Cột trái: Form nhập liệu HOẶC Giao diện duyệt */}
+                        {/* Form nhập liệu HOẶC Giao diện duyệt */}
                         <div className="w-full sm:w-1/2 flex flex-col gap-4">
+                            {/* --- KHỐI KỲ THANH TOÁN & CHI TIẾT  --- */}
+                            <div className="flex items-center justify-between px-1">
+                                <span className="text-[13px] font-medium text-slate-500">
+                                    Kỳ thanh toán: <span className="font-bold text-slate-800">
+                                        {invoice.period_from ? (() => {
+                                            const d = new Date(invoice.period_from);
+                                            return `Tháng ${d.getMonth() + 1}/${d.getFullYear()}`;
+                                        })() : "—"}
+                                    </span>
+                                </span>
+
+                                {onOpenViewModal && (
+                                    <button
+                                        type="button"
+                                        onClick={() => onOpenViewModal(invoice)}
+                                        className="text-[13px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 group active:scale-95 transition-all"
+                                    >
+                                        Xem chi tiết <i className="fa-solid fa-arrow-right-long text-[11px] group-hover:translate-x-1 transition-transform"></i>
+                                    </button>
+                                )}
+                            </div>
+                            {/* --- KHỐI KỲ THANH TOÁN & CHI TIẾT --- */}
+
                             {pendingTx ? (
                                 // --- NẾU CÓ PENDING -> HIỆN GIAO DIỆN DUYỆT ẢNH ---
                                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col h-full animate-[fadeIn_0.3s_ease-out]">

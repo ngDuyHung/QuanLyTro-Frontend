@@ -151,6 +151,20 @@ export default function InvoicesPage() {
         setIsPaymentModalOpen(true);
     };
 
+   // 1. Chuyển từ Thu tiền -> Xem chi tiết
+    const handleSwitchToView = (invoice) => {
+        setSelectedInvoice(invoice);
+        setIsPaymentModalOpen(false);
+        setIsViewModalOpen(true);
+    };
+
+    // 2. Chuyển từ Xem chi tiết -> Thu tiền
+    const handleSwitchToPayment = (invoice) => {
+        setSelectedInvoice(invoice);
+        setIsViewModalOpen(false);
+        setIsPaymentModalOpen(true);
+    };
+
     // Xử lý phát hành hóa đơn
     const handleOpenIssueConfirm = async (invoice) => {
         await invoiceService.issue(invoice.id)
@@ -242,11 +256,9 @@ export default function InvoicesPage() {
             <PaymentInvoiceModal
                 open={isPaymentModalOpen}
                 invoice={selectedInvoice}
-                onClose={() => {
-                    setIsPaymentModalOpen(false);
-                    setSelectedInvoice(null);
-                }}
+                onClose={() => setIsPaymentModalOpen(false)}
                 onSuccess={() => fetchInvoices()}
+                onOpenViewModal={handleSwitchToView}
             />
             <CancelInvoiceModal
                 open={isCancelModalOpen}
@@ -269,15 +281,10 @@ export default function InvoicesPage() {
             <ViewInvoiceModal
                 open={isViewModalOpen}
                 invoice={selectedInvoice}
-                onClose={() => {
-                    setIsViewModalOpen(false);
-                    setSelectedInvoice(null);
-                }}
+                
                 // BỔ SUNG THÊM DÒNG NÀY:
-                onOpenPaymentModal={() => {
-                    setIsViewModalOpen(false);     // Bước 1: Ẩn modal xem chi tiết đi cho đỡ rối màn hình
-                    setIsPaymentModalOpen(true);   // Bước 2: Bật ngay modal thu tiền lên (selectedInvoice đã có sẵn rồi)
-                }}
+                onClose={() => setIsViewModalOpen(false)}
+                onOpenPaymentModal={handleSwitchToPayment}
             />
 
             <InvoiceTemplateModal

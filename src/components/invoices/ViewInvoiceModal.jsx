@@ -488,7 +488,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         {["issued", "partially_paid", "overdue"].includes(invoice.status) && Number(invoice.remaining_amount) > 0 && (
                                             <button
                                                 type="button"
-                                                onClick={onOpenPaymentModal}
+                                                onClick={() => onOpenPaymentModal(invoice)}
                                                 className="w-full py-3 bg-brand text-white rounded-xl text-[14px] font-bold hover:bg-green-700 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-sm"
                                             >
                                                 <i className="fa-solid fa-sack-dollar text-[15px]"></i> Ghi nhận Thu tiền nhanh
