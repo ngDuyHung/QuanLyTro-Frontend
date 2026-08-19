@@ -436,8 +436,6 @@ export default function PaymentInvoiceModal({
                                             step="1"
                                             value={transactionDate}
                                             onChange={(e) => setTransactionDate(e.target.value)}
-                                            // Thêm min để khóa không cho người dùng click chọn ngày cũ hơn trên Lịch
-                                            min={(invoice?.issue_date || invoice?.period_from) ? `${invoice.issue_date || invoice.period_from}T00:00` : undefined}
                                             // readOnly
                                             className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-[13px] outline-none focus:border-brand"
                                         />
