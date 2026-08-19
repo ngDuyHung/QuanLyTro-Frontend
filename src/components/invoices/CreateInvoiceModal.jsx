@@ -158,6 +158,7 @@ export default function CreateInvoiceModal({
                     property_id: form.property_id,
                     status: "active",
                     per_page: 100,
+                    include_invoices: true
                 });
 
                 const fetchedLeases = response.data.data || [];
