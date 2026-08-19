@@ -30,12 +30,22 @@ export default function TenantSubmitUtilityModal({ open, onClose, onSuccess }) {
         return () => { document.body.style.overflow = ""; };
     }, [open]);
 
+    // Dùng useRef để giữ link ảnh và chỉ xóa khi Component Unmount (Đóng Modal)
+    const elecRef = React.useRef("");
+    const waterRef = React.useRef("");
+
+    useEffect(() => {
+        elecRef.current = elecPreview;
+        waterRef.current = waterPreview;
+    }, [elecPreview, waterPreview]);
+
     useEffect(() => {
         return () => {
-            if (waterPreview) URL.revokeObjectURL(waterPreview);
-            if (elecPreview) URL.revokeObjectURL(elecPreview);
+            // Chỉ chạy lệnh dọn rác này khi Modal bị tắt hẳn đi
+            if (elecRef.current) URL.revokeObjectURL(elecRef.current);
+            if (waterRef.current) URL.revokeObjectURL(waterRef.current);
         };
-    }, [waterPreview, elecPreview]);
+    }, []); // Mảng rỗng [] rất quan trọng!
 
     useEffect(() => {
         if (open) {
@@ -268,18 +278,21 @@ export default function TenantSubmitUtilityModal({ open, onClose, onSuccess }) {
                                 {/* Khu vực Ảnh / Camera */}
                                 <div className="flex-1 flex flex-col">
                                     {elecPreview ? (
-                                        <div className="relative w-full aspect-[4/5] sm:aspect-video bg-black rounded-xl overflow-hidden group mb-4 shadow-inner">
-                                            <EkycOverlay status={scanStatusElec} />
+                                        <div className="w-full h-full relative cursor-pointer" onClick={() => setFullScreenImage(elecPreview)}>
+                                            <div className="relative w-full aspect-[4/5] sm:aspect-video bg-black rounded-xl overflow-hidden group mb-4 shadow-inner" >
+                                                <EkycOverlay status={scanStatusElec} />
 
-                                            {/* Container Click Ảnh kèm icon kính lúp */}
-                                            <div className="w-full h-full relative cursor-pointer" onClick={() => setFullScreenImage(elecPreview)}>
+                                                {/* Container Click Ảnh kèm icon kính lúp */}
                                                 <img src={elecPreview} alt="Điện" className="w-full h-full object-cover group-hover:opacity-60 transition-opacity" />
                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                                     <i className="fa-solid fa-magnifying-glass-plus text-white text-3xl drop-shadow-md"></i>
                                                 </div>
                                             </div>
 
-                                            <button type="button" onClick={() => { setElecPreview(""); setElecImage(null); setScanStatusElec("idle"); setElecReading(""); }} className="absolute top-2 right-2 z-20 w-8 h-8 bg-black/50 hover:bg-red-500 text-white rounded-full flex justify-center items-center shadow-md backdrop-blur-md transition-all">
+                                            <button type="button" onClick={(e) => {
+                                                e.stopPropagation();
+                                                setElecPreview(""); setElecImage(null); setScanStatusElec("idle"); setElecReading("");
+                                            }} className="absolute top-2 right-2 z-20 w-8 h-8 bg-black/50 hover:bg-red-500 text-white rounded-full flex justify-center items-center shadow-md backdrop-blur-md transition-all">
                                                 <i className="fa-solid fa-trash text-[12px]"></i>
                                             </button>
                                         </div>
@@ -333,18 +346,21 @@ export default function TenantSubmitUtilityModal({ open, onClose, onSuccess }) {
                                 {/* Khu vực Ảnh / Camera */}
                                 <div className="flex-1 flex flex-col">
                                     {waterPreview ? (
-                                        <div className="relative w-full aspect-[4/5] sm:aspect-video bg-black rounded-xl overflow-hidden group mb-4 shadow-inner">
+                                        <div className="relative w-full aspect-[4/5] sm:aspect-video bg-black rounded-xl overflow-hidden group mb-4 shadow-inner"
+                                            onClick={() => setFullScreenImage(waterPreview)}>
                                             <EkycOverlay status={scanStatusWater} />
 
                                             {/* Container Click Ảnh kèm icon kính lúp */}
-                                            <div className="w-full h-full relative cursor-pointer" onClick={() => setFullScreenImage(waterPreview)}>
+                                            <div className="w-full h-full relative cursor-pointer" >
                                                 <img src={waterPreview} alt="Nước" className="w-full h-full object-cover group-hover:opacity-60 transition-opacity" />
                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                                     <i className="fa-solid fa-magnifying-glass-plus text-white text-3xl drop-shadow-md"></i>
                                                 </div>
                                             </div>
 
-                                            <button type="button" onClick={() => { setWaterPreview(""); setWaterImage(null); setScanStatusWater("idle"); setWaterReading(""); }} className="absolute top-2 right-2 z-20 w-8 h-8 bg-black/50 hover:bg-red-500 text-white rounded-full flex justify-center items-center shadow-md backdrop-blur-md transition-all">
+                                            <button type="button" onClick={(e) => { 
+                                                e.stopPropagation();
+                                                setWaterPreview(""); setWaterImage(null); setScanStatusWater("idle"); setWaterReading(""); }} className="absolute top-2 right-2 z-20 w-8 h-8 bg-black/50 hover:bg-red-500 text-white rounded-full flex justify-center items-center shadow-md backdrop-blur-md transition-all">
                                                 <i className="fa-solid fa-trash text-[12px]"></i>
                                             </button>
                                         </div>
