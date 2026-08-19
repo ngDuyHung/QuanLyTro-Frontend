@@ -1,4 +1,5 @@
 import React from "react";
+import Tooltip from "@/components/common/Tooltip";
 
 // Hàm format tiền tệ VNĐ
 const formatVND = (amount) => {
@@ -24,6 +25,7 @@ export default function DebtReportTab({ data }) {
                 <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex flex-col">
                     <span className="text-[12px] text-slate-500 font-semibold mb-1 uppercase">
                         Tổng công nợ
+                        <Tooltip content="Tổng số tiền khách thuê đang nợ tính đến thời điểm hiện tại (Không phụ thuộc vào bộ lọc ngày tháng)." />
                     </span>
                     <span className="text-lg lg:text-xl font-bold text-red-600">
                         {formatVND(totalDebt)}
@@ -33,18 +35,26 @@ export default function DebtReportTab({ data }) {
                 <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex flex-col">
                     <span className="text-[12px] text-slate-500 font-semibold mb-1 uppercase">
                         Trong hạn (Chưa tới hạn thu)
+                        <Tooltip content="Các khoản nợ từ hóa đơn đã phát hành nhưng chưa tới Hạn thanh toán." />
                     </span>
                     <span className="text-lg lg:text-xl font-bold text-blue-600">
                         {formatVND(inTerm)}
                     </span>
                 </div>
 
-                <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex flex-col">
-                    <span className="text-[12px] text-slate-500 font-semibold mb-1 uppercase">
-                        Quá hạn (1 - 15 ngày)
+                <div className="bg-white rounded-xl p-4 border border-red-500/30 bg-red-500/5 shadow-sm flex flex-col relative">
+                    <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+                        <div className="absolute -right-4 -top-4 text-red-500/10 text-6xl">
+                            <i className="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+
+                    <span className="text-[12px] text-red-600 font-bold mb-1 uppercase z-10 flex items-center">
+                        Quá hạn (trên 15 ngày)
+                        <Tooltip content="Các khoản nợ đã trễ hạn quá 15 ngày. Cần có biện pháp xử lý rủi ro." />
                     </span>
-                    <span className="text-lg lg:text-xl font-bold text-orange-500">
-                        {formatVND(overdue1_15)}
+                    <span className="text-xl lg:text-2xl font-bold text-red-600 z-10">
+                        {formatVND(overdueOver15)}
                     </span>
                 </div>
 
@@ -53,7 +63,7 @@ export default function DebtReportTab({ data }) {
                         <i className="fa-solid fa-triangle-exclamation"></i>
                     </div>
                     <span className="text-[12px] text-red-600 font-bold mb-1 uppercase z-10">
-            Quá hạn  (trên 15 ngày)
+                        Quá hạn  (trên 15 ngày)
                     </span>
                     <span className="text-xl lg:text-2xl font-bold text-red-600 z-10">
                         {formatVND(overdueOver15)}
