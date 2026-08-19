@@ -246,7 +246,7 @@ export default function PaymentInvoiceModal({
 
         // --- CHẶN NGÀY THU HỢP LÝ ---
         const txDateObj = new Date(transactionDate);
-        const limitDateStr = invoice.issue_date || invoice.period_from;
+        const limitDateStr =  invoice.period_from;
 
         if (limitDateStr) {
             const limitDateObj = new Date(limitDateStr);
