@@ -326,15 +326,15 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                                 </span>
                                             </div>
                                             <div className="border-x border-slate-200">
-                                                <span className="text-slate-500 block mb-0.5">Ngày lập h.đơn</span>
+                                                <span className="text-slate-500 block mb-0.5">Ngày lập</span>
                                                 <span className="font-medium text-slate-800 block">
                                                     {invoice.issue_date ? new Date(invoice.period_from).toLocaleDateString("vi-VN") : "—"}
                                                 </span>
                                             </div>
                                             <div>
-                                                <span className="text-slate-500 block mb-0.5">Hạn nạp tiền</span>
+                                                <span className="text-slate-500 block mb-0.5">Đến ngày</span>
                                                 <span className="font-medium text-slate-800 block">
-                                                    {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString("vi-VN") : "—"}
+                                                    {invoice.due_date ? new Date(invoice.period_to).toLocaleDateString("vi-VN") : "—"}
                                                 </span>
                                             </div>
                                         </div>
