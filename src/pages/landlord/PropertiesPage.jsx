@@ -411,7 +411,9 @@ export default function PropertiesPage() {
             <RoomList
               property={selectedProperty}
               properties={properties}
-              onRoomUpdated={fetchProperties} />
+              onRoomUpdated={fetchProperties} 
+              isPropertyLoading={isLoadingProperties}
+              />
           </div>
         </div>
       </div>

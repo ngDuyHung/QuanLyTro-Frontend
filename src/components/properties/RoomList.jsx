@@ -203,7 +203,7 @@ function EmptyRoomState({ property }) {
   );
 }
 
-export default function RoomList({ property, properties, onRoomUpdated }) {
+export default function RoomList({ property, properties, onRoomUpdated, isPropertyLoading }) {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -688,13 +688,13 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
             Danh sách phòng
           </p>
           <p className="text-[12px] text-brand font-semibold mt-0.5 lg:hidden">
-            {property?.name || "Chưa chọn khu nhà"} · {roomStats.total} phòng
+            {isPropertyLoading && !property ? "Đang tải..." : (property?.name || "Chưa chọn khu nhà")} · {roomStats.total} phòng
           </p>
 
           <h3 className="hidden lg:block text-[15px] font-bold text-slate-800">
             Phòng thuộc:{" "}
             <span className="text-brand">
-              {property?.name || "Chưa chọn khu nhà"}
+              {isPropertyLoading && !property ? "Đang tải..." : (property?.name || "Chưa chọn khu nhà")}
             </span>
           </h3>
 
@@ -750,8 +750,7 @@ export default function RoomList({ property, properties, onRoomUpdated }) {
         </div>
       </div>
 
-      {isLoadingRooms ? (
-        // Thêm min-h-[800px] để giữ khung màn hình Mobile không bị sụt xuống
+      {isLoadingRooms || isPropertyLoading ? (
         <div className="flex-1 min-h-[800px] lg:min-h-0">
           {/* Skeleton dành riêng cho Mobile (Card to, cao bằng card thật) */}
           <div className="lg:hidden space-y-3 pb-4 pt-2">
