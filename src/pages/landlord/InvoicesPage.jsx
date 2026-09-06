@@ -151,7 +151,7 @@ export default function InvoicesPage() {
         setIsPaymentModalOpen(true);
     };
 
-   // 1. Chuyển từ Thu tiền -> Xem chi tiết
+    // 1. Chuyển từ Thu tiền -> Xem chi tiết
     const handleSwitchToView = (invoice) => {
         setSelectedInvoice(invoice);
         setIsPaymentModalOpen(false);
@@ -194,14 +194,23 @@ export default function InvoicesPage() {
     return (
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 md:p-6 lg:p-6 pt-6 flex flex-col h-full bg-slate-50">
 
-            {/* Tiêu đề trang & Thống kê nhanh */}
-            <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            {/* Tiêu đề trang & Nút thêm nhanh (Mobile) */}
+            <div className="mb-4 sm:mb-6 flex justify-between items-center gap-4">
                 <div>
-                    <h1 className="text-[22px] font-bold text-slate-800">Quản lý hóa đơn</h1>
-                    <p className="text-[13px] text-slate-500 mt-1">
-                        Theo dõi công nợ tiền phòng, chi phí dịch vụ và quản lý phiếu thu tiền khách thuê.
+                    <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-800">Quản lý hóa đơn</h1>
+                    {/* Ẩn dòng chữ phụ trên Mobile để đỡ tốn chỗ */}
+                    <p className="text-[13px] text-slate-500 mt-0.5 hidden sm:block">
+                        Theo dõi hóa đơn và thu tiền khách thuê.
                     </p>
                 </div>
+
+                {/* NÚT LẬP HÓA ĐƠN ĐƯA LÊN ĐÂY ĐỂ ĐẬP NGAY VÀO MẮT CHỦ NHÀ */}
+                <button
+                    onClick={handleOpenCreateModal}
+                    className="xl:hidden bg-brand text-white px-3.5 py-2 rounded-lg text-[13px] font-bold shadow-sm shadow-brand/20 flex items-center gap-1.5 active:bg-green-700 transition-colors shrink-0"
+                >
+                    <i className="fa-solid fa-plus text-[14px]"></i> Lập hóa đơn
+                </button>
             </div>
 
 
@@ -281,7 +290,7 @@ export default function InvoicesPage() {
             <ViewInvoiceModal
                 open={isViewModalOpen}
                 invoice={selectedInvoice}
-                
+
                 // BỔ SUNG THÊM DÒNG NÀY:
                 onClose={() => setIsViewModalOpen(false)}
                 onOpenPaymentModal={handleSwitchToPayment}

@@ -382,6 +382,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                                 const free = parseFloat(item.free_quantity_snapshot) || 0;
                                                 const quantity = parseFloat(item.quantity) || 0;
                                                 const price = Number(item.unit_price_snapshot) || 0;
+                                                const basePrice = Number(item.base_price_snapshot) || 0;
 
                                                 let subtitle = null;
                                                 let calcBadge = null;
@@ -390,9 +391,27 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                                 if (item.charge_type === 'room') {
                                                     subtitle = `${quantity} ${item.unit}, giá: ${price.toLocaleString()} đ`;
                                                 } else if (isUtility && meter) {
+                                                    // 1. Dòng phụ đề (Subtitle)
                                                     subtitle = `Mới: ${meter.current_reading}, Cũ: ${meter.previous_reading}`;
                                                     if (free > 0) subtitle += ` - Miễn phí: ${free}`;
-                                                    calcBadge = `${quantity} ${item.unit} x ${price.toLocaleString()}đ`;
+                                                    if (basePrice > 0) subtitle += ` - Phí CĐ: ${basePrice.toLocaleString()}đ`;
+
+                                                    // 2. Dòng công thức tính xanh lá (Badge)
+                                                    let billable = Math.max(0, quantity - free);
+                                                    let badgeParts = [];
+
+                                                    // Chỉ hiển thị công thức cộng Phí cố định nếu lượng dùng > 0
+                                                    if (quantity > 0 && basePrice > 0) {
+                                                        badgeParts.push(`${basePrice.toLocaleString()}đ`);
+                                                    }
+
+                                                    // Thêm công thức phần xài lố
+                                                    if (billable > 0 || (basePrice === 0 && quantity > 0)) {
+                                                        badgeParts.push(`${billable} ${item.unit} x ${price.toLocaleString()}đ`);
+                                                    }
+
+                                                    calcBadge = badgeParts.length > 0 ? badgeParts.join(' + ') : "0 đ";
+
                                                 } else if (item.charge_type === 'deposit') {
                                                     subtitle = "Hoàn trả khi trả phòng nếu không phát sinh nợ/hư hỏng";
                                                 } else {

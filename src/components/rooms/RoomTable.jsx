@@ -177,23 +177,14 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex flex-col items-end shrink-0">
+          {/* Trạng thái được làm to, rõ ràng, gộp icon vào trong */}
           <span
-            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap shadow-sm ${statusConfig.badgeClass}`}
+            className={`px-2.5 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 shadow-sm whitespace-nowrap border ${statusConfig.badgeClass} ${!statusConfig.badgeClass.includes('border') ? 'border-transparent' : ''}`}
           >
-            {room.status_label || statusConfig.shortLabel}
+            <i className={`fa-solid ${statusConfig.icon}`}></i>
+            {room.status_label || statusConfig.label}
           </span>
-
-          <div className="relative">
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onToggleMenu?.(room.id); }}
-              className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 bg-white active:bg-slate-50 shadow-sm"
-              title="Thao tác"
-            >
-              <i className="fa-solid fa-ellipsis-vertical text-[12px]"></i>
-            </button>
-          </div>
         </div>
       </div>
 

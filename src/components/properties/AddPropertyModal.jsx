@@ -120,6 +120,7 @@ export default function AddPropertyModal({
           service_type: p.service_type,
           service_type_label: p.service_type_label,
           unit_price: formatMoneyInput(p.unit_price || 0),
+          base_price: formatMoneyInput(p.base_price || 0),
           free_units: p.free_units || 0,
           free_unit_type: p.free_unit_type || "none",
         }))
@@ -224,6 +225,7 @@ export default function AddPropertyModal({
     services.forEach((service, index) => {
       formData.append(`services[${index}][service_type]`, service.service_type);
       formData.append(`services[${index}][unit_price]`, parseMoney(service.unit_price) || 0);
+      formData.append(`services[${index}][base_price]`, parseMoney(service.base_price) || 0);
       formData.append(`services[${index}][free_units]`, service.free_units || 0);
       formData.append(`services[${index}][free_unit_type]`, service.free_unit_type || "none");
     });
@@ -507,12 +509,10 @@ export default function AddPropertyModal({
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {/* Header chỉ hiện ở Desktop */}
+                    {/* Header chỉ hiện ở Desktop (Đã gộp cột cho gọn) */}
                     <div className="hidden sm:flex items-center gap-2 px-4 py-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 border border-slate-200 rounded-lg">
                       <div className="w-[140px]">Dịch vụ</div>
-                      <div className="flex-1">Đơn giá (đ)</div>
-                      <div className="w-[90px]">Miễn phí</div>
-                      <div className="w-[140px]">Hình thức</div>
+                      <div className="flex-1">Cấu hình giá & Định mức</div>
                       <div className="w-8 text-center">Bỏ</div>
                     </div>
 
@@ -526,18 +526,16 @@ export default function AddPropertyModal({
                       return (
                         <div
                           key={service.service_type}
-                          className="bg-white border border-slate-200 sm:border-slate-100 rounded-xl sm:rounded-lg p-3 sm:p-2 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 shadow-sm sm:shadow-none hover:border-brand/30 transition-all group"
+                          className="bg-white border border-slate-200 sm:border-slate-100 rounded-xl sm:rounded-lg p-3 sm:p-2 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-2 shadow-sm sm:shadow-none hover:border-brand/30 transition-all group"
                         >
-                          {/* Header Card trên Mobile / Cột 1 trên PC */}
-                          <div className="flex items-center justify-between sm:w-[140px]">
+                          {/* Cột 1: Tên dịch vụ */}
+                          <div className="flex items-center justify-between sm:w-[140px] sm:mt-2">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-brand sm:hidden"></div>
                               <span className="text-[14px] sm:text-[13px] font-bold text-slate-800">
                                 {service.service_type_label} <span className="text-slate-500 font-medium text-[12px]">/{unit}</span>
                               </span>
                             </div>
-
-                            {/* Nút xóa trên Mobile */}
                             <button
                               type="button"
                               onClick={() => setServices(prev => prev.filter((_, i) => i !== index))}
@@ -547,55 +545,90 @@ export default function AddPropertyModal({
                             </button>
                           </div>
 
-                          {/* Lưới nhập liệu (Grid 2 cột trên Mobile, Flex hàng ngang trên PC) */}
-                          <div className="grid grid-cols-2 sm:flex sm:flex-1 gap-3 sm:gap-2">
-                            {/* Ô nhập Đơn giá (Trải dài 2 cột trên Mobile) */}
-                            <div className="col-span-2 sm:flex-1">
-                              <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">Đơn giá (VNĐ)</label>
-                              <div className="relative">
-                                <input
-                                  type="text"
-                                  inputMode="numeric"
-                                  required
-                                  value={service.unit_price}
-                                  onChange={(e) => handleServiceChange(index, "unit_price", formatMoneyInput(e.target.value))}
-                                  className="w-full pl-3 pr-7 py-2.5 sm:py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-bold text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand transition-all"
-                                  placeholder="0"
-                                />
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">đ</span>
+                          {/* Cột 2: Lưới nhập liệu Động */}
+                          <div className="flex-1 flex flex-col gap-2">
+                            {/* Dòng 1: Đơn giá và Hình thức */}
+                            <div className="grid grid-cols-2 sm:flex sm:flex-1 gap-3 sm:gap-2">
+                              <div className="col-span-2 sm:flex-1">
+                                <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">
+                                  {service.free_unit_type !== 'none' ? 'Đơn giá lố (VNĐ)' : 'Đơn giá (VNĐ)'}
+                                </label>
+                                <div className="relative">
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    required
+                                    value={service.unit_price}
+                                    onChange={(e) => handleServiceChange(index, "unit_price", formatMoneyInput(e.target.value))}
+                                    className="w-full pl-3 pr-7 py-2.5 sm:py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-bold text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                                    placeholder="0"
+                                  />
+                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">đ</span>
+                                </div>
+                              </div>
+
+                              <div className="col-span-2 sm:w-[170px]">
+                                <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">Hình thức</label>
+                                <select
+                                  value={service.free_unit_type}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setServices(prev => {
+                                      const updated = [...prev];
+                                      updated[index].free_unit_type = val;
+                                      if (val === 'none') {
+                                        updated[index].free_units = 0;
+                                        updated[index].base_price = ""; // Tự động reset phí cố định khi về none
+                                      }
+                                      return updated;
+                                    });
+                                  }}
+                                  className="w-full px-2 py-2.5 sm:py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-medium text-slate-700 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand transition-all cursor-pointer"
+                                >
+                                  <option value="none">Theo khối lượng</option>
+                                  <option value="per_person">Cố định/Theo người</option>
+                                  <option value="per_room">Cố định/Theo phòng</option>
+                                </select>
                               </div>
                             </div>
 
-                            {/* Ô SL Miễn phí */}
-                            <div className="col-span-1 sm:w-[90px]">
-                              <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">SL Miễn phí</label>
-                              <input
-                                type="number"
-                                min="0"
-                                required
-                                value={service.free_units}
-                                onChange={(e) => handleServiceChange(index, "free_units", e.target.value ? Number(e.target.value) : 0)}
-                                className="w-full px-3 py-2.5 sm:py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-semibold text-slate-800 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand transition-all"
-                              />
-                            </div>
+                            {/* Dòng 2: Mức miễn phí và Phí cố định (CHỈ HIỆN KHI KHÁC 'none') */}
+                            {service.free_unit_type !== 'none' && (
+                              <div className="grid grid-cols-2 sm:flex sm:flex-1 gap-3 sm:gap-2 p-3 sm:p-2 bg-slate-50 border border-slate-200 rounded-lg mt-1 relative">
+                                <div className="absolute -top-2 left-6 w-3 h-3 bg-slate-50 border-t border-l border-slate-200 rotate-45 sm:hidden"></div>
 
-                            {/* Dropdown Hình thức */}
-                            <div className="col-span-1 sm:w-[140px]">
-                              <label className="block text-[11px] font-bold text-slate-500 mb-1 sm:hidden">Hình thức</label>
-                              <select
-                                value={service.free_unit_type}
-                                onChange={(e) => handleServiceChange(index, "free_unit_type", e.target.value)}
-                                className="w-full px-2 py-2.5 sm:py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-medium text-slate-700 outline-none focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand transition-all cursor-pointer"
-                              >
-                                <option value="none">Không miễn phí</option>
-                                <option value="per_room">Theo phòng</option>
-                                <option value="per_person">Theo người</option>
-                              </select>
-                            </div>
+                                <div className="col-span-1 sm:w-[120px]">
+                                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Mức miễn phí</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    required
+                                    value={service.free_units}
+                                    onChange={(e) => handleServiceChange(index, "free_units", e.target.value ? Number(e.target.value) : 0)}
+                                    className="w-full px-3 py-2 sm:py-1.5 bg-white border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-semibold text-slate-800 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                                  />
+                                </div>
+
+                                <div className="col-span-1 sm:flex-1">
+                                  <label className="block text-[11px] font-bold text-slate-500 mb-1" title="Phí thu mặc định ban đầu">Thu tối thiểu</label>
+                                  <div className="relative">
+                                    <input
+                                      type="text"
+                                      inputMode="numeric"
+                                      value={service.base_price}
+                                      onChange={(e) => handleServiceChange(index, "base_price", formatMoneyInput(e.target.value))}
+                                      className="w-full pl-3 pr-7 py-2 sm:py-1.5 bg-white border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-semibold text-slate-800 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                                      placeholder="0"
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">đ</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* Nút xóa trên PC */}
-                          <div className="hidden sm:flex w-8 items-center justify-center">
+                          <div className="hidden sm:flex w-8 items-center justify-center sm:mt-1.5">
                             <button
                               type="button"
                               onClick={() => setServices(prev => prev.filter((_, i) => i !== index))}

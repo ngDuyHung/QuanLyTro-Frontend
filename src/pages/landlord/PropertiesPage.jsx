@@ -203,97 +203,182 @@ export default function PropertiesPage() {
           </NavLink>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap mt-3 lg:mt-0 pb-1 lg:pb-1">
-          {/* NÚT LỌC */}
-          <div className="relative">
-            <button
-              onClick={() => { setIsFilterMenuOpen(!isFilterMenuOpen); setIsSortMenuOpen(false); }}
-              className={`bg-white border px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors ${isFilterMenuOpen ? 'border-brand text-brand' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-            >
-              <i className={`fa-solid fa-filter ${filterStatus !== 'all' ? 'text-brand' : 'text-slate-400'}`}></i>
-              <span className="hidden sm:inline">{activeFilterLabel}</span>
-              <span className="sm:hidden">Lọc</span>
-              <i className="fa-solid fa-angle-down text-[10px] ml-0.5 opacity-70"></i>
-            </button>
+        <div className="mt-3 lg:mt-0 pb-1 lg:pb-1 w-full lg:w-auto">
 
-            {/* Dropdown Lọc */}
-            {isFilterMenuOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 py-1.5 z-40 animate-[fadeIn_0.15s_ease-out]">
-                <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 border-b border-slate-50">Lọc theo trạng thái</div>
-                {filterOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => { setFilterStatus(option.value); setPage(1); setIsFilterMenuOpen(false); }}
-                    className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${filterStatus === option.value ? "text-brand bg-brand/5" : "text-slate-700"
-                      }`}
-                  >
-                    <i className={`fa-solid ${option.icon} w-4 text-center ${filterStatus === option.value ? 'text-brand' : 'text-slate-400'}`}></i>
-                    {option.label}
-                    {filterStatus === option.value && <i className="fa-solid fa-check ml-auto text-brand"></i>}
-                  </button>
-                ))}
+          {/* ======================================================= */}
+          {/* GIAO DIỆN MOBILE: Gom Tìm kiếm + Nút Icon vào đúng 1 dòng */}
+          {/* ======================================================= */}
+          <div className="flex lg:hidden items-center gap-2 w-full">
+
+            {/* Ô Tìm kiếm Mobile */}
+            <div className="relative flex-1">
+              <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[13px]"></i>
+              <input
+                type="text"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Tìm khu nhà..."
+                className="w-full pl-8 pr-2 py-2 bg-white border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:border-brand shadow-sm transition-colors placeholder:text-slate-400"
+              />
+            </div>
+
+            {/* Cụm Nút chức năng Mobile (Chỉ hiện Icon) */}
+            <div className="flex items-center gap-2 shrink-0">
+
+              {/* Nút Lọc Mobile */}
+              <div className="relative">
+                <button
+                  onClick={() => { setIsFilterMenuOpen(!isFilterMenuOpen); setIsSortMenuOpen(false); }}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl border shadow-sm transition-colors ${isFilterMenuOpen || filterStatus !== 'all' ? 'border-brand text-brand bg-brand/5' : 'border-slate-200 text-slate-600 bg-white active:bg-slate-50'}`}
+                >
+                  <i className="fa-solid fa-filter text-[13px]"></i>
+                  {filterStatus !== 'all' && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 w-2.5 h-2.5 rounded-full border-2 border-white"></span>
+                  )}
+                </button>
+                {/* Dropdown Lọc */}
+                {isFilterMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 py-1.5 z-40 animate-[fadeIn_0.15s_ease-out]">
+                    <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 border-b border-slate-50">Lọc trạng thái</div>
+                    {filterOptions.map((option) => (
+                      <button key={option.value} onClick={() => { setFilterStatus(option.value); setPage(1); setIsFilterMenuOpen(false); }} className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${filterStatus === option.value ? "text-brand bg-brand/5" : "text-slate-700"}`}>
+                        <i className={`fa-solid ${option.icon} w-4 text-center ${filterStatus === option.value ? 'text-brand' : 'text-slate-400'}`}></i>
+                        {option.label}
+                        {filterStatus === option.value && <i className="fa-solid fa-check ml-auto text-brand"></i>}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Nút Sắp xếp Mobile */}
+              <div className="relative">
+                <button
+                  onClick={() => { setIsSortMenuOpen(!isSortMenuOpen); setIsFilterMenuOpen(false); }}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl border shadow-sm transition-colors ${isSortMenuOpen || sortBy !== 'newest' ? 'border-brand text-brand bg-brand/5' : 'border-slate-200 text-slate-600 bg-white active:bg-slate-50'}`}
+                >
+                  <i className="fa-solid fa-arrow-up-wide-short text-[13px]"></i>
+                </button>
+                {/* Dropdown Sắp xếp */}
+                {isSortMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1.5 w-44 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 py-1.5 z-40 animate-[fadeIn_0.15s_ease-out]">
+                    <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 border-b border-slate-50">Sắp xếp</div>
+                    {sortOptions.map((option) => (
+                      <button key={option.value} onClick={() => { setSortBy(option.value); setPage(1); setIsSortMenuOpen(false); }} className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${sortBy === option.value ? "text-brand bg-brand/5" : "text-slate-700"}`}>
+                        <i className={`fa-solid ${option.icon} w-4 text-center ${sortBy === option.value ? 'text-brand' : 'text-slate-400'}`}></i>
+                        {option.label}
+                        {sortBy === option.value && <i className="fa-solid fa-check ml-auto text-brand"></i>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Nút Thêm khu nhà Mobile */}
+              <button
+                type="button"
+                onClick={handleOpenCreateProperty}
+                className="h-9 px-3 flex items-center justify-center gap-1.5 bg-brand text-white rounded-xl shadow-sm active:bg-brand-dark transition-colors"
+              >
+                <i className="fa-solid fa-plus text-[14px] font-bold"></i>
+              </button>
+            </div>
           </div>
 
-          {/* NÚT SẮP XẾP */}
-          <div className="relative">
+          {/* ======================================================= */}
+          {/* GIAO DIỆN DESKTOP: Giữ nguyên dạng nút dài nằm ngang */}
+          {/* ======================================================= */}
+          <div className="hidden lg:flex items-center gap-2 flex-wrap">
+            {/* NÚT LỌC */}
+            <div className="relative">
+              <button
+                onClick={() => { setIsFilterMenuOpen(!isFilterMenuOpen); setIsSortMenuOpen(false); }}
+                className={`bg-white border px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors ${isFilterMenuOpen ? 'border-brand text-brand' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+              >
+                <i className={`fa-solid fa-filter ${filterStatus !== 'all' ? 'text-brand' : 'text-slate-400'}`}></i>
+                <span className="hidden sm:inline">{activeFilterLabel}</span>
+                <span className="sm:hidden">Lọc</span>
+                <i className="fa-solid fa-angle-down text-[10px] ml-0.5 opacity-70"></i>
+              </button>
+
+              {/* Dropdown Lọc PC */}
+              {isFilterMenuOpen && (
+                <div className="absolute left-0 top-full mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 py-1.5 z-40 animate-[fadeIn_0.15s_ease-out]">
+                  <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 border-b border-slate-50">Lọc theo trạng thái</div>
+                  {filterOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => { setFilterStatus(option.value); setPage(1); setIsFilterMenuOpen(false); }}
+                      className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${filterStatus === option.value ? "text-brand bg-brand/5" : "text-slate-700"
+                        }`}
+                    >
+                      <i className={`fa-solid ${option.icon} w-4 text-center ${filterStatus === option.value ? 'text-brand' : 'text-slate-400'}`}></i>
+                      {option.label}
+                      {filterStatus === option.value && <i className="fa-solid fa-check ml-auto text-brand"></i>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* NÚT SẮP XẾP */}
+            <div className="relative">
+              <button
+                onClick={() => { setIsSortMenuOpen(!isSortMenuOpen); setIsFilterMenuOpen(false); }}
+                className={`bg-white border px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors ${isSortMenuOpen ? 'border-brand text-brand' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+              >
+                <i className="fa-solid fa-arrow-up-wide-short text-slate-400"></i>
+                <span className="hidden sm:inline">Sắp xếp: {activeSortLabel}</span>
+                <span className="sm:hidden">Sắp xếp</span>
+                <i className="fa-solid fa-angle-down text-[10px] ml-0.5 opacity-70"></i>
+              </button>
+
+              {/* Dropdown Sắp xếp PC */}
+              {isSortMenuOpen && (
+                <div className="absolute left-0 sm:right-0 sm:left-auto top-full mt-1.5 w-44 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 py-1.5 z-40 animate-[fadeIn_0.15s_ease-out]">
+                  <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 border-b border-slate-50">Thứ tự ưu tiên</div>
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => { setSortBy(option.value); setPage(1); setIsSortMenuOpen(false); }}
+                      className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${sortBy === option.value ? "text-brand bg-brand/5" : "text-slate-700"
+                        }`}
+                    >
+                      <i className={`fa-solid ${option.icon} w-4 text-center ${sortBy === option.value ? 'text-brand' : 'text-slate-400'}`}></i>
+                      {option.label}
+                      {sortBy === option.value && <i className="fa-solid fa-check ml-auto text-brand"></i>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <button
-              onClick={() => { setIsSortMenuOpen(!isSortMenuOpen); setIsFilterMenuOpen(false); }}
-              className={`bg-white border px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors ${isSortMenuOpen ? 'border-brand text-brand' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
+              type="button"
+              onClick={() => setIsImportModalOpen(true)}
+              className="bg-white border border-green-500 text-green-600 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium hover:bg-green-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ml-auto lg:ml-2"
             >
-              <i className="fa-solid fa-arrow-up-wide-short text-slate-400"></i>
-              <span className="hidden sm:inline">Sắp xếp: {activeSortLabel}</span>
-              <span className="sm:hidden">Sắp xếp</span>
-              <i className="fa-solid fa-angle-down text-[10px] ml-0.5 opacity-70"></i>
+              <i className="fa-regular fa-file-excel text-[14px]"></i>
+              <span className="hidden sm:inline">Nhập Excel</span>
             </button>
-
-            {/* Dropdown Sắp xếp */}
-            {isSortMenuOpen && (
-              <div className="absolute left-0 sm:right-0 sm:left-auto top-full mt-1.5 w-44 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 py-1.5 z-40 animate-[fadeIn_0.15s_ease-out]">
-                <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 border-b border-slate-50">Thứ tự ưu tiên</div>
-                {sortOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => { setSortBy(option.value); setPage(1); setIsSortMenuOpen(false); }}
-                    className={`w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5 hover:bg-slate-50 transition-colors ${sortBy === option.value ? "text-brand bg-brand/5" : "text-slate-700"
-                      }`}
-                  >
-                    <i className={`fa-solid ${option.icon} w-4 text-center ${sortBy === option.value ? 'text-brand' : 'text-slate-400'}`}></i>
-                    {option.label}
-                    {sortBy === option.value && <i className="fa-solid fa-check ml-auto text-brand"></i>}
-                  </button>
-                ))}
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={handleOpenCreateProperty}
+              className="bg-brand text-white px-3 sm:px-4 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium hover:bg-brand-dark transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap shrink-0 ml-auto lg:ml-0"
+            >
+              <i className="fa-solid fa-plus"></i>
+              <span className="hidden sm:inline">Thêm khu nhà</span>
+              <span className="sm:hidden">Thêm</span>
+            </button>
           </div>
-
-          {/* ---  EXCEL MỚI THÊM VÀO ĐÂY --- */}
-          <button
-            type="button"
-            onClick={() => setIsImportModalOpen(true)}
-            className="bg-white border border-green-500 text-green-600 px-3 sm:px-3.5 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium hover:bg-green-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ml-auto lg:ml-2"
-          >
-            <i className="fa-regular fa-file-excel text-[14px]"></i>
-            <span className="hidden sm:inline">Nhập Excel</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleOpenCreateProperty}
-            className="bg-brand text-white px-3 sm:px-4 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium hover:bg-brand-dark transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap shrink-0 ml-auto lg:ml-0"
-          >
-            <i className="fa-solid fa-plus"></i>
-            <span className="hidden sm:inline">Thêm khu nhà</span>
-            <span className="sm:hidden">Thêm</span>
-          </button>
         </div>
       </div>
 
       <div className="flex-1 lg:min-h-0 flex flex-col lg:grid lg:grid-cols-12 lg:gap-6">
-        <div className="lg:col-span-5 flex flex-col gap-4 lg:overflow-y-auto no-scrollbar lg:pr-1 mb-6 lg:mb-0">
-          <div className="relative w-full shrink-0">
+        <div className="lg:col-span-5 flex flex-col gap-4 lg:overflow-y-auto no-scrollbar lg:pr-1 mb-1 lg:mb-0">
+          <div className="relative w-full shrink-0 hidden lg:block">
             <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input
               type="text"

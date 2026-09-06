@@ -106,9 +106,9 @@ export default function CreateInvoiceModal({
                 toDate.setDate(toDate.getDate() - 1);
             }
 
-            // Hạn thanh toán: Bằng ngày bắt đầu ("Từ ngày") cộng thêm 10 ngày
-            dueDate = new Date(fromDate.getTime());
-            dueDate.setDate(dueDate.getDate() + 10);
+            // Hạn thanh toán mặc định = Ngày kết thúc kỳ + 5 ngày
+            dueDate = new Date(toDate.getTime());
+            dueDate.setDate(dueDate.getDate() + 5);
 
             // DÒ TÌM PROPERTY ID AN TOÀN (Kể cả khi bị nested sâu bên trong)
             const initPropertyId = defaultLease
@@ -241,9 +241,9 @@ export default function CreateInvoiceModal({
             toDate.setDate(toDate.getDate() - 1);
         }
 
-        // Hạn thanh toán mặc định +10 ngày
-        dueDate = new Date(fromDate.getTime());
-        dueDate.setDate(dueDate.getDate() + 10);
+        // Hạn thanh toán mặc định = Ngày kết thúc kỳ + 5 ngày
+        dueDate = new Date(toDate.getTime());
+        dueDate.setDate(dueDate.getDate() + 5);
 
         const formatDateLocal = (date) => {
             const year = date.getFullYear();
@@ -265,6 +265,25 @@ export default function CreateInvoiceModal({
 
     const handleChange = (field) => (e) => {
         setForm(prev => ({ ...prev, [field]: e.target.value, ...(field === "property_id" ? { lease_id: "" } : {}) }));
+    };
+
+    const handlePeriodToChange = (e) => {
+        const newPeriodTo = e.target.value;
+        setForm(prev => {
+            const updated = { ...prev, period_to: newPeriodTo };
+            if (newPeriodTo) {
+                // Tự động đẩy hạn thanh toán lên 5 ngày sau ngày kết thúc kỳ
+                const toDateObj = new Date(newPeriodTo);
+                toDateObj.setDate(toDateObj.getDate() + 5);
+
+                const year = toDateObj.getFullYear();
+                const month = String(toDateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(toDateObj.getDate()).padStart(2, '0');
+
+                updated.due_date = `${year}-${month}-${day}`;
+            }
+            return updated;
+        });
     };
 
     const handleUtilityChange = (type, field, value) => {
@@ -325,11 +344,13 @@ export default function CreateInvoiceModal({
     // Tính tổng tiền an toàn với Number()
     const elecUsage = Math.max(0, (Number(electricity.current) || 0) - (Number(electricity.prev) || 0));
     const elecBillable = Math.max(0, elecUsage - (Number(electricity.free) || 0));
-    const elecAmount = elecBillable * (Number(electricity.price) || 0);
+    // Sửa: Chỉ tính tiền nếu dùng > 0
+    const elecAmount = elecUsage > 0 ? (Number(electricity.base_price) || 0) + (elecBillable * (Number(electricity.price) || 0)) : 0;
 
     const waterUsage = Math.max(0, (Number(water.current) || 0) - (Number(water.prev) || 0));
     const waterBillable = Math.max(0, waterUsage - (Number(water.free) || 0));
-    const waterAmount = waterBillable * (Number(water.price) || 0);
+    // Sửa: Chỉ tính tiền nếu dùng > 0
+    const waterAmount = waterUsage > 0 ? (Number(water.base_price) || 0) + (waterBillable * (Number(water.price) || 0)) : 0;
 
     const dynamicAmount = dynamicItems.reduce((sum, item) => {
         const amount = (Number(item.quantity) || 0) * (Number(item.unit_price_snapshot) || 0);
@@ -396,7 +417,8 @@ export default function CreateInvoiceModal({
                     unit: "kWh",
                     quantity: elecUsage,
                     unit_price_snapshot: electricity.price,
-                    free_quantity_snapshot: electricity.free
+                    free_quantity_snapshot: electricity.free,
+                    base_price_snapshot: electricity.base_price || 0
                 });
             }
 
@@ -407,7 +429,8 @@ export default function CreateInvoiceModal({
                     unit: "m³",
                     quantity: waterUsage,
                     unit_price_snapshot: water.price,
-                    free_quantity_snapshot: water.free
+                    free_quantity_snapshot: water.free,
+                    base_price_snapshot: water.base_price || 0
                 });
             }
 
@@ -650,34 +673,43 @@ export default function CreateInvoiceModal({
                                     </div>
                                 </div>
 
-                                {/* Khối Ngày tháng thiết kế kiểu underline */}
-                                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 pt-1">
+                                {/* Khối Ngày tháng thiết kế dạng Box bo góc, dễ bấm trên mobile */}
+                                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                     <div className="flex-1">
-                                        <label className="block text-[11px] text-slate-500 font-semibold mb-1">Kỳ thanh toán <span className="text-red-500">*</span></label>
+                                        <label className="block text-[11px] text-slate-500 font-bold uppercase tracking-wide mb-1.5">
+                                            Kỳ thanh toán <span className="text-red-500">*</span>
+                                        </label>
                                         <div className="flex items-center gap-2">
                                             <input
                                                 type="date"
                                                 value={form.period_from}
                                                 onChange={handleChange("period_from")}
-                                                className="w-full bg-transparent border-b border-slate-300 text-[13px] font-semibold text-slate-700 outline-none focus:border-brand pb-1 transition-colors"
+                                                className="w-full px-3 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-semibold text-slate-700 outline-none focus:bg-white focus:border-brand transition-colors"
                                             />
-                                            <span className="text-slate-400 text-[12px]"><i className="fa-solid fa-arrow-right-long"></i></span>
+                                            <span className="text-slate-400 text-[12px] shrink-0">
+                                                <i className="fa-solid fa-arrow-right-long"></i>
+                                            </span>
                                             <input
                                                 type="date"
                                                 value={form.period_to}
-                                                onChange={handleChange("period_to")}
-                                                className="w-full bg-transparent border-b border-slate-300 text-[13px] font-semibold text-slate-700 outline-none focus:border-brand pb-1 transition-colors"
+                                                onChange={handlePeriodToChange} // <-- Gọi hàm mới ở đây
+                                                className="w-full px-3 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-semibold text-slate-700 outline-none focus:bg-white focus:border-brand transition-colors"
                                             />
                                         </div>
                                     </div>
+
                                     <div className="w-full sm:w-[140px]">
-                                        <label className="block text-[11px] text-slate-500 font-semibold mb-1">Hạn thanh toán</label>
-                                        <input
-                                            type="date"
-                                            value={form.due_date}
-                                            onChange={handleChange("due_date")}
-                                            className="w-full bg-transparent border-b border-slate-300 text-[13px] font-semibold text-brand outline-none focus:border-brand pb-1 transition-colors"
-                                        />
+                                        <label className="block text-[11px] text-red-500 font-bold uppercase tracking-wide mb-1.5">
+                                            Hạn thanh toán
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="date"
+                                                value={form.due_date}
+                                                onChange={handleChange("due_date")} // Vẫn cho phép chủ nhà tự sửa tay
+                                                className="w-full px-3 py-2.5 sm:py-2 bg-red-50/50 border border-red-200 rounded-lg text-[14px] sm:text-[13px] font-bold text-red-600 outline-none focus:bg-red-50 focus:border-red-400 transition-colors"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -766,7 +798,7 @@ export default function CreateInvoiceModal({
                                 ].map((item) => {
                                     const usage = Math.max(0, (Number(item.state.current) || 0) - (Number(item.state.prev) || 0));
                                     const billable = Math.max(0, usage - (Number(item.state.free) || 0));
-                                    const amount = billable * (Number(item.state.price) || 0);
+                                    const amount = usage > 0 ? (Number(item.state.base_price) || 0) + (billable * (Number(item.state.price) || 0)) : 0;
 
                                     return (
                                         <div key={item.type} className="bg-white border border-slate-200 rounded-xl mb-4 shadow-sm overflow-hidden">
@@ -842,10 +874,11 @@ export default function CreateInvoiceModal({
                                                 </div>
 
                                                 {/* Đơn giá & Miễn phí (Xếp ngang 2 ô, nhưng nội dung bên trong xếp dọc) */}
-                                                <div className="mt-3 pt-3 border-t border-dashed border-slate-200 flex flex-nowrap gap-2">
+                                                <div className="mt-3 pt-3 border-t border-dashed border-slate-200 flex flex-wrap sm:flex-nowrap gap-2">
 
                                                     {/* Ô ĐƠN GIÁ */}
-                                                    <label className="flex-1 flex flex-col justify-center bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 cursor-text transition-colors focus-within:border-brand focus-within:bg-white shadow-sm overflow-hidden">
+                                                    <label className="flex-1 min-w-[100px] flex flex-col justify-center bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 cursor-text transition-colors focus-within:border-brand focus-within:bg-white shadow-sm overflow-hidden">
+                                                        {/* Giữ nguyên như code cũ của bạn */}
                                                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mb-0.5">Đơn giá</span>
                                                         <div className="flex items-center min-w-0">
                                                             <input
@@ -857,7 +890,6 @@ export default function CreateInvoiceModal({
                                                                     const rawValue = e.target.value.replace(/[^\d]/g, "");
                                                                     handleUtilityChange(item.type, 'price', rawValue ? Number(rawValue) : 0);
                                                                 }}
-                                                                // Căn trái text để đồng bộ với tiêu đề ở trên, tăng size chữ lên 14px cho dễ nhìn
                                                                 className="w-full min-w-0 bg-transparent text-[14px] font-bold text-slate-800 outline-none"
                                                             />
                                                             <span className="text-[11px] text-slate-400 ml-1 whitespace-nowrap shrink-0">đ/{item.unit}</span>
@@ -865,7 +897,8 @@ export default function CreateInvoiceModal({
                                                     </label>
 
                                                     {/* Ô MIỄN PHÍ */}
-                                                    <label className="flex-1 flex flex-col justify-center bg-emerald-50/50 rounded-lg px-2.5 py-1.5 border border-emerald-200 cursor-text transition-colors focus-within:border-emerald-400 focus-within:bg-emerald-50 shadow-sm overflow-hidden">
+                                                    <label className="flex-1 min-w-[100px] flex flex-col justify-center bg-emerald-50/50 rounded-lg px-2.5 py-1.5 border border-emerald-200 cursor-text transition-colors focus-within:border-emerald-400 focus-within:bg-emerald-50 shadow-sm overflow-hidden">
+                                                        {/* Giữ nguyên như code cũ của bạn */}
                                                         <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wide mb-0.5">Miễn phí</span>
                                                         <div className="flex items-center min-w-0">
                                                             <input
@@ -878,6 +911,27 @@ export default function CreateInvoiceModal({
                                                             <span className="text-[11px] text-emerald-600 ml-1 whitespace-nowrap shrink-0">{item.unit}</span>
                                                         </div>
                                                     </label>
+
+                                                    {/* Ô PHÍ CỐ ĐỊNH (Chỉ hiện khi lớn hơn 0) */}
+                                                    {item.state.base_price > 0 && (
+                                                        <label className="flex-1 min-w-[100px] flex flex-col justify-center bg-purple-50/50 rounded-lg px-2.5 py-1.5 border border-purple-200 cursor-text transition-colors focus-within:border-purple-400 focus-within:bg-purple-50 shadow-sm overflow-hidden">
+                                                            <span className="text-[10px] text-purple-600 font-bold uppercase tracking-wide mb-0.5" title="Phí thu mặc định ban đầu">Phí cố định</span>
+                                                            <div className="flex items-center min-w-0">
+                                                                <input
+                                                                    type="text"
+                                                                    inputMode="numeric"
+                                                                    value={item.state.base_price === 0 ? "" : Number(item.state.base_price).toLocaleString("vi-VN")}
+                                                                    onChange={(e) => {
+                                                                        const rawValue = e.target.value.replace(/[^\d]/g, "");
+                                                                        handleUtilityChange(item.type, 'base_price', rawValue ? Number(rawValue) : 0);
+                                                                    }}
+                                                                    className="w-full min-w-0 bg-transparent text-[14px] font-bold text-purple-700 outline-none"
+                                                                    placeholder="0"
+                                                                />
+                                                                <span className="text-[11px] text-purple-600 ml-1 whitespace-nowrap shrink-0">đ</span>
+                                                            </div>
+                                                        </label>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -924,7 +978,7 @@ export default function CreateInvoiceModal({
                                 ].map((item) => {
                                     const usage = Math.max(0, (Number(item.state.current) || 0) - (Number(item.state.prev) || 0));
                                     const billable = Math.max(0, usage - (Number(item.state.free) || 0));
-                                    const amount = billable * (Number(item.state.price) || 0);
+                                    const amount = usage > 0 ? (Number(item.state.base_price) || 0) + (billable * (Number(item.state.price) || 0)) : 0;
 
                                     return (
                                         <div key={item.type} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-4 bg-white lg:bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3 hover:border-slate-300 transition-colors shadow-sm lg:shadow-none">
@@ -993,6 +1047,24 @@ export default function CreateInvoiceModal({
                                                             className="w-full pl-[62px] pr-2 py-2 lg:py-1.5 border border-emerald-200 bg-emerald-50 rounded-lg text-[13px] text-emerald-700 font-bold focus:border-emerald-500 outline-none transition-colors"
                                                         />
                                                     </div>
+                                                    {/* Ô Phí cố định (Chỉ hiện khi lớn hơn 0) */}
+                                                    {item.state.base_price > 0 && (
+                                                        <div className="relative">
+                                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-purple-600 font-semibold pointer-events-none">Phí cố định</span>
+                                                            <input
+                                                                type="text"
+                                                                inputMode="numeric"
+                                                                value={item.state.base_price === 0 ? "" : Number(item.state.base_price).toLocaleString("vi-VN")}
+                                                                onChange={(e) => {
+                                                                    const rawValue = e.target.value.replace(/[^\d]/g, "");
+                                                                    handleUtilityChange(item.type, 'base_price', rawValue ? Number(rawValue) : 0);
+                                                                }}
+                                                                className="w-full pl-[74px] pr-2 py-2 lg:py-1.5 border border-purple-200 bg-purple-50 rounded-lg text-[13px] text-purple-700 font-bold focus:border-purple-500 outline-none transition-colors"
+                                                                placeholder="0"
+                                                            />
+                                                        </div>
+                                                    )}
+
                                                 </div>
 
                                                 {/* Khu vực Xử lý Ảnh Chốt số & Thành tiền (Luôn cho sửa ảnh) */}

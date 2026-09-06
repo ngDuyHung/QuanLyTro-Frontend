@@ -4,6 +4,7 @@ const initialForm = {
     property_id: "",
     service_type: "electricity",
     unit_price: "",
+    base_price: 0, // THÊM TRƯỜNG NÀY
     free_units: 0,
     free_unit_type: "none",
     effective_date: new Date().toISOString().slice(0, 10),
@@ -36,6 +37,16 @@ export default function AddServicePriceModal({
         setForm((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
+    // Khi người dùng đổi Hình thức miễn phí về "none", tự động reset các ô ẩn
+    const handleFreeUnitTypeChange = (e) => {
+        const val = e.target.value;
+        setForm((prev) => ({
+            ...prev,
+            free_unit_type: val,
+            ...(val === "none" ? { free_units: 0, base_price: 0 } : {})
+        }));
+    };
+
     const handleFormSubmit = (e) => {
         e.preventDefault();
         if (!form.unit_price || Number(form.unit_price) < 0) {
@@ -46,6 +57,7 @@ export default function AddServicePriceModal({
             ...form,
             property_id: form.property_id === "" ? null : Number(form.property_id),
             unit_price: Number(form.unit_price),
+            base_price: Number(form.base_price) || 0, // THÊM DÒNG NÀY
             free_units: Number(form.free_units) || 0,
         });
     };
@@ -84,6 +96,7 @@ export default function AddServicePriceModal({
                         </select>
                     </div>
 
+                    {/* DÒNG 1: Loại dịch vụ & Hình thức miễn phí */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Loại dịch vụ</label>
@@ -104,7 +117,26 @@ export default function AddServicePriceModal({
                             </select>
                         </div>
                         <div>
-                            <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Đơn giá (VNĐ) *</label>
+                            <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Hình thức tính phí</label>
+                            <select
+                                value={form.free_unit_type}
+                                onChange={handleFreeUnitTypeChange}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-semibold outline-none focus:border-brand"
+                            >
+                                <option value="none">Tính theo khối lượng</option>
+                                <option value="per_person">Cố định/Miễn phí theo người</option>
+                                <option value="per_room">Cố định/Miễn phí theo phòng</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    {/* DÒNG 2: Đơn giá và Cấu hình phụ (Ẩn/Hiện dựa vào Hình thức) */}
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* Đơn giá thì lúc nào cũng hiện */}
+                        <div className={form.free_unit_type !== "none" ? "col-span-2 sm:col-span-1" : "col-span-2"}>
+                            <label className="block text-[12px] font-bold text-slate-700 mb-1.5">
+                                {form.free_unit_type !== "none" ? "Đơn giá khi xài lố (VNĐ) *" : "Đơn giá (VNĐ) *"}
+                            </label>
                             <input
                                 type="number"
                                 required
@@ -115,32 +147,39 @@ export default function AddServicePriceModal({
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-bold outline-none focus:border-brand"
                             />
                         </div>
+
+                        {/* Các ô cấu hình phụ chỉ hiện khi KHÔNG PHẢI "none" */}
+                        {form.free_unit_type !== "none" && (
+                            <>
+                                <div>
+                                    <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Mức miễn phí</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={form.free_units}
+                                        onChange={handleChange("free_units")}
+                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-semibold outline-none focus:border-brand"
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Phí thu cố định tối thiểu (VNĐ)</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={form.base_price}
+                                        onChange={handleChange("base_price")}
+                                        placeholder="Ví dụ: 20000 (để trống nếu 0đ)"
+                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-semibold outline-none focus:border-brand"
+                                    />
+                                    <p className="text-[11px] text-slate-500 mt-1">
+                                        Khoản thu cứng. Nếu xài lố mức miễn phí sẽ cộng thêm tiền lố.
+                                    </p>
+                                </div>
+                            </>
+                        )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Số lượng miễn phí</label>
-                            <input
-                                type="number"
-                                min="0"
-                                value={form.free_units}
-                                onChange={handleChange("free_units")}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-semibold outline-none focus:border-brand"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Hình thức miễn phí</label>
-                            <select
-                                value={form.free_unit_type}
-                                onChange={handleChange("free_unit_type")}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-semibold outline-none focus:border-brand"
-                            >
-                                <option value="none">Không miễn phí</option>
-                                <option value="per_room">Trên mỗi phòng</option>
-                                <option value="per_person">Trên mỗi nhân khẩu</option>
-                            </select>
-                        </div>
-                    </div>
+                    <hr className="border-slate-100 my-1"/>
 
                     <div>
                         <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Ngày bắt đầu áp dụng</label>

@@ -17,6 +17,7 @@ export default function EditServicePriceModal({
                 property_id: initialData.property_id || "",
                 service_type: initialData.service_type,
                 unit_price: initialData.unit_price,
+                base_price: initialData.base_price || 0, // THÊM TRƯỜNG NÀY
                 free_units: initialData.free_units || 0,
                 free_unit_type: initialData.free_unit_type || "none",
                 effective_date: initialData.effective_date ? initialData.effective_date.slice(0, 10) : new Date().toISOString().slice(0, 10),
@@ -29,12 +30,23 @@ export default function EditServicePriceModal({
 
     const handleChange = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
+    // Khi thay đổi Hình thức, tự reset các ô ẩn đi để tránh rác DB
+    const handleFreeUnitTypeChange = (e) => {
+        const val = e.target.value;
+        setForm((prev) => ({
+            ...prev,
+            free_unit_type: val,
+            ...(val === "none" ? { free_units: 0, base_price: 0 } : {})
+        }));
+    };
+
     const handleFormSubmit = (e) => {
         e.preventDefault();
         onSubmit({
             ...form,
             property_id: form.property_id === "" ? null : Number(form.property_id),
             unit_price: Number(form.unit_price),
+            base_price: Number(form.base_price) || 0, // THÊM TRƯỜNG NÀY
             free_units: Number(form.free_units) || 0,
         });
     };
@@ -66,7 +78,7 @@ export default function EditServicePriceModal({
                                 value={form.property_id}
                                 onChange={handleChange("property_id")}
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-semibold outline-none focus:border-brand disabled:opacity-60 disabled:cursor-not-allowed"
-                                disabled // Thông thường sửa giá không nên cho đổi Phạm vi, nếu muốn đổi thì bỏ thẻ disabled
+                                disabled 
                             >
                                 <option value="">Áp dụng chung toàn hệ thống (Global)</option>
                                 {properties.map((p) => (
@@ -75,6 +87,7 @@ export default function EditServicePriceModal({
                             </select>
                         </div>
 
+                        {/* DÒNG 1: Loại dịch vụ & Hình thức tính phí */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Loại dịch vụ</label>
@@ -96,7 +109,25 @@ export default function EditServicePriceModal({
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Đơn giá (VNĐ) *</label>
+                                <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Hình thức tính phí</label>
+                                <select
+                                    value={form.free_unit_type}
+                                    onChange={handleFreeUnitTypeChange}
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-semibold outline-none focus:border-brand"
+                                >
+                                    <option value="none">Tính theo khối lượng</option>
+                                    <option value="per_person">Cố định/Miễn phí theo người</option>
+                                    <option value="per_room">Cố định/Miễn phí theo phòng</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* DÒNG 2: Đơn giá và Các ô ẩn hiện */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className={form.free_unit_type !== "none" ? "col-span-2 sm:col-span-1" : "col-span-2"}>
+                                <label className="block text-[12px] font-bold text-slate-700 mb-1.5">
+                                    {form.free_unit_type !== "none" ? "Đơn giá khi xài lố (VNĐ) *" : "Đơn giá (VNĐ) *"}
+                                </label>
                                 <input
                                     type="number"
                                     required
@@ -106,13 +137,61 @@ export default function EditServicePriceModal({
                                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-bold outline-none focus:border-brand"
                                 />
                             </div>
+
+                            {form.free_unit_type !== "none" && (
+                                <>
+                                    <div>
+                                        <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Mức miễn phí</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={form.free_units}
+                                            onChange={handleChange("free_units")}
+                                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-semibold outline-none focus:border-brand"
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Phí thu cố định tối thiểu (VNĐ)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={form.base_price}
+                                            onChange={handleChange("base_price")}
+                                            placeholder="Ví dụ: 20000 (để trống nếu 0đ)"
+                                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-semibold outline-none focus:border-brand"
+                                        />
+                                        <p className="text-[11px] text-slate-500 mt-1">
+                                            Khoản thu cứng. Nếu xài lố mức miễn phí sẽ cộng thêm tiền lố.
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        
+                        <hr className="border-slate-100 my-1"/>
+
+                        <div>
+                            <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Ngày bắt đầu áp dụng</label>
+                            <input
+                                type="date"
+                                required
+                                value={form.effective_date}
+                                onChange={handleChange("effective_date")}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-semibold outline-none focus:border-brand"
+                            />
                         </div>
 
-                        {/* --- BẠN GIỮ NGUYÊN CÁC TRƯỜNG CÒN LẠI CỦA FORM (Free Units, Date, Note) --- */}
-
+                        <div>
+                            <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Ghi chú bổ sung</label>
+                            <textarea
+                                value={form.note}
+                                onChange={handleChange("note")}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-medium outline-none focus:border-brand h-20 resize-none"
+                            />
+                        </div>
                     </form>
 
-                    {/* VÙNG HIỂN THỊ LỊCH SỬ THAY ĐỔI GIÁ (THÊM MỚI Ở ĐÂY) */}
+                    {/* VÙNG HIỂN THỊ LỊCH SỬ THAY ĐỔI GIÁ (Giữ nguyên) */}
                     {initialData?.price_histories && initialData.price_histories.length > 0 && (
                         <div className="mt-6 border-t border-slate-200 pt-5">
                             <h3 className="text-[13px] font-bold text-slate-800 mb-3 flex items-center gap-2">
