@@ -440,10 +440,18 @@ export default function InvoicesTable({
                         </div>
 
                         {/* Dòng dưới: Mã HĐ + Tiền */}
-                        <div className="text-[11px] font-medium text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                          <span>HĐ: {invoice.invoice_code}</span>
-                          <span className="text-slate-300">|</span>
-                          <span className="text-emerald-600 font-bold text-[12px]">{formatCurrency(invoice.total_amount)}đ</span>
+                        <div className="text-[11px] font-medium text-slate-500 mt-1 flex items-center gap-1.5 w-full">
+
+                          {/* Mã HĐ: Cho phép tự động cắt chữ (truncate) nếu hết chỗ */}
+                          <span className="truncate min-w-0">HĐ: {invoice.invoice_code}</span>
+
+                          <span className="text-slate-300 shrink-0">|</span>
+
+                          {/* Số tiền: Bắt buộc KHÔNG được co bóp (shrink-0) */}
+                          <span className="text-emerald-600 font-bold text-[12px] shrink-0">
+                            {formatCurrency(invoice.total_amount)}đ
+                          </span>
+
                         </div>
                       </div>
 
