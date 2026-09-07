@@ -106,8 +106,8 @@ export default function CreateInvoiceModal({
                 toDate.setDate(toDate.getDate() - 1);
             }
 
-            // Hạn thanh toán mặc định = Ngày kết thúc kỳ + 5 ngày
-            dueDate = new Date(toDate.getTime());
+            // Hạn thanh toán mặc định = Ngày bắt đầu kỳ + 5 ngày
+            dueDate = new Date(fromDate.getTime());
             dueDate.setDate(dueDate.getDate() + 5);
 
             // DÒ TÌM PROPERTY ID AN TOÀN (Kể cả khi bị nested sâu bên trong)
@@ -241,8 +241,8 @@ export default function CreateInvoiceModal({
             toDate.setDate(toDate.getDate() - 1);
         }
 
-        // Hạn thanh toán mặc định = Ngày kết thúc kỳ + 5 ngày
-        dueDate = new Date(toDate.getTime());
+        // Hạn thanh toán mặc định = Ngày bắt đầu kỳ + 5 ngày
+        dueDate = new Date(fromDate.getTime());
         dueDate.setDate(dueDate.getDate() + 5);
 
         const formatDateLocal = (date) => {
@@ -267,23 +267,27 @@ export default function CreateInvoiceModal({
         setForm(prev => ({ ...prev, [field]: e.target.value, ...(field === "property_id" ? { lease_id: "" } : {}) }));
     };
 
-    const handlePeriodToChange = (e) => {
-        const newPeriodTo = e.target.value;
+    const handlePeriodFromChange = (e) => {
+        const newPeriodFrom = e.target.value;
         setForm(prev => {
-            const updated = { ...prev, period_to: newPeriodTo };
-            if (newPeriodTo) {
-                // Tự động đẩy hạn thanh toán lên 5 ngày sau ngày kết thúc kỳ
-                const toDateObj = new Date(newPeriodTo);
-                toDateObj.setDate(toDateObj.getDate() + 5);
+            const updated = { ...prev, period_from: newPeriodFrom };
+            if (newPeriodFrom) {
+                // Tự động đẩy hạn thanh toán lên 5 ngày sau ngày BẮT ĐẦU kỳ
+                const fromDateObj = new Date(newPeriodFrom);
+                fromDateObj.setDate(fromDateObj.getDate() + 5);
 
-                const year = toDateObj.getFullYear();
-                const month = String(toDateObj.getMonth() + 1).padStart(2, '0');
-                const day = String(toDateObj.getDate()).padStart(2, '0');
+                const year = fromDateObj.getFullYear();
+                const month = String(fromDateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(fromDateObj.getDate()).padStart(2, '0');
 
                 updated.due_date = `${year}-${month}-${day}`;
             }
             return updated;
         });
+    };
+
+    const handlePeriodToChange = (e) => {
+        setForm(prev => ({ ...prev, period_to: e.target.value }));
     };
 
     const handleUtilityChange = (type, field, value) => {
@@ -683,7 +687,7 @@ export default function CreateInvoiceModal({
                                             <input
                                                 type="date"
                                                 value={form.period_from}
-                                                onChange={handleChange("period_from")}
+                                                onChange={handlePeriodFromChange}
                                                 className="w-full px-3 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-[14px] sm:text-[13px] font-semibold text-slate-700 outline-none focus:bg-white focus:border-brand transition-colors"
                                             />
                                             <span className="text-slate-400 text-[12px] shrink-0">
