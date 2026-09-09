@@ -524,6 +524,9 @@ export default function AddRoomModal({
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">đ</span>
                   </div>
+                  <p className="text-[11px] text-slate-500 mt-1.5 italic leading-tight">
+                    *Mức giá tự động áp dụng khi lập hóa đơn kỳ tới.
+                  </p>
                 </div>
 
                 {/* Tiền cọc: 1/2 Mobile, 1/3 PC */}
@@ -541,6 +544,9 @@ export default function AddRoomModal({
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-400">đ</span>
                   </div>
+                  <p className="text-[11px] text-slate-500 mt-1.5 italic leading-tight">
+                    *Cọc thực tế thu sẽ dựa trên số tiền này.
+                  </p>
                 </div>
 
                 {/* Sức chứa: Trải dài 2 cột Mobile, 1/3 PC */}
