@@ -246,7 +246,7 @@ export default function PaymentInvoiceModal({
 
         // --- CHẶN NGÀY THU HỢP LÝ ---
         const txDateObj = new Date(transactionDate);
-        const limitDateStr =  invoice.period_from;
+        const limitDateStr = invoice.period_from;
 
         if (limitDateStr) {
             const limitDateObj = new Date(limitDateStr);
@@ -420,6 +420,8 @@ export default function PaymentInvoiceModal({
                                         <div className="relative">
                                             <input
                                                 type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
                                                 value={displayAmount}
                                                 onChange={handleAmountChange}
                                                 onFocus={(e) => e.target.select()}

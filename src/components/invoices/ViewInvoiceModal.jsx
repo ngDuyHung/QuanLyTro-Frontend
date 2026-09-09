@@ -314,10 +314,10 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         </div>
 
                                         {/* 2. Khối thông tin Kỳ hạn, Ngày lập, Hạn nộp chia 3 cột */}
-                                        <div className="grid grid-cols-3 border border-slate-200 rounded-xl p-3 text-center bg-white text-[13px] mb-5">
-                                            <div>
-                                                <span className="text-slate-500 block mb-0.5">Hóa đơn tháng</span>
-                                                <span className="font-medium text-slate-800 block">
+                                        <div className="grid grid-cols-3 border border-slate-200 rounded-xl p-3 sm:p-5 text-center bg-slate-50 shadow-sm mb-5">
+                                            <div className="flex flex-col justify-center">
+                                                <span className="text-[13px] font-semibold text-slate-500 block mb-1">Hóa đơn tháng</span>
+                                                <span className="text-[15px] font-bold text-slate-800 block">
                                                     {(() => {
                                                         if (!invoice.period_from) return "—";
                                                         const d = new Date(invoice.period_from);
@@ -325,15 +325,15 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                                     })()}
                                                 </span>
                                             </div>
-                                            <div className="border-x border-slate-200">
-                                                <span className="text-slate-500 block mb-0.5">Ngày lập</span>
-                                                <span className="font-medium text-slate-800 block">
+                                            <div className="border-x border-slate-200 px-2 flex flex-col justify-center">
+                                                <span className="text-[13px] font-semibold text-slate-500 block mb-1">Ngày lập</span>
+                                                <span className="text-[15px] font-bold text-slate-800 block">
                                                     {invoice.issue_date ? new Date(invoice.period_from).toLocaleDateString("vi-VN") : "—"}
                                                 </span>
                                             </div>
-                                            <div>
-                                                <span className="text-slate-500 block mb-0.5">Đến ngày</span>
-                                                <span className="font-medium text-slate-800 block">
+                                            <div className="flex flex-col justify-center">
+                                                <span className="text-[13px] font-semibold text-slate-500 block mb-1">Đến ngày</span>
+                                                <span className="text-[15px] font-bold text-slate-800 block">
                                                     {invoice.due_date ? new Date(invoice.period_to).toLocaleDateString("vi-VN") : "—"}
                                                 </span>
                                             </div>

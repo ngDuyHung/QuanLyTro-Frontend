@@ -741,7 +741,7 @@ export default function CreateInvoiceModal({
                             {/* ========================================== */}
                             <div className="sm:hidden">
                                 {/* --- CARD TIỀN PHÒNG --- */}
-                                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-4">
+                                <div className="bg-white border border-slate-300 rounded-xl shadow-sm overflow-hidden mb-4">
 
                                     {/* Header */}
                                     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
@@ -805,7 +805,7 @@ export default function CreateInvoiceModal({
                                     const amount = usage > 0 ? (Number(item.state.base_price) || 0) + (billable * (Number(item.state.price) || 0)) : 0;
 
                                     return (
-                                        <div key={item.type} className="bg-white border border-slate-200 rounded-xl mb-4 shadow-sm overflow-hidden">
+                                        <div key={item.type} className="bg-white border border-slate-300 rounded-xl mb-4 shadow-sm overflow-hidden">
                                             {/* Header Card */}
                                             <div className="flex justify-between items-center p-3 border-b border-slate-100 bg-slate-50/50">
                                                 <div className="flex items-center gap-3">
@@ -1122,12 +1122,13 @@ export default function CreateInvoiceModal({
                                 <button
                                     type="button"
                                     onClick={handleAddDynamicItem}
-                                    className="text-[12px] font-bold text-brand hover:text-green-700 bg-brand/10 px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
+                                    className="hidden sm:inline-flex items-center text-[12px] font-bold text-brand hover:text-green-700 bg-brand/10 px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
                                 >
                                     <i className="fa-solid fa-plus mr-1"></i>
                                     <span>Thêm</span>
                                     <span className="hidden sm:inline">&nbsp;khoản thu</span>
                                 </button>
+
                             </div>
 
                             {dynamicItems.length === 0 ? (
@@ -1148,19 +1149,19 @@ export default function CreateInvoiceModal({
                                     </div>
 
                                     {/* Danh sách các dòng dịch vụ */}
-                                    <div className="space-y-3 sm:space-y-0 sm:divide-y sm:divide-slate-100">
+                                    <div className="flex flex-col gap-4 sm:gap-0 sm:divide-y sm:divide-slate-100 mt-2 sm:mt-0">
                                         {dynamicItems.map((item, index) => (
                                             <div
                                                 key={item.id}
-                                                className="bg-white border border-slate-200 sm:bg-transparent sm:border-0 p-3 sm:px-4 sm:py-2 rounded-xl sm:rounded-none flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4 relative shadow-sm sm:shadow-none"
+                                                className="bg-white sm:bg-transparent border-2 border-slate-200 sm:border-0 rounded-2xl sm:rounded-none flex flex-col sm:flex-row sm:items-center relative shadow-sm sm:shadow-none overflow-hidden transition-all focus-within:border-brand/70"
                                             >
-                                                {/* 1. Loại dịch vụ & Nút xóa trên Mobile */}
-                                                <div className="flex items-center justify-between gap-2 w-full sm:w-[140px] shrink-0">
+                                                {/* 1. Loại dịch vụ & Nút xóa (Làm thành Header nổi bật trên Mobile) */}
+                                                <div className="flex items-center justify-between gap-2 w-full sm:w-[140px] shrink-0 bg-slate-100 sm:bg-transparent px-3 py-2.5 sm:p-0 border-b border-slate-100 sm:border-none">
                                                     <div className="relative flex-1">
                                                         <select
                                                             value={item.charge_type}
                                                             onChange={(e) => handleUpdateDynamicItem(item.id, 'charge_type', e.target.value)}
-                                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-2.5 pr-7 py-1.5 text-[13px] font-medium text-slate-700 outline-none focus:border-brand appearance-none"
+                                                            className="w-full bg-white sm:bg-transparent border border-slate-200 sm:border-0 rounded-lg sm:rounded-none pl-3 pr-8 py-2 sm:py-1.5 text-[14px] sm:text-[13px] font-bold sm:font-medium text-slate-700 outline-none focus:border-brand sm:focus:border-0 appearance-none shadow-sm sm:shadow-none transition-colors"
                                                         >
                                                             <option value="garbage">Tiền rác/tháng</option>
                                                             <option value="internet">Internet/tháng</option>
@@ -1169,79 +1170,82 @@ export default function CreateInvoiceModal({
                                                             <option value="damage_fee">Phí hư hại</option>
                                                             <option value="other">Khác</option>
                                                         </select>
-                                                        <i className="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 sm:hidden pointer-events-none"></i>
+                                                        <i className="fa-solid fa-chevron-down absolute right-3 sm:right-2.5 top-1/2 -translate-y-1/2 text-[11px] sm:text-[10px] text-slate-400 pointer-events-none"></i>
                                                     </div>
 
-                                                    {/* Nút xóa trên Mobile (Gọn nhẹ hơn) */}
+                                                    {/* Nút xóa trên Mobile */}
                                                     <button
                                                         type="button"
                                                         onClick={() => handleRemoveDynamicItem(item.id)}
-                                                        className="sm:hidden w-7 h-7 rounded-md bg-red-50 text-red-500 flex items-center justify-center shrink-0 active:bg-red-100 transition-colors"
+                                                        className="sm:hidden w-9 h-9 rounded-lg bg-white border border-red-100 text-red-500 flex items-center justify-center shrink-0 shadow-sm active:bg-red-50 transition-colors"
                                                     >
-                                                        <i className="fa-solid fa-trash-can text-[13px]"></i>
+                                                        <i className="fa-solid fa-trash-can text-[14px]"></i>
                                                     </button>
                                                 </div>
 
-                                                {/* 2. Ô nhập mô tả (Ẩn bớt trên mobile nếu là Rác/Internet) */}
-                                                <div className={`w-full sm:flex-1 ${['garbage', 'internet'].includes(item.charge_type) ? 'hidden sm:block' : 'block'}`}>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Mô tả (Ví dụ: Sửa bóng đèn)..."
-                                                        value={item.description}
-                                                        onChange={(e) => handleUpdateDynamicItem(item.id, 'description', e.target.value)}
-                                                        className="w-full px-2.5 py-1.5 bg-slate-50 sm:bg-white border border-slate-200 rounded-lg text-[13px] outline-none focus:border-brand text-slate-700 placeholder:text-slate-400"
-                                                    />
-                                                </div>
+                                                {/* Phần Body trên Mobile (Dùng sm:contents để PC không bị phá vỡ cấu trúc cột ngang) */}
+                                                <div className="flex flex-col sm:contents gap-3 p-3 sm:p-0">
 
-                                                {/* 3. Wrapper cho SL, Giá, Thành tiền: Mobile xếp dạng lưới, PC dùng `contents` để giữ nguyên cột */}
-                                                <div className="flex flex-col sm:contents w-full gap-2 mt-2 sm:mt-0">
-
-                                                    {/* Nhóm SL và Đơn Giá (Mobile xếp ngang 2 ô) */}
-                                                    <div className="flex gap-2 sm:contents w-full">
-                                                        {/* Ô Số lượng */}
-                                                        <label className="flex-[1] sm:flex-none flex flex-col justify-center sm:block sm:w-[70px] shrink-0 bg-slate-50 sm:bg-transparent rounded-lg sm:rounded-none px-2.5 py-1.5 sm:p-0 border border-slate-200 sm:border-0 cursor-text focus-within:border-brand focus-within:bg-white shadow-sm sm:shadow-none transition-colors">
-                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mb-0.5 sm:hidden">Số lượng</span>
-                                                            <input
-                                                                type="number"
-                                                                value={item.quantity}
-                                                                onChange={(e) => handleUpdateDynamicItem(item.id, 'quantity', e.target.value)}
-                                                                className="w-full min-w-0 bg-transparent text-[14px] sm:text-[13px] font-bold sm:font-medium sm:text-center outline-none text-slate-800"
-                                                            />
-                                                        </label>
-
-                                                        {/* Ô Đơn giá */}
-                                                        <label className="flex-[2] sm:flex-none flex flex-col justify-center sm:block sm:w-[115px] shrink-0 bg-slate-50 sm:bg-transparent rounded-lg sm:rounded-none px-2.5 py-1.5 sm:p-0 border border-slate-200 sm:border-0 cursor-text focus-within:border-brand focus-within:bg-white shadow-sm sm:shadow-none transition-colors min-w-0">
-                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mb-0.5 sm:hidden">Đơn giá (đ)</span>
-                                                            <input
-                                                                type="text"
-                                                                inputMode="numeric"
-                                                                value={item.unit_price_snapshot === 0 ? "" : Number(item.unit_price_snapshot).toLocaleString("vi-VN")}
-                                                                placeholder="0"
-                                                                onChange={(e) => {
-                                                                    const rawValue = e.target.value.replace(/[^\d]/g, "");
-                                                                    handleUpdateDynamicItem(item.id, 'unit_price_snapshot', rawValue ? Number(rawValue) : 0);
-                                                                }}
-                                                                // Căn trái trên Mobile để đồng bộ với tiêu đề, căn phải trên PC
-                                                                className="w-full min-w-0 bg-transparent text-[14px] sm:text-[13px] font-bold sm:font-medium text-left sm:text-right outline-none text-slate-800"
-                                                            />
-                                                        </label>
+                                                    {/* 2. Ô nhập mô tả */}
+                                                    <div className={`w-full sm:flex-1 ${['garbage', 'internet'].includes(item.charge_type) ? 'hidden sm:block' : 'block'}`}>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Mô tả (Ví dụ: Sửa bóng đèn)..."
+                                                            value={item.description}
+                                                            onChange={(e) => handleUpdateDynamicItem(item.id, 'description', e.target.value)}
+                                                            className="w-full px-3 py-2.5 sm:px-2.5 sm:py-1.5 bg-slate-50 sm:bg-transparent border border-slate-200 sm:border-0 rounded-lg sm:rounded-none text-[14px] sm:text-[13px] outline-none focus:border-brand sm:focus:border-0 focus:bg-white sm:focus:bg-transparent text-slate-700 placeholder:text-slate-400 transition-colors"
+                                                        />
                                                     </div>
 
-                                                    {/* Nhóm Thành tiền (Mobile tự động xuống dòng và có vạch mờ phân cách) */}
-                                                    <div className="flex items-center justify-between sm:justify-end sm:contents pt-1.5 sm:pt-0 mt-1 sm:mt-0 border-t border-slate-100 border-dashed sm:border-0">
-                                                        <span className="text-[12px] text-slate-500 font-medium sm:hidden">Thành tiền:</span>
-                                                        <div className={`text-[16px] sm:text-[13px] font-black sm:font-bold text-right sm:w-[115px] shrink-0 truncate ${item.charge_type === 'discount' ? 'text-red-500' : 'text-slate-800'}`}>
-                                                            {item.charge_type === 'discount' ? '-' : ''}{((Number(item.quantity) || 0) * (Number(item.unit_price_snapshot) || 0)).toLocaleString()} <span className="text-[12px] underline decoration-slate-300 ml-0.5">đ</span>
+                                                    {/* 3. Wrapper cho SL, Giá, Thành tiền */}
+                                                    <div className="flex flex-col sm:contents w-full gap-3 sm:gap-0">
+
+                                                        {/* Nhóm SL và Đơn Giá (Mobile xếp ngang 2 ô) */}
+                                                        <div className="flex gap-3 sm:gap-2 sm:contents w-full">
+                                                            {/* Ô Số lượng */}
+                                                            <label className="flex-[1] sm:flex-none flex flex-col justify-center sm:block sm:w-[70px] shrink-0 bg-slate-50 sm:bg-transparent rounded-lg sm:rounded-none px-3 py-2 sm:p-0 border border-slate-200 sm:border-0 cursor-text focus-within:border-brand focus-within:bg-white shadow-sm sm:shadow-none transition-colors">
+                                                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mb-1 sm:mb-0.5 sm:hidden">Số lượng</span>
+                                                                <input
+                                                                    type="number"
+                                                                    value={item.quantity}
+                                                                    onChange={(e) => handleUpdateDynamicItem(item.id, 'quantity', e.target.value)}
+                                                                    className="w-full min-w-0 bg-transparent text-[15px] sm:text-[13px] font-black sm:font-medium sm:text-center outline-none text-slate-800"
+                                                                />
+                                                            </label>
+
+                                                            {/* Ô Đơn giá */}
+                                                            <label className="flex-[2] sm:flex-none flex flex-col justify-center sm:block sm:w-[115px] shrink-0 bg-slate-50 sm:bg-transparent rounded-lg sm:rounded-none px-3 py-2 sm:p-0 border border-slate-200 sm:border-0 cursor-text focus-within:border-brand focus-within:bg-white shadow-sm sm:shadow-none transition-colors min-w-0">
+                                                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mb-1 sm:mb-0.5 sm:hidden">Đơn giá (đ)</span>
+                                                                <input
+                                                                    type="text"
+                                                                    inputMode="numeric"
+                                                                    value={item.unit_price_snapshot === 0 ? "" : Number(item.unit_price_snapshot).toLocaleString("vi-VN")}
+                                                                    placeholder="0"
+                                                                    onChange={(e) => {
+                                                                        const rawValue = e.target.value.replace(/[^\d]/g, "");
+                                                                        handleUpdateDynamicItem(item.id, 'unit_price_snapshot', rawValue ? Number(rawValue) : 0);
+                                                                    }}
+                                                                    className="w-full min-w-0 bg-transparent text-[15px] sm:text-[13px] font-black sm:font-medium text-left sm:text-right outline-none text-slate-800"
+                                                                />
+                                                            </label>
                                                         </div>
-                                                    </div>
 
+                                                        {/* Nhóm Thành tiền */}
+                                                        <div className="flex items-center justify-between sm:justify-end sm:contents pt-3 sm:pt-0 mt-1 sm:mt-0 border-t border-slate-100 border-dashed sm:border-0">
+                                                            <span className="text-[12px] text-slate-500 font-bold uppercase sm:hidden">Thành tiền</span>
+                                                            <div className={`text-[17px] sm:text-[13px] font-black sm:font-bold text-right sm:w-[115px] shrink-0 truncate ${item.charge_type === 'discount' ? 'text-red-500' : 'text-slate-800'}`}>
+                                                                {item.charge_type === 'discount' ? '-' : ''}{((Number(item.quantity) || 0) * (Number(item.unit_price_snapshot) || 0)).toLocaleString()} <span className="text-[12px] underline decoration-slate-300 ml-0.5">đ</span>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
                                                 </div>
 
                                                 {/* Nút xóa trên màn hình PC */}
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveDynamicItem(item.id)}
-                                                    className="hidden sm:flex w-8 h-8 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 items-center justify-center shrink-0 transition-colors"
+                                                    className="hidden sm:flex w-8 h-8 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 items-center justify-center shrink-0 transition-colors sm:ml-2"
                                                     title="Xóa khoản thu này"
                                                 >
                                                     <i className="fa-solid fa-trash-can text-[13px]"></i>
@@ -1251,6 +1255,15 @@ export default function CreateInvoiceModal({
                                     </div>
                                 </div>
                             )}
+
+                            <button
+                                type="button"
+                                onClick={handleAddDynamicItem}
+                                className="sm:hidden w-full mt-4 py-3 border-2 border-dashed border-brand/40 text-brand bg-brand/5 hover:bg-brand/10 rounded-xl text-[13px] font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                            >
+                                <i className="fa-solid fa-plus"></i>
+                                Thêm dịch vụ khác
+                            </button>
                         </div>
 
                         {/* SECTION 4: Lời nhắn tới khách thuê */}
@@ -1276,7 +1289,7 @@ export default function CreateInvoiceModal({
                     </div>
 
                     {/* Footer với Tổng tiền & Nút Bấm tối ưu Mobile/PC */}
-                    <div className="border-t border-slate-200 p-4 sm:px-5 sm:py-3.5 bg-white shrink-0 sticky bottom-0 z-20 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+                    <div className="border-t border-slate-400 p-4 sm:px-5 sm:py-3.5 bg-white shrink-0 sticky bottom-0 z-20 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
 
                         {/* 1. HIỂN THỊ TỔNG TIỀN (Mobile: nằm trên / PC: nằm trái) */}
                         <div className="flex items-center justify-between sm:justify-start sm:gap-4 w-full sm:w-auto  sm:bg-transparent p-1 sm:p-0 rounded-lg sm:rounded-none  sm:border-none">
