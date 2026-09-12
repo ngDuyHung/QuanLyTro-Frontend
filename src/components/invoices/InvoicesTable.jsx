@@ -93,6 +93,16 @@ export default function InvoicesTable({
 
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
 
+
+  const handlePageChange = (newPage) => {
+    onPageChange?.(newPage);
+
+    setTimeout(() => {
+      // Cuộn mượt lên đầu trang khi chuyển trang
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 50);
+  };
+
   // Đếm số lượng bộ lọc đang áp dụng (Bỏ propertyId ra khỏi bộ đếm)
   const activeFilterCount =
     (roomId ? 1 : 0) +
@@ -830,32 +840,129 @@ export default function InvoicesTable({
           </table>
         </div>
 
-        {/* PHÂN TRANG */}
-        <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-col sm:flex-row justify-between items-center gap-4 mt-auto">
+        {/* Pagination */}
+        <div className="flex justify-between items-center lg:px-5 lg:py-3 lg:bg-white lg:border lg:border-slate-200 lg:border-t-slate-100 lg:rounded-b-xl pt-2 pb-2">
           <span className="text-[12px] text-slate-500">
-            Hiển thị 1 - {invoices.length} trong tổng số {pagination?.total || invoices.length} hóa đơn
+            {pagination ? (
+              <>
+                <span className="lg:hidden">
+                  Trang {pagination.current_page}/{pagination.last_page} · {pagination.total} phòng
+                </span>
+                <span className="hidden lg:inline">
+                  Hiển thị {pagination.from || 0} - {pagination.to || 0} trong tổng số {pagination.total || 0} phòng
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="lg:hidden">0 phòng</span>
+                <span className="hidden lg:inline">Chưa có dữ liệu phòng</span>
+              </>
+            )}
           </span>
-          <div className="flex items-center gap-4">
-            <div className="flex gap-1">
+
+          {pagination?.last_page > 1 && (
+            <div className="flex items-center gap-1">
+              {/* Nút lùi trang */}
               <button
+                type="button"
                 disabled={page <= 1}
-                onClick={() => onPageChange?.(page - 1)}
-                className="w-8 h-8 rounded flex items-center justify-center text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                onClick={() => handlePageChange(Math.max(1, page - 1))}
+                className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <i className="fa-solid fa-angle-left text-[12px]"></i>
+                <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
               </button>
-              <button className="w-8 h-8 rounded flex items-center justify-center bg-brand text-white font-medium text-[13px]">
-                {page}
-              </button>
+
+              {/* === BẮT ĐẦU PHẦN SỐ TRANG (TỐI ƯU RIÊNG PC & MOBILE) === */}
+              <>
+                {/* 1. GIAO DIỆN PC (Hiển thị 5 trang liền kề) */}
+                <div className="hidden lg:flex flex-wrap gap-1 justify-center">
+                  {(() => {
+                    const last = pagination?.last_page || 1;
+                    const current = page;
+                    if (last <= 1) return <button type="button" className="flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium bg-brand text-white shadow-sm">1</button>;
+
+                    let pages = [];
+                    if (last <= 5) {
+                      pages = Array.from({ length: last }, (_, i) => i + 1);
+                    } else {
+                      if (current <= 3) {
+                        pages = [1, 2, 3, 4, 5, '...', last];
+                      } else if (current >= last - 2) {
+                        pages = [1, '...', last - 4, last - 3, last - 2, last - 1, last];
+                      } else {
+                        pages = [1, '...', current - 1, current, current + 1, '...', last];
+                      }
+                    }
+
+                    return pages.map((p, index) => {
+                      if (p === '...') return <span key={`pc-dots-${index}`} className="flex h-7 w-5 items-end justify-center text-slate-400 pb-1 text-[14px]">...</span>;
+                      return (
+                        <button
+                          key={`pc-${index}`}
+                          type="button"
+                          onClick={() => handlePageChange(p)} // Đổi thành onPageChange?.(p) nếu copy sang file InvoicesTable
+                          className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${p === current ? "bg-brand text-white shadow-sm" : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"}`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+
+                {/* 2. GIAO DIỆN MOBILE (Chỉ hiển thị tối đa 3 trang) */}
+                <div className="flex lg:hidden flex-wrap gap-1 justify-center">
+                  {(() => {
+                    const last = pagination?.last_page || 1;
+                    const current = page;
+                    if (last <= 1) return <button type="button" className="flex h-8 w-8 items-center justify-center rounded text-[13px] font-medium bg-brand text-white shadow-sm">1</button>;
+
+                    let pages = [];
+                    if (last <= 3) {
+                      // Nếu tổng số trang <= 3 thì hiện hết: 1 2 3
+                      pages = Array.from({ length: last }, (_, i) => i + 1);
+                    } else {
+                      if (current <= 2) {
+                        // Đang ở đầu: 1 2 3 ... Cuối
+                        pages = [1, 2, 3, '...', last];
+                      } else if (current >= last - 1) {
+                        // Đang ở cuối: 1 ... Cuối-2 Cuối-1 Cuối
+                        pages = [1, '...', last - 2, last - 1, last];
+                      } else {
+                        // Đang ở giữa: 1 ... Hiện tại ... Cuối
+                        pages = [1, '...', current, '...', last];
+                      }
+                    }
+
+                    return pages.map((p, index) => {
+                      if (p === '...') return <span key={`mb-dots-${index}`} className="flex h-8 w-4 items-end justify-center text-slate-400 pb-1 text-[14px]">...</span>;
+                      return (
+                        <button
+                          key={`mb-${index}`}
+                          type="button"
+                          onClick={() => handlePageChange(p)} // Đổi thành onPageChange?.(p) nếu copy sang file InvoicesTable
+                          className={`flex h-8 w-8 items-center justify-center rounded text-[13px] font-medium transition-colors ${p === current ? "bg-brand text-white shadow-sm" : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"}`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+              </>
+              {/* === KẾT THÚC PHẦN SỐ TRANG === */}
+
+              {/* Nút tiến trang */}
               <button
-                disabled={!pagination?.next_page_url}
-                onClick={() => onPageChange?.(page + 1)}
-                className="w-8 h-8 rounded flex items-center justify-center text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                type="button"
+                disabled={page >= pagination.last_page}
+                onClick={() => handlePageChange(page + 1)}
+                className="w-8 h-8 lg:w-7 lg:h-7 rounded-lg lg:rounded flex items-center justify-center text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <i className="fa-solid fa-angle-right text-[12px]"></i>
+                <i className="fa-solid fa-angle-right text-[12px] lg:text-[11px]"></i>
               </button>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </>

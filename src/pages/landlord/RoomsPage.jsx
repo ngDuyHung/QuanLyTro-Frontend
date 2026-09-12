@@ -18,6 +18,10 @@ import reservationService from "@/services/reservationService";
 import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
 import importService from "@/services/importService";
 import DebtorsModal from "@/components/rooms/DebtorsModal";
+
+import invoiceService from "@/services/invoiceService";
+import PaymentInvoiceModal from "@/components/invoices/PaymentInvoiceModal";
+import ViewInvoiceModal from "@/components/invoices/ViewInvoiceModal";
 const PER_PAGE = 10;
 
 const emptyRoomStats = {
@@ -83,6 +87,57 @@ export default function RoomsPage() {
   const [isExportingExcel, setIsExportingExcel] = useState(false);
 
   const [isDebtorsModalOpen, setIsDebtorsModalOpen] = useState(false);
+
+  // 1. STATE QUẢN LÝ MODAL TỪ NÚT NỢ
+  const [isViewInvoiceOpen, setIsViewInvoiceOpen] = useState(false);
+  const [isPaymentInvoiceOpen, setIsPaymentInvoiceOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  // 2. HÀM XỬ LÝ KHI BẤM NÚT NỢ (LUÔN LUÔN MỞ MODAL)
+  const handleViewDebt = async (room) => {
+    const toastId = toast.loading("Đang lấy thông tin hóa đơn...");
+    try {
+      const response = await invoiceService.getAll({
+        room_id: room.id,
+        status: "issued,partially_paid,overdue",
+        per_page: 3 // Chỉ cần lấy vài cái là đủ biết có nợ nhiều tháng không
+      });
+
+      const unpaidInvoices = response.data.data;
+      toast.dismiss(toastId);
+
+      if (unpaidInvoices.length > 0) {
+        if (unpaidInvoices.length > 1) {
+          // Thông báo nhẹ nhàng để chủ nhà hiểu tại sao số tiền trong Modal có thể khác tổng nợ
+          toast.info(`Phòng này nợ ${unpaidInvoices.length} tháng. Đang mở hóa đơn mới nhất.`, { autoClose: 3000 });
+        }
+
+        // API Backend đang dùng latest() nên index [0] luôn là hóa đơn mới nhất
+        setSelectedInvoice(unpaidInvoices[0]);
+        setIsViewInvoiceOpen(true);
+      } else {
+        toast.success("Phòng này hiện không có nợ.");
+        fetchRooms(); // Load lại list phòng để cập nhật cục nợ đỏ thành xanh
+      }
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error("Không thể tải thông tin nợ. Vui lòng thử lại.");
+    }
+  };
+
+  // 3. HÀM CHUYỂN TỪ XEM CHI TIẾT -> THU TIỀN (Giống bên InvoicesPage)
+  const handleSwitchToPayment = (invoice) => {
+    setSelectedInvoice(invoice);
+    setIsViewInvoiceOpen(false);
+    setIsPaymentInvoiceOpen(true);
+  };
+
+  // 4. HÀM CHUYỂN TỪ THU TIỀN -> XEM CHI TIẾT (Quay lại)
+  const handleSwitchToView = (invoice) => {
+    setSelectedInvoice(invoice);
+    setIsPaymentInvoiceOpen(false);
+    setIsViewInvoiceOpen(true);
+  };
 
   // Lắng nghe sự thay đổi của location.state để tự động cập nhật bộ lọc
   useEffect(() => {
@@ -237,7 +292,7 @@ export default function RoomsPage() {
 
   const handleOpenRoomDetail = async (room) => {
     if (!room?.id) return;
-    
+
     // Đẩy luôn cục dữ liệu phòng đã có sẵn ở list vào modal
     setSelectedRoom(room);
     // Mở modal lên ngay lập tức mà không cần delay
@@ -464,6 +519,7 @@ export default function RoomsPage() {
           onReserve={handleOpenReserve}         // Truyền hàm Cọc xuống
           onCancelReserve={handleOpenCancelReserve} // Truyền hàm Hủy cọc xuống
           onViewInvoices={handleOpenCreateInvoice}
+          onViewDebt={handleViewDebt}
         />
       </div>
 
@@ -543,6 +599,23 @@ export default function RoomsPage() {
         open={isDebtorsModalOpen}
         onClose={() => setIsDebtorsModalOpen(false)}
         propertyId={propertyId} // Truyền propertyId để modal chỉ hiển thị danh sách nợ của khu nhà đang lọc (nếu có)
+      />
+
+      <ViewInvoiceModal
+        open={isViewInvoiceOpen}
+        invoice={selectedInvoice}
+        onClose={() => setIsViewInvoiceOpen(false)}
+        onOpenPaymentModal={handleSwitchToPayment}
+      />
+
+      <PaymentInvoiceModal
+        open={isPaymentInvoiceOpen}
+        invoice={selectedInvoice}
+        onClose={() => setIsPaymentInvoiceOpen(false)}
+        onSuccess={() => {
+          fetchRooms(); // Thu thành công thì refresh lại list phòng
+        }}
+        onOpenViewModal={handleSwitchToView}
       />
     </div>
   );

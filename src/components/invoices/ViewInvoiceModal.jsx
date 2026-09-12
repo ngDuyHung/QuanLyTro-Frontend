@@ -298,14 +298,16 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                     <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
 
                         {/* CỘT TRÁI: Giao diện thiết kế chuẩn phong cách App Mobile di động */}
-                        <div className={`w-full flex-1 lg:w-[390px] lg:flex-none min-h-0 overflow-y-auto p-3 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 [&::-webkit-scrollbar]:hidden ${mobileTab === "details" ? "block" : "hidden"} lg:block`}>
-                            {isLoading || !invoice ? (
-                                <div className="flex justify-center items-center h-48 text-brand">
-                                    <i className="fa-solid fa-spinner animate-spin text-xl"></i>
-                                </div>
-                            ) : (
-                                <>
-                                    <div ref={receiptMobileRef} className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm relative">
+                        <div className={`w-full flex-1 lg:w-[390px] lg:flex-none min-h-0 flex-col bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 ${mobileTab === "details" ? "flex" : "hidden"} lg:flex`}>
+
+                            {/* Vùng cuộn riêng cho nội dung biên lai */}
+                            <div className="flex-1 overflow-y-auto p-3 [&::-webkit-scrollbar]:hidden">
+                                {isLoading || !invoice ? (
+                                    <div className="flex justify-center items-center h-48 text-brand">
+                                        <i className="fa-solid fa-spinner animate-spin text-xl"></i>
+                                    </div>
+                                ) : (
+                                    <div ref={receiptMobileRef} className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm relative">
 
                                         {/* 1. Tiêu đề Phòng & Tên khu trọ */}
                                         <div className="text-center pb-4">
@@ -314,7 +316,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         </div>
 
                                         {/* 2. Khối thông tin Kỳ hạn, Ngày lập, Hạn nộp chia 3 cột */}
-                                        <div className="grid grid-cols-3 border border-slate-200 rounded-xl p-3 sm:p-5 text-center bg-slate-50 shadow-sm mb-5">
+                                        <div className="grid grid-cols-3 border border-slate-200 rounded-xl p-3 sm:p-4 text-center bg-slate-50 shadow-sm mb-5">
                                             <div className="flex flex-col justify-center">
                                                 <span className="text-[13px] font-semibold text-slate-500 block mb-1">Hóa đơn tháng</span>
                                                 <span className="text-[15px] font-bold text-slate-800 block">
@@ -340,7 +342,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         </div>
 
                                         {/* 3. Khối Kính gửi khách hàng */}
-                                        <div className="flex justify-between items-start text-[14px] border-b border-slate-200 pb-4 mb-4">
+                                        <div className="flex justify-between items-start text-[14px] border-b border-slate-300 pb-4 mb-4">
                                             <span className="text-slate-600">Kính gửi</span>
                                             <div className="text-right">
                                                 {/* Ưu tiên Snapshot trước, nếu trống (hóa đơn cũ trước khi nâng cấp) thì lấy Relation */}
@@ -354,7 +356,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         </div>
 
                                         {/* 4. Khối Lý do thu & Badge trạng thái thu tiền */}
-                                        <div className="flex justify-between items-start text-[14px] border-b border-slate-200 pb-4 mb-2">
+                                        <div className="flex justify-between items-start text-[14px] border-b border-slate-300 pb-4 mb-2">
                                             <div>
                                                 <span className="text-slate-600 block mb-1">Lý do thu</span>
                                                 <span className="font-bold text-slate-800 block">
@@ -375,7 +377,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         </div>
 
                                         {/* 5. Vùng Danh sách các khoản tiền chi tiết */}
-                                        <div className="divide-y divide-slate-100">
+                                        <div className="divide-y divide-slate-300">
                                             {invoice.items?.map((item) => {
                                                 const isUtility = ["electricity", "water"].includes(item.charge_type);
                                                 const meter = invoice.meter_readings?.find((m) => m.type === item.charge_type);
@@ -451,7 +453,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                         </div>
 
                                         {/* 6. Khối tóm tắt dòng tiền (Căn sát lề phải giống mẫu) */}
-                                        <div className="pt-4 mt-2 border-t border-slate-100 flex flex-col items-end gap-3 text-[14px]">
+                                        <div className="pt-4 mt-2 border-t border-slate-300 flex flex-col items-end gap-3 text-[14px]">
                                             <div className="flex items-center justify-between w-full ">
                                                 <span className="text-slate-600">Tổng tiền dịch vụ</span>
                                                 <span className="font-bold text-slate-800">{Number(invoice.total_amount).toLocaleString()} đ</span>
@@ -485,37 +487,37 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                             <strong>* Chú ý:</strong> Vui lòng thanh toán đúng hạn và trước ngày {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString("vi-VN") : "—"}
                                         </p>
                                     </div>
+                                )}
+                            </div>
 
-                                    {/* HỘP NÚT BẤM CHỨC NĂNG (NẰM NGOÀI VÙNG CHỤP ẢNH ĐỂ KHÔNG BỊ PHÁT SINH TRONG BIÊN LAI) */}
-                                    <div className="mt-5 pt-4 border-t border-slate-200 flex flex-col gap-2">
+                            {/* --- NÚT BẤM STICKY FOOTER NẰM DƯỚI ĐÁY CỘT TRÁI --- */}
+                            {!isLoading && invoice && (
+                                <div className="shrink-0 p-3 bg-white border-t border-slate-200 flex items-center gap-2.5 z-10 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
+                                    {/* Nút Gửi Ảnh */}
+                                    <button
+                                        type="button"
+                                        onClick={handleShareMobileReceipt}
+                                        disabled={!!exportingAction}
+                                        className="flex-[1] py-3 bg-indigo-50 text-indigo-700 rounded-xl text-[13px] font-bold hover:bg-indigo-100 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
+                                    >
+                                        {exportingAction === 'share_mobile_receipt' ? (
+                                            <i className="fa-solid fa-spinner animate-spin text-[15px]"></i>
+                                        ) : (
+                                            <><i className="fa-solid fa-share-nodes text-[14px]"></i> Gửi ảnh</>
+                                        )}
+                                    </button>
 
-                                        {/* NÚT MỚI THÊM: CHIA SẺ BIÊN LAI ĐIỆN TỬ */}
+                                    {/* Nút Thu Tiền Nhanh */}
+                                    {["issued", "partially_paid", "overdue"].includes(invoice.status) && Number(invoice.remaining_amount) > 0 && (
                                         <button
                                             type="button"
-                                            onClick={handleShareMobileReceipt}
-                                            disabled={!!exportingAction}
-                                            className="w-full py-3 bg-indigo-50 text-indigo-700 rounded-xl text-[14px] font-bold hover:bg-indigo-100 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                                            onClick={() => onOpenPaymentModal(invoice)}
+                                            className="flex-[1.6] py-3 bg-brand text-white rounded-xl text-[13px] font-bold hover:bg-green-700 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 shadow-sm"
                                         >
-                                            {exportingAction === 'share_mobile_receipt' ? (
-                                                <><i className="fa-solid fa-spinner animate-spin text-[15px]"></i> Đang tạo ảnh...</>
-                                            ) : (
-                                                <><i className="fa-solid fa-receipt text-[15px]"></i> Chia sẻ Biên lai điện tử</>
-                                            )}
+                                            <i className="fa-solid fa-sack-dollar text-[14px]"></i> Thu tiền nhanh
                                         </button>
-
-                                        {/* Nút Thu Tiền Nhanh liên kết động từ trang quản lý chính (GIỮ NGUYÊN) */}
-                                        {["issued", "partially_paid", "overdue"].includes(invoice.status) && Number(invoice.remaining_amount) > 0 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => onOpenPaymentModal(invoice)}
-                                                className="w-full py-3 bg-brand text-white rounded-xl text-[14px] font-bold hover:bg-green-700 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-sm"
-                                            >
-                                                <i className="fa-solid fa-sack-dollar text-[15px]"></i> Ghi nhận Thu tiền nhanh
-                                            </button>
-                                        )}
-
-                                    </div>
-                                </>
+                                    )}
+                                </div>
                             )}
                         </div>
 

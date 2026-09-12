@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
 const getStatusConfig = (status) => {
   switch (status) {
@@ -48,8 +48,8 @@ function PropertyActionMenu({ property, onEdit, onDelete }) {
           onDelete?.(property);
         }}
         className={`w-full px-3.5 py-2.5 text-left text-[13px] font-medium flex items-center gap-2.5 ${hasRooms
-            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
-            : "text-red-600 hover:bg-red-50"
+          ? "text-slate-400 bg-slate-50 cursor-not-allowed"
+          : "text-red-600 hover:bg-red-50"
           }`}
       >
         <i className="fa-regular fa-trash-can w-4 text-center text-[12px]"></i>
@@ -120,14 +120,14 @@ function MobilePropertyActionSheet({
               onDelete?.(property);
             }}
             className={`w-full mt-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold flex items-center gap-3 ${hasRooms
-                ? "text-slate-400 bg-slate-50 cursor-not-allowed"
-                : "text-red-600 hover:bg-red-50 active:bg-red-100"
+              ? "text-slate-400 bg-slate-50 cursor-not-allowed"
+              : "text-red-600 hover:bg-red-50 active:bg-red-100"
               }`}
           >
             <span
               className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${hasRooms
-                  ? "bg-slate-100 text-slate-400"
-                  : "bg-red-50 text-red-600"
+                ? "bg-slate-100 text-slate-400"
+                : "bg-red-50 text-red-600"
                 }`}
             >
               <i className="fa-regular fa-trash-can text-[15px]"></i>
@@ -153,6 +153,56 @@ function MobilePropertyActionSheet({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// component này vào ngay trên function PropertyCard(...)
+function MobileMinimalPropertyCard({ property, isSelected, onSelect, onToggleMenu }) {
+  const status = getStatusConfig(property.status);
+  const totalRooms = property.total_rooms ?? property.rooms_count ?? 0;
+
+  return (
+    <div
+      className={`flex-shrink-0 flex items-center gap-2 p-1.5 pr-1.5 rounded-full border transition-all ${isSelected
+        ? "border-brand bg-brand/5 shadow-sm"
+        : "border-slate-200 bg-white hover:bg-slate-50"
+        } ${property.status === "inactive" ? "opacity-80" : ""}`}
+    >
+      {/* Vùng bấm để chọn khu nhà */}
+      <button
+        type="button"
+        onClick={() => onSelect?.(property.id)}
+        className="flex items-center gap-2 text-left"
+      >
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${isSelected ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500'}`}>
+          {property.cover_image_url ? (
+            <img src={property.cover_image_url} alt="" className="w-full h-full rounded-full object-cover" />
+          ) : (
+            <i className="fa-regular fa-building text-[12px]"></i>
+          )}
+        </div>
+        <div className="flex flex-col items-start pr-1">
+          <span className={`text-[13px] font-bold leading-tight ${isSelected ? 'text-brand' : 'text-slate-700'}`}>
+            {property.name}
+          </span>
+          <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+            {totalRooms} phòng <span className={`ml-0.5 ${status.className} px-1 rounded-sm`}>{status.shortLabel}</span>
+          </span>
+        </div>
+      </button>
+
+      {/* Nút 3 chấm mở Menu thao tác (Vẫn giữ nguyên chức năng Edit/Delete) */}
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onToggleMenu?.(property.id);
+        }}
+        className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200"
+      >
+        <i className="fa-solid fa-ellipsis-vertical text-[12px]"></i>
+      </button>
     </div>
   );
 }
@@ -184,8 +234,8 @@ function PropertyCard({
         }
       }}
       className={`relative text-left flex-shrink-0 w-[148px] lg:w-full bg-white rounded-xl p-2.5 lg:p-3.5 cursor-pointer shadow-sm flex flex-col lg:flex-row lg:gap-4 transition-all ${isSelected
-          ? "border-2 border-brand"
-          : "border border-slate-200 hover:border-brand"
+        ? "border-2 border-brand"
+        : "border border-slate-200 hover:border-brand"
         } ${property.status === "inactive" ? "opacity-80 hover:opacity-100" : ""}`}
     >
       {/* Ảnh Cover */}
@@ -385,18 +435,23 @@ export default function PropertyList({
 
   if (isLoading) {
     return (
-      <>
+      <div className="w-full">
         <div className="flex items-center justify-between mb-2 lg:hidden">
-          <p className="text-[13px] font-bold text-slate-700">Chọn khu nhà</p>
-          <span className="text-[12px] text-slate-400">Đang tải...</span>
+          <p className="text-[13px] font-bold text-slate-700">Đang tải khu nhà...</p>
         </div>
-
-        <div className="flex gap-3 pb-2 overflow-x-auto no-scrollbar lg:flex-col lg:overflow-y-visible lg:pb-0">
+        <div className="flex gap-2.5 overflow-x-auto no-scrollbar lg:flex-col lg:overflow-y-visible">
           {Array.from({ length: 3 }).map((_, index) => (
-            <PropertySkeleton key={index} />
+            <React.Fragment key={index}>
+              {/* Skeleton Mobile: Dạng thanh mỏng */}
+              <div className="lg:hidden shrink-0 w-[160px] h-[46px] rounded-full bg-white border border-slate-200 animate-pulse"></div>
+              {/* Skeleton Desktop: Card lớn */}
+              <div className="hidden lg:block w-full">
+                <PropertySkeleton />
+              </div>
+            </React.Fragment>
           ))}
         </div>
-      </>
+      </div>
     );
   }
 
@@ -418,57 +473,71 @@ export default function PropertyList({
 
   return (
     <>
-      <div className="flex items-center justify-between mb-2 lg:hidden">
-        <p className="text-[13px] font-bold text-slate-700">Chọn khu nhà</p>
-        {/* Nếu có từ 2 trang trở lên, hiển thị bộ chuyển trang mini */}
-        {lastPage > 1 ? (
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 pl-2.5 pr-1 py-0.5 rounded-full shadow-sm">
-            <span className="text-[11px] font-semibold text-slate-600">
-              {page}/{lastPage}
-            </span>
+      {/* Cụm này đã được bọc class sticky để ghim cố định trên Mobile */}
+      <div className="w-full">
 
-            <div className="flex items-center border-l border-slate-200 ml-1 pl-1">
-              {/* Nút lùi trang mini */}
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => onPageChange(page - 1)}
-                className="w-5 h-5 flex items-center justify-center text-slate-500 disabled:opacity-30 active:bg-slate-200 rounded-full"
-              >
-                <i className="fa-solid fa-angle-left text-[10px]"></i>
-              </button>
-
-              {/* Nút tiến trang mini */}
-              <button
-                type="button"
-                disabled={page >= lastPage}
-                onClick={() => onPageChange(page + 1)}
-                className="w-5 h-5 flex items-center justify-center text-slate-500 disabled:opacity-30 active:bg-slate-200 rounded-full"
-              >
-                <i className="fa-solid fa-angle-right text-[10px]"></i>
-              </button>
+        {/* Header mini Mobile */}
+        <div className="flex items-center justify-between mb-2 lg:hidden">
+          <p className="text-[13px] font-bold text-slate-700">Khu nhà của bạn</p>
+          {lastPage > 1 ? (
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 pl-2.5 pr-1 py-0.5 rounded-full shadow-sm">
+              <span className="text-[11px] font-semibold text-slate-600">
+                {page}/{lastPage}
+              </span>
+              <div className="flex items-center border-l border-slate-200 ml-1 pl-1">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => onPageChange(page - 1)}
+                  className="w-5 h-5 flex items-center justify-center text-slate-500 disabled:opacity-30 active:bg-slate-200 rounded-full"
+                >
+                  <i className="fa-solid fa-angle-left text-[10px]"></i>
+                </button>
+                <button
+                  type="button"
+                  disabled={page >= lastPage}
+                  onClick={() => onPageChange(page + 1)}
+                  className="w-5 h-5 flex items-center justify-center text-slate-500 disabled:opacity-30 active:bg-slate-200 rounded-full"
+                >
+                  <i className="fa-solid fa-angle-right text-[10px]"></i>
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          // Nếu chỉ có 1 trang, giữ nguyên hiển thị tổng số khu nhà ban đầu
-          <span className="text-[12px] text-slate-400">{total} khu nhà</span>
-        )}
-      </div>
+          ) : (
+            <span className="text-[12px] text-slate-400">{total} khu nhà</span>
+          )}
+        </div>
 
-      <div className="flex gap-3 pb-2 overflow-x-auto no-scrollbar lg:flex-col lg:overflow-y-visible lg:pb-0">
-        {properties.map((property, index) => (
-          <PropertyCard
-            key={property.id}
-            property={property}
-            index={index}
-            isSelected={property.id === selectedPropertyId}
-            isMenuOpen={activeMenuPropertyId === property.id}
-            onToggleMenu={handleToggleMenu}
-            onSelect={onSelectProperty}
-            onEdit={handleEditProperty}
-            onDelete={handleDeleteProperty}
-          />
-        ))}
+        {/* Danh sách trượt ngang */}
+        <div className="flex gap-2.5 overflow-x-auto no-scrollbar lg:flex-col lg:overflow-y-visible">
+          {properties.map((property, index) => (
+            <React.Fragment key={property.id}>
+              {/* CHỈ HIỂN THỊ TRÊN MOBILE: Dạng Pill/Chip nhỏ gọn */}
+              <div className="block lg:hidden shrink-0">
+                <MobileMinimalPropertyCard
+                  property={property}
+                  isSelected={property.id === selectedPropertyId}
+                  onSelect={onSelectProperty}
+                  onToggleMenu={handleToggleMenu}
+                />
+              </div>
+
+              {/* CHỈ HIỂN THỊ TRÊN DESKTOP: Dạng Card bự chi tiết như cũ */}
+              <div className="hidden lg:block">
+                <PropertyCard
+                  property={property}
+                  index={index}
+                  isSelected={property.id === selectedPropertyId}
+                  isMenuOpen={activeMenuPropertyId === property.id}
+                  onToggleMenu={handleToggleMenu}
+                  onSelect={onSelectProperty}
+                  onEdit={handleEditProperty}
+                  onDelete={handleDeleteProperty}
+                />
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
       </div>
 
       {lastPage > 1 && (
@@ -491,8 +560,8 @@ export default function PropertyList({
                 type="button"
                 onClick={() => onPageChange(pageNumber)}
                 className={`flex h-8 w-8 items-center justify-center rounded-lg text-[13px] font-medium transition-colors ${pageNumber === page
-                    ? "bg-brand text-white shadow-sm shadow-green-600/20"
-                    : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                  ? "bg-brand text-white shadow-sm shadow-green-600/20"
+                  : "border border-slate-200 text-slate-600 hover:bg-slate-50"
                   }`}
               >
                 {pageNumber}

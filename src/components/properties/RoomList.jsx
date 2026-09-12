@@ -14,7 +14,11 @@ import CancelReservationModal from "@/components/rooms/CancelReservationModal";
 import reservationService from "@/services/reservationService";
 
 import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
-const PER_PAGE = 8;
+
+import invoiceService from "@/services/invoiceService";
+import PaymentInvoiceModal from "@/components/invoices/PaymentInvoiceModal";
+import ViewInvoiceModal from "@/components/invoices/ViewInvoiceModal";
+const PER_PAGE = 10;
 
 const formatCurrency = (value) => {
   const number = Number(value || 0);
@@ -139,12 +143,21 @@ function RoomActionsMenu({ room, onAction, isNearBottom }) {
       }
     );
   } else if (status === "occupied") {
-    actions.unshift({
-      key: "invoice",
-      label: "Lập hóa đơn tháng",
-      icon: "fa-solid fa-file-invoice-dollar",
-      className: "text-blue-600 font-semibold border-b border-slate-100 pb-2 bg-blue-50/30",
-    });
+    if (room.payment_status === "debt") {
+      actions.unshift({
+        key: "viewDebt",
+        label: "Thu tiền nhanh",
+        icon: "fa-solid fa-hand-holding-dollar",
+        className: "text-red-600 font-semibold border-b border-slate-100 pb-2 bg-red-50/30",
+      });
+    } else {
+      actions.unshift({
+        key: "invoice",
+        label: "Lập hóa đơn tháng",
+        icon: "fa-solid fa-file-invoice-dollar",
+        className: "text-blue-600 font-semibold border-b border-slate-100 pb-2 bg-blue-50/30",
+      });
+    }
   }
 
 
@@ -240,6 +253,50 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
   const [isCreateInvoiceModalOpen, setIsCreateInvoiceModalOpen] = useState(false);
   const [sort, setSort] = useState("created_at_desc");
   const propertyId = property?.id || null;
+
+  const [isViewInvoiceOpen, setIsViewInvoiceOpen] = useState(false);
+  const [isPaymentInvoiceOpen, setIsPaymentInvoiceOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  const handleViewDebt = async (room) => {
+    const toastId = toast.loading("Đang lấy thông tin hóa đơn...");
+    try {
+      const response = await invoiceService.getAll({
+        room_id: room.id,
+        status: "issued,partially_paid,overdue",
+        per_page: 3
+      });
+
+      const unpaidInvoices = response.data.data;
+      toast.dismiss(toastId);
+
+      if (unpaidInvoices.length > 0) {
+        if (unpaidInvoices.length > 1) {
+          toast.info(`Phòng này nợ ${unpaidInvoices.length} tháng. Đang mở hóa đơn mới nhất.`, { autoClose: 3000 });
+        }
+        setSelectedInvoice(unpaidInvoices[0]);
+        setIsViewInvoiceOpen(true);
+      } else {
+        toast.success("Phòng này hiện không có nợ.");
+        fetchRooms();
+      }
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error("Không thể tải thông tin nợ. Vui lòng thử lại.");
+    }
+  };
+
+  const handleSwitchToPayment = (invoice) => {
+    setSelectedInvoice(invoice);
+    setIsViewInvoiceOpen(false);
+    setIsPaymentInvoiceOpen(true);
+  };
+
+  const handleSwitchToView = (invoice) => {
+    setSelectedInvoice(invoice);
+    setIsPaymentInvoiceOpen(false);
+    setIsViewInvoiceOpen(true);
+  };
 
   // Hàm xử lý chuyển trang kèm hiệu ứng cuộn lên đầu UX/UI
   const handlePageChange = (newPage) => {
@@ -509,6 +566,10 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
       setIsCreateInvoiceModalOpen(true);
       return;
     }
+    if (actionKey === "viewDebt") {
+      handleViewDebt(room);
+      return;
+    }
 
     // Các tính năng còn lại (Ghi điện nước, đổi trạng thái) vẫn để tạm toast info
     const actionLabels = {
@@ -603,16 +664,29 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
             )}
 
             {room.status === "occupied" && (
-              <button
-                type="button"
-                onClick={() => { onClose(); onAction("invoice", room); }}
-                className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-blue-600 hover:bg-blue-50 flex items-center gap-3"
-              >
-                <span className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <i className="fa-solid fa-file-invoice-dollar text-[15px]"></i>
-                </span>
-                <span>Lập hóa đơn tháng</span>
-              </button>
+              room.payment_status === "debt" ? (
+                <button
+                  type="button"
+                  onClick={() => { onClose(); onAction("viewDebt", room); }}
+                  className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-3"
+                >
+                  <span className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                    <i className="fa-solid fa-hand-holding-dollar text-[15px]"></i>
+                  </span>
+                  <span>Thu tiền nhanh</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => { onClose(); onAction("invoice", room); }}
+                  className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-blue-600 hover:bg-blue-50 flex items-center gap-3"
+                >
+                  <span className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <i className="fa-solid fa-file-invoice-dollar text-[15px]"></i>
+                  </span>
+                  <span>Lập hóa đơn tháng</span>
+                </button>
+              )
             )}
 
             {room.status === "maintenance" && (
@@ -841,7 +915,7 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
                           <div
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/landlord/invoices?property_id=${room.property_id}&room_id=${room.id}`);
+                              handleViewDebt(room);
                             }}
                             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-bold bg-red-50 text-red-600 border border-red-200 active:bg-red-100 active:scale-[0.96] transition-all cursor-pointer shadow-sm"
                           >
@@ -953,13 +1027,23 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
                           <i className="fa-regular fa-eye text-slate-400"></i>
                           Xem chi tiết
                         </button>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); handleAction("invoice", room); }}
-                          className="flex-1 py-2 rounded-lg border border-green-400 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100"
-                        >
-                          <i className="fa-solid fa-file-invoice-dollar"></i> Lập hóa đơn
-                        </button>
+                        {room.status === "occupied" && room.payment_status === "debt" ? (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleAction("viewDebt", room); }}
+                            className="flex-1 py-2 rounded-lg border border-red-400 bg-red-50 text-[12px] font-semibold text-red-600 flex items-center justify-center gap-1.5 active:bg-red-100 shadow-sm"
+                          >
+                            <i className="fa-solid fa-hand-holding-dollar"></i> Thu tiền
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleAction("invoice", room); }}
+                            className="flex-1 py-2 rounded-lg border border-green-400 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100 shadow-sm"
+                          >
+                            <i className="fa-solid fa-file-invoice-dollar"></i> Lập hóa đơn
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
@@ -1037,11 +1121,14 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
 
                         <td className="py-3 px-2">
                           {tenantName ? (
-                            <div className="flex flex-col">
-                              <span className="font-medium text-slate-800">
+                            <div className="flex flex-col min-w-0">
+                              <span
+                                className="font-medium text-slate-800 truncate"
+                                title={tenantName}
+                              >
                                 {tenantName}
                               </span>
-                              <span className="text-[11px] text-slate-500">
+                              <span className="text-[11px] text-slate-500 truncate">
                                 {tenantPhone || "Chưa có số điện thoại"}
                               </span>
                             </div>
@@ -1123,33 +1210,85 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
               <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
             </button>
 
-            {/* MOBILE UI: Chỉ hiện một ô số trang hiện tại */}
-            <button
-              type="button"
-              className="flex lg:hidden w-8 h-8 rounded-lg items-center justify-center bg-brand text-white font-medium text-[13px]"
-            >
-              {page}
-            </button>
+            {/* === BẮT ĐẦU PHẦN SỐ TRANG (TỐI ƯU RIÊNG PC & MOBILE) === */}
+            <>
+              {/* 1. GIAO DIỆN PC (Hiển thị 5 trang liền kề) */}
+              <div className="hidden lg:flex flex-wrap gap-1 justify-center">
+                {(() => {
+                  const last = pagination?.last_page || 1;
+                  const current = page;
+                  if (last <= 1) return <button type="button" className="flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium bg-brand text-white shadow-sm">1</button>;
 
-            {/* DESKTOP UI: Hiện đầy đủ dãy số trang */}
-            <div className="hidden lg:flex gap-1">
-              {Array.from({ length: pagination.last_page }).map((_, index) => {
-                const pageNumber = index + 1;
-                return (
-                  <button
-                    key={pageNumber}
-                    type="button"
-                    onClick={() => handlePageChange(pageNumber)}
-                    className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
-                      ? "bg-brand text-white shadow-sm"
-                      : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
-                      }`}
-                  >
-                    {pageNumber}
-                  </button>
-                );
-              })}
-            </div>
+                  let pages = [];
+                  if (last <= 5) {
+                    pages = Array.from({ length: last }, (_, i) => i + 1);
+                  } else {
+                    if (current <= 3) {
+                      pages = [1, 2, 3, 4, 5, '...', last];
+                    } else if (current >= last - 2) {
+                      pages = [1, '...', last - 4, last - 3, last - 2, last - 1, last];
+                    } else {
+                      pages = [1, '...', current - 1, current, current + 1, '...', last];
+                    }
+                  }
+
+                  return pages.map((p, index) => {
+                    if (p === '...') return <span key={`pc-dots-${index}`} className="flex h-7 w-5 items-end justify-center text-slate-400 pb-1 text-[14px]">...</span>;
+                    return (
+                      <button
+                        key={`pc-${index}`}
+                        type="button"
+                        onClick={() => handlePageChange(p)} // Đổi thành onPageChange?.(p) nếu copy sang file InvoicesTable
+                        className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${p === current ? "bg-brand text-white shadow-sm" : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"}`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+
+              {/* 2. GIAO DIỆN MOBILE (Chỉ hiển thị tối đa 3 trang) */}
+              <div className="flex lg:hidden flex-wrap gap-1 justify-center">
+                {(() => {
+                  const last = pagination?.last_page || 1;
+                  const current = page;
+                  if (last <= 1) return <button type="button" className="flex h-8 w-8 items-center justify-center rounded text-[13px] font-medium bg-brand text-white shadow-sm">1</button>;
+
+                  let pages = [];
+                  if (last <= 3) {
+                    // Nếu tổng số trang <= 3 thì hiện hết: 1 2 3
+                    pages = Array.from({ length: last }, (_, i) => i + 1);
+                  } else {
+                    if (current <= 2) {
+                      // Đang ở đầu: 1 2 3 ... Cuối
+                      pages = [1, 2, 3, '...', last];
+                    } else if (current >= last - 1) {
+                      // Đang ở cuối: 1 ... Cuối-2 Cuối-1 Cuối
+                      pages = [1, '...', last - 2, last - 1, last];
+                    } else {
+                      // Đang ở giữa: 1 ... Hiện tại ... Cuối
+                      pages = [1, '...', current, '...', last];
+                    }
+                  }
+
+                  return pages.map((p, index) => {
+                    if (p === '...') return <span key={`mb-dots-${index}`} className="flex h-8 w-4 items-end justify-center text-slate-400 pb-1 text-[14px]">...</span>;
+                    return (
+                      <button
+                        key={`mb-${index}`}
+                        type="button"
+                        onClick={() => handlePageChange(p)} // Đổi thành onPageChange?.(p) nếu copy sang file InvoicesTable
+                        className={`flex h-8 w-8 items-center justify-center rounded text-[13px] font-medium transition-colors ${p === current ? "bg-brand text-white shadow-sm" : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"}`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+            </>
+            {/* === KẾT THÚC PHẦN SỐ TRANG === */}
 
             {/* Nút tiến trang */}
             <button
@@ -1243,6 +1382,22 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
         onSuccess={() => {
           fetchRooms();
         }}
+      />
+      <ViewInvoiceModal
+        open={isViewInvoiceOpen}
+        invoice={selectedInvoice}
+        onClose={() => setIsViewInvoiceOpen(false)}
+        onOpenPaymentModal={handleSwitchToPayment}
+      />
+
+      <PaymentInvoiceModal
+        open={isPaymentInvoiceOpen}
+        invoice={selectedInvoice}
+        onClose={() => setIsPaymentInvoiceOpen(false)}
+        onSuccess={() => {
+          fetchRooms(); // Cập nhật lại list phòng sau khi thu tiền
+        }}
+        onOpenViewModal={handleSwitchToView}
       />
     </div>
   );

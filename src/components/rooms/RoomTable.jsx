@@ -140,7 +140,7 @@ function RoomActionsMenu({ room, onAction }) {
   );
 }
 
-function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
+function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction, onViewDebt }) {
   const navigate = useNavigate();
   const statusConfig = getStatusConfig(room.status);
   const tenantName = getTenantName(room);
@@ -207,7 +207,7 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
               <div
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/landlord/invoices?property_id=${room.property_id}&room_id=${room.id}`);
+                  onViewDebt?.(room);
                 }}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-bold bg-red-50 text-red-600 border border-red-200 active:bg-red-100 active:scale-[0.96] transition-all cursor-pointer shadow-sm"
               >
@@ -321,13 +321,23 @@ function MobileRoomCard({ room, isMenuOpen, onToggleMenu, onAction }) {
               <i className="fa-regular fa-eye text-slate-400"></i>
               Xem chi tiết
             </button>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onAction?.("invoice", room); }}
-              className="flex-1 py-2 rounded-lg border border-green-400 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100"
-            >
-              <i className="fa-solid fa-file-invoice-dollar"></i> Lập hóa đơn
-            </button>
+            {room.status === "occupied" && room.payment_status === "debt" ? (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onAction?.("viewDebt", room); }}
+                className="flex-1 py-2 rounded-lg border border-red-400 bg-red-50 text-[12px] font-semibold text-red-600 flex items-center justify-center gap-1.5 active:bg-red-100 shadow-sm"
+              >
+                <i className="fa-solid fa-hand-holding-dollar"></i> Thu tiền
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onAction?.("invoice", room); }}
+                className="flex-1 py-2 rounded-lg border border-green-400 bg-green-50 text-[12px] font-semibold text-brand flex items-center justify-center gap-1.5 active:bg-green-100 shadow-sm"
+              >
+                <i className="fa-solid fa-file-invoice-dollar"></i> Lập hóa đơn
+              </button>
+            )}
           </>
         )}
       </div>
@@ -440,16 +450,29 @@ function MobileRoomActionSheet({ room, open, onClose, onAction }) {
           )}
 
           {room.status === "occupied" && (
-            <button
-              type="button"
-              onClick={() => { onClose(); onAction("invoice", room); }}
-              className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-blue-600 hover:bg-blue-50 flex items-center gap-3"
-            >
-              <span className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                <i className="fa-solid fa-file-invoice-dollar text-[15px]"></i>
-              </span>
-              <span>Lập hóa đơn tháng</span>
-            </button>
+            room.payment_status === "debt" ? (
+              <button
+                type="button"
+                onClick={() => { onClose(); onAction("viewDebt", room); }}
+                className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-3"
+              >
+                <span className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                  <i className="fa-solid fa-hand-holding-dollar text-[15px]"></i>
+                </span>
+                <span>Thu tiền nhanh</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { onClose(); onAction("invoice", room); }}
+                className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-blue-600 hover:bg-blue-50 flex items-center gap-3"
+              >
+                <span className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <i className="fa-solid fa-file-invoice-dollar text-[15px]"></i>
+                </span>
+                <span>Lập hóa đơn tháng</span>
+              </button>
+            )
           )}
 
           {room.status === "maintenance" && (
@@ -544,6 +567,7 @@ export default function RoomTable({
   onUpdateStatus,
   onReserve,
   onCancelReserve,
+  onViewDebt,
 }) {
   const [activeActionRoomId, setActiveActionRoomId] = useState(null);
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false); // STATE MỚI CHO BỘ LỌC
@@ -618,6 +642,7 @@ export default function RoomTable({
       case "meter": onRecordMeter?.(room); return;
       case "maintenance": onUpdateStatus?.(room, "maintenance"); return;
       case "available": onUpdateStatus?.(room, "available"); return;
+      case "viewDebt": onViewDebt?.(room); return;
       default: return;
     }
   };
@@ -677,7 +702,7 @@ export default function RoomTable({
   );
 
   return (
-    <div id="room-table-top" className="mb-6 flex flex-col gap-3 lg:gap-0 lg:bg-white lg:border lg:border-slate-200 lg:rounded-xl lg:shadow-sm">
+    <div id="room-table-top" className="mb-6 flex flex-col gap-3 lg:gap-0 lg:bg-white lg:border lg:border-slate-200 lg:rounded-xl lg:shadow-sm scroll-mt-[130px]">
 
       {/* ========================================================= */}
       {/* BỘ LỌC CHO DESKTOP (Hiển thị dàn trải, không bị giấu đi) */}
@@ -755,69 +780,80 @@ export default function RoomTable({
       </div>
 
       {/* ========================================================= */}
-      {/* BỘ LỌC CHO MOBILE (Nút bấm thu gọn + Bottom Sheet)        */}
+      {/* BỘ LỌC CHO MOBILE (Dạng thẻ Select cuộn ngang)            */}
       {/* ========================================================= */}
-      <div className="lg:hidden bg-white border border-slate-200 rounded-xl p-3 flex gap-3 items-center shadow-sm relative">
+      <div className="lg:hidden flex flex-col gap-2.5 mb-2">
         {/* Ô Tìm kiếm Mobile */}
-        <div className="relative flex-1">
+        <div className="relative w-full">
           <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
           <input
             type="text"
             value={searchText}
             onChange={(event) => onSearchTextChange?.(event.target.value)}
-            placeholder="Tìm kiếm..."
-            className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-[13px] focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+            placeholder="Tìm kiếm phòng..."
+            className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-[13px] outline-none shadow-sm focus:border-brand"
           />
         </div>
 
-        {/* Nút Mở Bottom Sheet Mobile */}
-        <button
-          type="button"
-          onClick={() => setIsFilterMenuOpen(true)}
-          className={`shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 border rounded-lg text-[13px] font-medium transition-colors ${activeFilterCount > 0
-            ? "border-brand text-brand bg-brand/5"
-            : "border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
-            }`}
-        >
-          <i className="fa-solid fa-filter"></i>
-          <span className="hidden sm:inline">Lọc</span>
-
-          {/* Chấm đỏ thông báo số lượng bộ lọc đang bật */}
-          {activeFilterCount > 0 && (
-            <span className="bg-brand text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full shrink-0">
-              {activeFilterCount}
-            </span>
+        {/* Các thẻ Select cuộn ngang */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 items-center">
+          {/* Chỉ hiện chọn khu nhà nếu có danh sách property (dùng cho trang dùng chung RoomTable) */}
+          {properties && properties.length > 0 && (
+            <select
+              value={propertyId}
+              onChange={(event) => onPropertyIdChange?.(event.target.value)}
+              className="shrink-0 border border-slate-200 rounded-lg text-[12px] px-2 py-1.5 text-slate-600 bg-white outline-none focus:border-brand shadow-sm"
+            >
+              <option value="">Tất cả khu nhà</option>
+              {properties.map((property) => (
+                <option key={property.id} value={property.id}>
+                  {property.name}
+                </option>
+              ))}
+            </select>
           )}
-        </button>
-      </div>
 
-      {/* BOTTOM SHEET CHO MOBILE */}
-      {isFilterMenuOpen && (
-        <div className="fixed inset-0 z-[60] lg:hidden bg-slate-900/50 backdrop-blur-[2px] flex items-end">
-          <div className="absolute inset-0" onClick={() => setIsFilterMenuOpen(false)}></div>
-          <div className="w-full bg-white rounded-t-2xl shadow-2xl animate-[slideUp_0.2s_ease-out] relative z-10 flex flex-col max-h-[85vh]">
-            <div className="px-5 pt-3 pb-4 border-b border-slate-100 shrink-0">
-              <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-4"></div>
-              <div className="flex justify-between items-center">
-                <h3 className="text-[16px] font-bold text-slate-800">Bộ lọc & Sắp xếp</h3>
-                {activeFilterCount > 0 && (
-                  <button onClick={() => { onClearFilters(); setIsFilterMenuOpen(false); }} className="text-[13px] text-red-500 font-medium">Xóa lọc</button>
-                )}
-              </div>
-            </div>
+          {/* Chọn trạng thái */}
+          <select
+            value={status}
+            onChange={(event) => onStatusChange?.(event.target.value)}
+            className="shrink-0 border border-slate-200 rounded-lg text-[12px] px-2 py-1.5 text-slate-600 bg-white outline-none focus:border-brand shadow-sm"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="available">Phòng trống</option>
+            <option value="reserved">Đang đặt cọc</option>
+            <option value="occupied">Đang thuê</option>
+            <option value="maintenance">Bảo trì</option>
+          </select>
 
-            <div className="p-5 overflow-y-auto flex flex-col gap-5 no-scrollbar">
-              {FilterContent}
-            </div>
+          {/* Chọn sắp xếp */}
+          <select
+            value={sort}
+            onChange={(event) => onSortChange?.(event.target.value)}
+            className="shrink-0 border border-slate-200 rounded-lg text-[12px] px-2 py-1.5 text-slate-600 bg-white outline-none focus:border-brand shadow-sm"
+          >
+            <option value="sort_order_asc">Thứ tự: Nhỏ - lớn</option>
+            <option value="sort_order_desc">Thứ tự: Lớn - nhỏ</option>
+            <option value="created_at_desc">Mới nhất</option>
+            <option value="created_at_asc">Cũ nhất</option>
+            <option value="price_asc">Giá: Thấp - cao</option>
+            <option value="price_desc">Giá: Cao - thấp</option>
+            <option value="name_asc">Tên phòng: A - Z</option>
+            <option value="name_desc">Tên phòng: Z - A</option>
+          </select>
 
-            <div className="px-5 pb-5 pt-3 border-t border-slate-100 shrink-0">
-              <button onClick={() => setIsFilterMenuOpen(false)} className="w-full py-3 bg-brand text-white rounded-xl text-[14px] font-semibold active:scale-[0.98] transition-transform shadow-sm shadow-brand/30">
-                Áp dụng
-              </button>
-            </div>
-          </div>
+          {/* Nút xóa lọc */}
+          {isFilterActive && (
+            <button
+              type="button"
+              onClick={onClearFilters}
+              className="shrink-0 border border-red-200 bg-red-50 text-red-500 rounded-lg text-[12px] px-2 py-1.5 font-medium flex items-center gap-1 shadow-sm"
+            >
+              <i className="fa-solid fa-xmark"></i> Xóa lọc
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Mobile cards */}
       <div className="lg:hidden">
@@ -838,6 +874,7 @@ export default function RoomTable({
                   )
                 }
                 onAction={handleAction}
+                onViewDebt={onViewDebt}
               />
             ))}
           </div>
@@ -916,7 +953,7 @@ export default function RoomTable({
                       />
                     </td>
 
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 max-w-[150px]">
                       <div className="flex items-start gap-2">
                         <span
                           className="text-[12px] font-bold text-slate-400 mt-0.5 w-4 text-center shrink-0"
@@ -924,11 +961,14 @@ export default function RoomTable({
                         >
                           {room.sort_order ?? 0}
                         </span>
-                        <div>
-                          <p className="font-bold text-slate-800 leading-tight mb-0.5">
+                        <div className="min-w-0 flex-1"> {/* Thêm min-w-0 để truncate hoạt động trong flex */}
+                          <p
+                            className="font-bold text-slate-800 leading-tight mb-0.5 truncate"
+                            title={room.name}
+                          >
                             {room.name}
                           </p>
-                          <p className="text-[11px] text-slate-500 leading-tight">
+                          <p className="text-[11px] text-slate-500 leading-tight truncate">
                             {formatFloor(room.floor_number)}
                           </p>
                         </div>
@@ -936,10 +976,16 @@ export default function RoomTable({
                     </td>
 
                     <td className="py-3 px-4 max-w-[240px]">
-                      <p className="font-bold text-slate-800 truncate">
+                      <p
+                        className="font-bold text-slate-800 truncate"
+                        title={room.property?.name}
+                      >
                         {room.property?.name || "—"}
                       </p>
-                      <p className="text-[11px] text-slate-500 truncate">
+                      <p
+                        className="text-[11px] text-slate-500 truncate"
+                        title={room.property?.address}
+                      >
                         {room.property?.address || "—"}
                       </p>
                     </td>
@@ -960,13 +1006,16 @@ export default function RoomTable({
                       </span>
                     </td>
 
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 max-w-[180px]">
                       {tenantName ? (
-                        <div className="flex flex-col">
-                          <span className="font-medium text-slate-800">
+                        <div className="flex flex-col min-w-0">
+                          <span
+                            className="font-medium text-slate-800 truncate"
+                            title={tenantName}
+                          >
                             {tenantName}
                           </span>
-                          <span className="text-[11px] text-slate-500">
+                          <span className="text-[11px] text-slate-500 truncate">
                             {tenantPhone || "Chưa có số điện thoại"}
                           </span>
                         </div>
@@ -979,7 +1028,10 @@ export default function RoomTable({
                     <td className="py-3 px-4">
                       {room.payment_status === "debt" ? (
                         <div
-                          onClick={() => navigate(`/landlord/invoices?property_id=${room.property_id}&room_id=${room.id}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewDebt?.(room);
+                          }}
                           className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm"
                           title={`Phòng ${room.name} đang nợ tiền. Nhấn để xem chi tiết hóa đơn.`}
                         >
@@ -1032,9 +1084,15 @@ export default function RoomTable({
                         )}
                         {/* TRẠNG THÁI ĐANG THUÊ */}
                         {room.status === "occupied" && (
-                          <button onClick={() => handleAction("invoice", room)} className="flex items-center px-3 py-1.5 bg-white text-blue-600 border border-blue-200 rounded-lg text-[12px] font-semibold hover:bg-blue-50 transition-all shadow-sm whitespace-nowrap">
-                            <i className="fa-solid fa-file-invoice-dollar mr-1.5"></i>Lập hóa đơn
-                          </button>
+                          room.payment_status === "debt" ? (
+                            <button onClick={() => handleAction("viewDebt", room)} className="flex items-center px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-[12px] font-semibold hover:bg-red-100 transition-all shadow-sm whitespace-nowrap">
+                              <i className="fa-solid fa-hand-holding-dollar mr-1.5"></i> Thu tiền
+                            </button>
+                          ) : (
+                            <button onClick={() => handleAction("invoice", room)} className="flex items-center px-3 py-1.5 bg-white text-blue-600 border border-blue-200 rounded-lg text-[12px] font-semibold hover:bg-blue-50 transition-all shadow-sm whitespace-nowrap">
+                              <i className="fa-solid fa-file-invoice-dollar mr-1.5"></i> Lập hóa đơn
+                            </button>
+                          )
                         )}
                         {/* NÚT MENU 3 CHẤM */}
                         <button
@@ -1100,33 +1158,85 @@ export default function RoomTable({
               <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
             </button>
 
-            {/* MOBILE UI: Chỉ hiện một ô số trang hiện tại */}
-            <button
-              type="button"
-              className="flex lg:hidden w-8 h-8 rounded-lg items-center justify-center bg-brand text-white font-medium text-[13px]"
-            >
-              {page}
-            </button>
+            {/* === BẮT ĐẦU PHẦN SỐ TRANG (TỐI ƯU RIÊNG PC & MOBILE) === */}
+            <>
+              {/* 1. GIAO DIỆN PC (Hiển thị 5 trang liền kề) */}
+              <div className="hidden lg:flex flex-wrap gap-1 justify-center">
+                {(() => {
+                  const last = pagination?.last_page || 1;
+                  const current = page;
+                  if (last <= 1) return <button type="button" className="flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium bg-brand text-white shadow-sm">1</button>;
 
-            {/* DESKTOP UI: Hiện đầy đủ dãy số trang */}
-            <div className="hidden lg:flex gap-1">
-              {Array.from({ length: pagination.last_page }).map((_, index) => {
-                const pageNumber = index + 1;
-                return (
-                  <button
-                    key={pageNumber}
-                    type="button"
-                    onClick={() => handlePageChange(pageNumber)}
-                    className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
-                      ? "bg-brand text-white shadow-sm"
-                      : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
-                      }`}
-                  >
-                    {pageNumber}
-                  </button>
-                );
-              })}
-            </div>
+                  let pages = [];
+                  if (last <= 5) {
+                    pages = Array.from({ length: last }, (_, i) => i + 1);
+                  } else {
+                    if (current <= 3) {
+                      pages = [1, 2, 3, 4, 5, '...', last];
+                    } else if (current >= last - 2) {
+                      pages = [1, '...', last - 4, last - 3, last - 2, last - 1, last];
+                    } else {
+                      pages = [1, '...', current - 1, current, current + 1, '...', last];
+                    }
+                  }
+
+                  return pages.map((p, index) => {
+                    if (p === '...') return <span key={`pc-dots-${index}`} className="flex h-7 w-5 items-end justify-center text-slate-400 pb-1 text-[14px]">...</span>;
+                    return (
+                      <button
+                        key={`pc-${index}`}
+                        type="button"
+                        onClick={() => handlePageChange(p)} // Đổi thành onPageChange?.(p) nếu copy sang file InvoicesTable
+                        className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${p === current ? "bg-brand text-white shadow-sm" : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"}`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+
+              {/* 2. GIAO DIỆN MOBILE (Chỉ hiển thị tối đa 3 trang) */}
+              <div className="flex lg:hidden flex-wrap gap-1 justify-center">
+                {(() => {
+                  const last = pagination?.last_page || 1;
+                  const current = page;
+                  if (last <= 1) return <button type="button" className="flex h-8 w-8 items-center justify-center rounded text-[13px] font-medium bg-brand text-white shadow-sm">1</button>;
+
+                  let pages = [];
+                  if (last <= 3) {
+                    // Nếu tổng số trang <= 3 thì hiện hết: 1 2 3
+                    pages = Array.from({ length: last }, (_, i) => i + 1);
+                  } else {
+                    if (current <= 2) {
+                      // Đang ở đầu: 1 2 3 ... Cuối
+                      pages = [1, 2, 3, '...', last];
+                    } else if (current >= last - 1) {
+                      // Đang ở cuối: 1 ... Cuối-2 Cuối-1 Cuối
+                      pages = [1, '...', last - 2, last - 1, last];
+                    } else {
+                      // Đang ở giữa: 1 ... Hiện tại ... Cuối
+                      pages = [1, '...', current, '...', last];
+                    }
+                  }
+
+                  return pages.map((p, index) => {
+                    if (p === '...') return <span key={`mb-dots-${index}`} className="flex h-8 w-4 items-end justify-center text-slate-400 pb-1 text-[14px]">...</span>;
+                    return (
+                      <button
+                        key={`mb-${index}`}
+                        type="button"
+                        onClick={() => handlePageChange(p)} // Đổi thành onPageChange?.(p) nếu copy sang file InvoicesTable
+                        className={`flex h-8 w-8 items-center justify-center rounded text-[13px] font-medium transition-colors ${p === current ? "bg-brand text-white shadow-sm" : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"}`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+            </>
+            {/* === KẾT THÚC PHẦN SỐ TRANG === */}
 
             {/* Nút tiến trang */}
             <button

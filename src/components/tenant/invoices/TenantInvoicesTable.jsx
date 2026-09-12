@@ -335,7 +335,7 @@ export default function TenantInvoicesTable({
                     </div>
                 )}
             </div>
-            
+
             {/* Phân trang đặt riêng ở dưới cùng, ngoài khối padding chính */}
             {invoices.length > 0 && !isLoading && (
                 <div className="bg-white border border-gray-200 sm:border-x-0 sm:border-b-0 sm:border-t sm:border-gray-100 rounded-b-xl p-3 sm:p-4 flex items-center justify-between mt-auto shrink-0">
@@ -377,38 +377,58 @@ export default function TenantInvoicesTable({
                                 <i className="fa-solid fa-angle-left text-[12px] sm:text-[11px]"></i>
                             </button>
 
-                            {/* UI Mobile: Chỉ hiện 1 ô số trang hiện tại */}
-                            <button
-                                type="button"
-                                className="flex sm:hidden w-8 h-8 rounded-lg items-center justify-center bg-primary text-white font-medium text-[13px]"
-                            >
-                                {page}
-                            </button>
+                            {/* === BẮT ĐẦU PHẦN SỐ TRANG (HIỂN THỊ CHUNG PC LẪN MOBILE) === */}
+                            <div className="flex flex-wrap gap-1 justify-center">
+                                {(() => {
+                                    // Lưu ý: riêng file InvoicesTable.jsx nếu API không trả về last_page, hãy kiểm tra lại
+                                    const last = pagination?.last_page || 1;
+                                    const current = page;
 
-                            {/* UI PC: Hiện đầy đủ dãy số trang */}
-                            <div className="hidden sm:flex gap-1">
-                                {Array.from({ length: pagination.last_page }).map((_, index) => {
-                                    const pageNumber = index + 1;
-                                    return (
-                                        <button
-                                            key={pageNumber}
-                                            type="button"
-                                            onClick={() => {
-                                                onPageChange?.(pageNumber);
-                                                const tableContainer = document.getElementById('tenant-invoices-top');
-                                                if (tableContainer) tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                                else window.scrollTo({ top: 0, behavior: 'smooth' });
-                                            }}
-                                            className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
-                                                ? "bg-primary text-white shadow-sm"
-                                                : "border border-gray-200 text-gray-600 hover:bg-gray-50 bg-white"
-                                                }`}
-                                        >
-                                            {pageNumber}
+                                    if (last <= 1) return (
+                                        <button type="button" className="flex h-8 w-8 lg:h-7 lg:w-7 items-center justify-center rounded text-[13px] lg:text-[12px] font-medium bg-brand text-white shadow-sm">
+                                            1
                                         </button>
                                     );
-                                })}
+
+                                    let pages = [];
+                                    if (last <= 5) {
+                                        pages = Array.from({ length: last }, (_, i) => i + 1);
+                                    } else {
+                                        if (current <= 3) {
+                                            pages = [1, 2, 3, 4, 5, '...', last];
+                                        } else if (current >= last - 2) {
+                                            pages = [1, '...', last - 4, last - 3, last - 2, last - 1, last];
+                                        } else {
+                                            pages = [1, '...', current - 1, current, current + 1, '...', last];
+                                        }
+                                    }
+
+                                    return pages.map((p, index) => {
+                                        if (p === '...') {
+                                            return (
+                                                <span key={`dots-${index}`} className="flex h-8 w-5 lg:h-7 lg:w-5 items-end justify-center text-slate-400 pb-1 text-[14px]">
+                                                    ...
+                                                </span>
+                                            );
+                                        }
+                                        return (
+                                            <button
+                                                key={index}
+                                                type="button"
+                                                /* Chú ý: Ở file InvoicesTable.jsx bạn đổi chữ handlePageChange(p) thành onPageChange?.(p) nhé */
+                                                onClick={() => handlePageChange(p)}
+                                                className={`flex h-8 w-8 lg:h-7 lg:w-7 items-center justify-center rounded text-[13px] lg:text-[12px] font-medium transition-colors ${p === current
+                                                    ? "bg-brand text-white shadow-sm"
+                                                    : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+                                                    }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        );
+                                    });
+                                })()}
                             </div>
+                            {/* === KẾT THÚC PHẦN SỐ TRANG === */}
 
                             {/* Nút tiến trang */}
                             <button

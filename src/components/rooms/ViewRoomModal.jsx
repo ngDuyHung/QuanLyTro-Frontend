@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import invoiceService from "@/services/invoiceService";
 import utilityService from "@/services/utilityService";
 
@@ -70,6 +71,7 @@ const getInvoiceStatusConfig = (status) => {
 };
 
 export default function ViewRoomModal({ open, onClose, room, isLoading = false }) {
+  const navigate = useNavigate();
   const [activeImage, setActiveImage] = useState("");
   // Thêm state quản lý ảnh đang phóng to
   const [zoomedImage, setZoomedImage] = useState(null);
@@ -284,6 +286,16 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                       <i className="fa-solid fa-file-invoice-dollar text-brand text-[13px]"></i>
                       <h3 className="text-[14px] font-bold text-slate-800">Hóa đơn gần đây</h3>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose(); // Đóng modal hiện tại
+                        navigate(`/landlord/invoices?property_id=${room.property_id}&room_id=${room.id}`); // Chuyển trang có kèm filter
+                      }}
+                      className="text-[12px] font-semibold text-brand hover:text-brand-dark transition-colors flex items-center gap-1"
+                    >
+                      Xem tất cả <i className="fa-solid fa-arrow-right text-[10px]"></i>
+                    </button>
                   </div>
 
                   <div className="p-4 flex-1 overflow-y-auto no-scrollbar">

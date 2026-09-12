@@ -457,33 +457,58 @@ export default function TenantTable({
                 <i className="fa-solid fa-angle-left text-[12px] lg:text-[11px]"></i>
               </button>
 
-              {/* MOBILE UI: Chỉ hiện ô số trang hiện tại */}
-              <button
-                type="button"
-                className="flex lg:hidden w-8 h-8 rounded-lg items-center justify-center bg-brand text-white font-medium text-[13px]"
-              >
-                {page}
-              </button>
+              {/* === BẮT ĐẦU PHẦN SỐ TRANG (HIỂN THỊ CHUNG PC LẪN MOBILE) === */}
+              <div className="flex flex-wrap gap-1 justify-center">
+                {(() => {
+                  // Lưu ý: riêng file InvoicesTable.jsx nếu API không trả về last_page, hãy kiểm tra lại
+                  const last = pagination?.last_page || 1;
+                  const current = page;
 
-              {/* DESKTOP UI: Hiện đầy đủ dãy số trang */}
-              <div className="hidden lg:flex gap-1">
-                {Array.from({ length: pagination.last_page }).map((_, index) => {
-                  const pageNumber = index + 1;
-                  return (
-                    <button
-                      key={pageNumber}
-                      type="button"
-                      onClick={() => handlePageChange(pageNumber)}
-                      className={`flex h-7 w-7 items-center justify-center rounded text-[12px] font-medium transition-colors ${pageNumber === page
-                        ? "bg-brand text-white shadow-sm"
-                        : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
-                        }`}
-                    >
-                      {pageNumber}
+                  if (last <= 1) return (
+                    <button type="button" className="flex h-8 w-8 lg:h-7 lg:w-7 items-center justify-center rounded text-[13px] lg:text-[12px] font-medium bg-brand text-white shadow-sm">
+                      1
                     </button>
                   );
-                })}
+
+                  let pages = [];
+                  if (last <= 5) {
+                    pages = Array.from({ length: last }, (_, i) => i + 1);
+                  } else {
+                    if (current <= 3) {
+                      pages = [1, 2, 3, 4, 5, '...', last];
+                    } else if (current >= last - 2) {
+                      pages = [1, '...', last - 4, last - 3, last - 2, last - 1, last];
+                    } else {
+                      pages = [1, '...', current - 1, current, current + 1, '...', last];
+                    }
+                  }
+
+                  return pages.map((p, index) => {
+                    if (p === '...') {
+                      return (
+                        <span key={`dots-${index}`} className="flex h-8 w-5 lg:h-7 lg:w-5 items-end justify-center text-slate-400 pb-1 text-[14px]">
+                          ...
+                        </span>
+                      );
+                    }
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        /* Chú ý: Ở file InvoicesTable.jsx bạn đổi chữ handlePageChange(p) thành onPageChange?.(p) nhé */
+                        onClick={() => handlePageChange(p)}
+                        className={`flex h-8 w-8 lg:h-7 lg:w-7 items-center justify-center rounded text-[13px] lg:text-[12px] font-medium transition-colors ${p === current
+                            ? "bg-brand text-white shadow-sm"
+                            : "border border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+                          }`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
+              {/* === KẾT THÚC PHẦN SỐ TRANG === */}
 
               {/* Nút tiến trang */}
               <button

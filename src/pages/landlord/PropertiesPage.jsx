@@ -116,6 +116,22 @@ export default function PropertiesPage() {
     fetchProperties();
   }, [fetchProperties]);
 
+  // hàm này để xử lý khi người dùng click chọn khu nhà
+  const handleSelectProperty = (id) => {
+    setSelectedPropertyId(id);
+
+    // Tự động cuộn xuống danh sách phòng trên Mobile
+    if (window.innerWidth < 1024) {
+      setTimeout(() => {
+        // Tìm element danh sách phòng
+        const roomTable = document.getElementById('room-table-top') || document.getElementById('room-list-top');
+        if (roomTable) {
+          roomTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150); // Delay 150ms để đợi React render dữ liệu khu nhà mới
+    }
+  };
+
   // Các hàm xử lý CRUD Property
   const handleOpenCreateProperty = () => setIsAddModalOpen(true);
 
@@ -278,9 +294,10 @@ export default function PropertiesPage() {
               <button
                 type="button"
                 onClick={handleOpenCreateProperty}
-                className="h-9 px-3 flex items-center justify-center gap-1.5 bg-brand text-white rounded-xl shadow-sm active:bg-brand-dark transition-colors"
+                className="h-9 px-3.5 flex items-center justify-center gap-1.5 bg-brand text-white rounded-xl shadow-sm active:bg-brand-dark transition-colors"
               >
-                <i className="fa-solid fa-plus text-[14px] font-bold"></i>
+                <i className="fa-solid fa-plus text-[13px] font-bold"></i>
+                <span className="text-[13px] font-semibold whitespace-nowrap">Thêm khu nhà</span>
               </button>
             </div>
           </div>
@@ -377,7 +394,8 @@ export default function PropertiesPage() {
       </div>
 
       <div className="flex-1 lg:min-h-0 flex flex-col lg:grid lg:grid-cols-12 lg:gap-6">
-        <div className="lg:col-span-5 flex flex-col gap-4 lg:overflow-y-auto no-scrollbar lg:pr-1 mb-1 lg:mb-0">
+        {/* Đã bọc sticky top-0 ở container cha này để ghim toàn bộ phần danh sách khu nhà khi cuộn */}
+        <div className="lg:col-span-5 flex flex-col gap-2 lg:gap-4 lg:overflow-y-auto no-scrollbar lg:pr-1 mb-1 lg:mb-0 sticky top-0 z-30 bg-slate-50 -mx-4 px-4 py-2 lg:static lg:mx-0 lg:px-0 lg:py-0 border-b border-slate-200 lg:border-none shadow-sm lg:shadow-none">
           <div className="relative w-full shrink-0 hidden lg:block">
             <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input
@@ -392,7 +410,7 @@ export default function PropertiesPage() {
           <PropertyList
             properties={properties}
             selectedPropertyId={selectedPropertyId}
-            onSelectProperty={setSelectedPropertyId}
+            onSelectProperty={handleSelectProperty}
             onEditProperty={handleOpenEditProperty}
             onDeleteProperty={handleDeleteProperty}
             isLoading={isLoadingProperties}
@@ -411,9 +429,9 @@ export default function PropertiesPage() {
             <RoomList
               property={selectedProperty}
               properties={properties}
-              onRoomUpdated={fetchProperties} 
+              onRoomUpdated={fetchProperties}
               isPropertyLoading={isLoadingProperties}
-              />
+            />
           </div>
         </div>
       </div>
