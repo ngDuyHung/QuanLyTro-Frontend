@@ -421,7 +421,6 @@ export default function PaymentInvoiceModal({
                                             <input
                                                 type="text"
                                                 inputMode="numeric"
-                                                pattern="[0-9]*"
                                                 value={displayAmount}
                                                 onChange={handleAmountChange}
                                                 onFocus={(e) => e.target.select()}
