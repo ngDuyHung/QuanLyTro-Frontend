@@ -143,19 +143,26 @@ function RoomActionsMenu({ room, onAction, isNearBottom }) {
       }
     );
   } else if (status === "occupied") {
+    actions.unshift({
+      key: "viewAllInvoices",
+      label: "Xem tất cả hóa đơn",
+      icon: "fa-solid fa-receipt",
+      className: "text-indigo-600 font-semibold border-b border-slate-100 pb-2 bg-indigo-50/30",
+    });
+
+    actions.unshift({
+      key: "invoice",
+      label: "Lập hóa đơn tháng",
+      icon: "fa-solid fa-file-invoice-dollar",
+      className: "text-blue-600 font-semibold border-b border-slate-100 pb-2 bg-blue-50/30",
+    });
+
     if (room.payment_status === "debt") {
       actions.unshift({
         key: "viewDebt",
         label: "Thu tiền nhanh",
         icon: "fa-solid fa-hand-holding-dollar",
         className: "text-red-600 font-semibold border-b border-slate-100 pb-2 bg-red-50/30",
-      });
-    } else {
-      actions.unshift({
-        key: "invoice",
-        label: "Lập hóa đơn tháng",
-        icon: "fa-solid fa-file-invoice-dollar",
-        className: "text-blue-600 font-semibold border-b border-slate-100 pb-2 bg-blue-50/30",
       });
     }
   }
@@ -571,6 +578,12 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
       return;
     }
 
+    if (actionKey === "viewAllInvoices") {
+      const pId = room.property_id || property?.id || "";
+      navigate(`/landlord/invoices?property_id=${pId}&room_id=${room.id}`);
+      return;
+    }
+
     // Các tính năng còn lại (Ghi điện nước, đổi trạng thái) vẫn để tạm toast info
     const actionLabels = {
       images: "Cập nhật hình ảnh",
@@ -664,18 +677,22 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
             )}
 
             {room.status === "occupied" && (
-              room.payment_status === "debt" ? (
-                <button
-                  type="button"
-                  onClick={() => { onClose(); onAction("viewDebt", room); }}
-                  className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-3"
-                >
-                  <span className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
-                    <i className="fa-solid fa-hand-holding-dollar text-[15px]"></i>
-                  </span>
-                  <span>Thu tiền nhanh</span>
-                </button>
-              ) : (
+              <>
+                {/* Khi có nợ thì hiện thêm nút Thu tiền nhanh */}
+                {room.payment_status === "debt" && (
+                  <button
+                    type="button"
+                    onClick={() => { onClose(); onAction("viewDebt", room); }}
+                    className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-3"
+                  >
+                    <span className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                      <i className="fa-solid fa-hand-holding-dollar text-[15px]"></i>
+                    </span>
+                    <span>Thu tiền nhanh</span>
+                  </button>
+                )}
+
+                {/* Luôn hiện nút Lập hóa đơn */}
                 <button
                   type="button"
                   onClick={() => { onClose(); onAction("invoice", room); }}
@@ -686,7 +703,19 @@ export default function RoomList({ property, properties, onRoomUpdated, isProper
                   </span>
                   <span>Lập hóa đơn tháng</span>
                 </button>
-              )
+
+                {/* Nút Xem tất cả hóa đơn của phòng */}
+                <button
+                  type="button"
+                  onClick={() => { onClose(); onAction("viewAllInvoices", room); }}
+                  className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-indigo-600 hover:bg-indigo-50 flex items-center gap-3"
+                >
+                  <span className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <i className="fa-solid fa-receipt text-[15px]"></i>
+                  </span>
+                  <span>Xem tất cả hóa đơn</span>
+                </button>
+              </>
             )}
 
             {room.status === "maintenance" && (

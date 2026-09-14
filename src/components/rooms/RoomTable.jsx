@@ -450,18 +450,22 @@ function MobileRoomActionSheet({ room, open, onClose, onAction }) {
           )}
 
           {room.status === "occupied" && (
-            room.payment_status === "debt" ? (
-              <button
-                type="button"
-                onClick={() => { onClose(); onAction("viewDebt", room); }}
-                className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-3"
-              >
-                <span className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
-                  <i className="fa-solid fa-hand-holding-dollar text-[15px]"></i>
-                </span>
-                <span>Thu tiền nhanh</span>
-              </button>
-            ) : (
+            <>
+              {/* Nếu nợ thì hiện thêm nút Thu tiền nhanh */}
+              {room.payment_status === "debt" && (
+                <button
+                  type="button"
+                  onClick={() => { onClose(); onAction("viewDebt", room); }}
+                  className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-3"
+                >
+                  <span className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                    <i className="fa-solid fa-hand-holding-dollar text-[15px]"></i>
+                  </span>
+                  <span>Thu tiền nhanh</span>
+                </button>
+              )}
+
+              {/* Luôn luôn hiển thị nút Lập hóa đơn */}
               <button
                 type="button"
                 onClick={() => { onClose(); onAction("invoice", room); }}
@@ -472,7 +476,19 @@ function MobileRoomActionSheet({ room, open, onClose, onAction }) {
                 </span>
                 <span>Lập hóa đơn tháng</span>
               </button>
-            )
+
+              {/* Nút Xem tất cả hóa đơn của phòng */}
+              <button
+                type="button"
+                onClick={() => { onClose(); onAction("viewAllInvoices", room); }}
+                className="w-full mb-1 px-4 py-3.5 rounded-xl text-left text-[14px] font-semibold text-indigo-600 hover:bg-indigo-50 flex items-center gap-3"
+              >
+                <span className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <i className="fa-solid fa-receipt text-[15px]"></i>
+                </span>
+                <span>Xem tất cả hóa đơn</span>
+              </button>
+            </>
           )}
 
           {room.status === "maintenance" && (
@@ -643,6 +659,11 @@ export default function RoomTable({
       case "maintenance": onUpdateStatus?.(room, "maintenance"); return;
       case "available": onUpdateStatus?.(room, "available"); return;
       case "viewDebt": onViewDebt?.(room); return;
+      case "viewAllInvoices": {
+        const pId = room.property_id || room.property?.id || "";
+        navigate(`/landlord/invoices?property_id=${pId}&room_id=${room.id}`);
+        return;
+      }
       default: return;
     }
   };
