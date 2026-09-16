@@ -394,7 +394,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                                     subtitle = `${quantity} ${item.unit}, giá: ${price.toLocaleString()} đ`;
                                                 } else if (isUtility && meter) {
                                                     // 1. Dòng phụ đề (Subtitle)
-                                                    subtitle = `Mới: ${meter.current_reading}, Cũ: ${meter.previous_reading}`;
+                                                    subtitle = `Mới: ${meter.current_reading} - Cũ: ${meter.previous_reading}`;
                                                     if (free > 0) subtitle += ` - Miễn phí: ${free}`;
                                                     if (basePrice > 0) subtitle += ` - Phí CĐ: ${basePrice.toLocaleString()}đ`;
 
@@ -424,7 +424,7 @@ export default function ViewInvoiceModal({ open, invoice: initialInvoice, onClos
                                                     <div key={item.id} className="py-4 first:pt-2 last:pb-4">
                                                         <div className="flex justify-between items-start gap-4">
                                                             <div className="flex-1">
-                                                                <h4 className="font-bold text-slate-800 text-[15px]">{item.description}</h4>
+                                                                <h4 className="font-bold text-slate-800 text-[15px]">{item.description?.replace(/\s*\(\s*\d+\s*-\s*\d+\s*\)/g, '').trim()}</h4>
 
                                                                 {subtitle && (
                                                                     <p className="text-[14px] text-slate-600 mt-1">
