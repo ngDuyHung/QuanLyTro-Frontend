@@ -16,6 +16,13 @@ const ROOM_AMENITIES_MAP = {
 };
 
 // --- CÁC HÀM HELPER FORMAT DỮ LIỆU ---
+const formatDateShort = (dateStr) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+
 const formatCurrency = (value) => {
   const number = Number(value || 0);
   return `${new Intl.NumberFormat("vi-VN").format(number)}đ`;
@@ -318,9 +325,9 @@ export default function ViewRoomModal({ open, onClose, room, isLoading = false }
                       <div className="flex flex-col gap-4">
                         {recentInvoices.map((invoice) => {
                           const invStatus = getInvoiceStatusConfig(invoice.status);
-                          const periodLabel = invoice.period_from
-                            ? `${new Date(invoice.period_from).getDate()} tháng ${new Date(invoice.period_from).getMonth() + 1} /${new Date(invoice.period_from).getFullYear()}`
-                            : "---";
+                          const periodLabel = invoice.period_from && invoice.period_to
+                            ? `${formatDateShort(invoice.period_from)} - ${formatDateShort(invoice.period_to)}/${new Date(invoice.period_to).getFullYear()}`
+                            : (invoice.period_from ? `Tháng ${new Date(invoice.period_from).getMonth() + 1}/${new Date(invoice.period_from).getFullYear()}` : "---");
 
 
                           return (
