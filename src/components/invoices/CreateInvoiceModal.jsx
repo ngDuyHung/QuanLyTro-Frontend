@@ -345,23 +345,26 @@ export default function CreateInvoiceModal({
         setDynamicItems(prev => prev.filter(item => item.id !== id));
     };
 
+    // Hàm hỗ trợ làm tròn lên theo mốc 1.000 đồng
+    const roundUp1k = (val) => Math.ceil((Number(val) || 0) / 1000) * 1000;
+
     // Tính tổng tiền an toàn với Number()
     const elecUsage = Math.max(0, (Number(electricity.current) || 0) - (Number(electricity.prev) || 0));
     const elecBillable = Math.max(0, elecUsage - (Number(electricity.free) || 0));
-    // Sửa: Chỉ tính tiền nếu dùng > 0
-    const elecAmount = elecUsage > 0 ? (Number(electricity.base_price) || 0) + (elecBillable * (Number(electricity.price) || 0)) : 0;
+    const elecRaw = elecUsage > 0 ? (Number(electricity.base_price) || 0) + (elecBillable * (Number(electricity.price) || 0)) : 0;
+    const elecAmount = roundUp1k(elecRaw);
 
     const waterUsage = Math.max(0, (Number(water.current) || 0) - (Number(water.prev) || 0));
     const waterBillable = Math.max(0, waterUsage - (Number(water.free) || 0));
-    // Sửa: Chỉ tính tiền nếu dùng > 0
-    const waterAmount = waterUsage > 0 ? (Number(water.base_price) || 0) + (waterBillable * (Number(water.price) || 0)) : 0;
+    const waterRaw = waterUsage > 0 ? (Number(water.base_price) || 0) + (waterBillable * (Number(water.price) || 0)) : 0;
+    const waterAmount = roundUp1k(waterRaw);
 
     const dynamicAmount = dynamicItems.reduce((sum, item) => {
-        const amount = (Number(item.quantity) || 0) * (Number(item.unit_price_snapshot) || 0);
+        const amount = roundUp1k((Number(item.quantity) || 0) * (Number(item.unit_price_snapshot) || 0));
         return item.charge_type === 'discount' ? sum - amount : sum + amount;
     }, 0);
 
-    const totalAmount = (Number(rent.price) || 0) + elecAmount + waterAmount + dynamicAmount;
+    const totalAmount = Math.max(0, roundUp1k((Number(rent.price) || 0) + elecAmount + waterAmount + dynamicAmount));
 
     // --- SUBMIT VỚI 2 ACTION KHÁC NHAU ---
     const handleSubmit = async (actionType) => {
@@ -1234,7 +1237,7 @@ export default function CreateInvoiceModal({
                                                         <div className="flex items-center justify-between sm:justify-end sm:contents pt-3 sm:pt-0 mt-1 sm:mt-0 border-t border-slate-100 border-dashed sm:border-0">
                                                             <span className="text-[12px] text-slate-500 font-bold uppercase sm:hidden">Thành tiền</span>
                                                             <div className={`text-[17px] sm:text-[13px] font-black sm:font-bold text-right sm:w-[115px] shrink-0 truncate ${item.charge_type === 'discount' ? 'text-red-500' : 'text-slate-800'}`}>
-                                                                {item.charge_type === 'discount' ? '-' : ''}{((Number(item.quantity) || 0) * (Number(item.unit_price_snapshot) || 0)).toLocaleString()} <span className="text-[12px] underline decoration-slate-300 ml-0.5">đ</span>
+                                                                {item.charge_type === 'discount' ? '-' : ''}{(Math.ceil(((Number(item.quantity) || 0) * (Number(item.unit_price_snapshot) || 0)) / 1000) * 1000).toLocaleString()} <span className="text-[12px] underline decoration-slate-300 ml-0.5">đ</span>
                                                             </div>
                                                         </div>
 
